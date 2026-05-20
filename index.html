@@ -472,6 +472,54 @@
             .ten-frame { grid-template-columns: repeat(5, 34px); gap: 6px; }
             .ten-dot { width: 34px; height: 34px; }
         }
+
+        /* Multi-Grade & Princess Theme Layouts */
+        .magic-mirror-container {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 4px solid #f59e0b;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .mirror-frame {
+            border: 6px double #d97706;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .pumpkin-patch-container {
+            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+            border: 4px solid #ea580c;
+        }
+        .pumpkin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1.5rem;
+        }
+        .ocean-sorter-container {
+            background: linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 100%);
+            border: 4px solid #0284c7;
+        }
+        .painting-wall-container {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border: 4px solid #7c3aed;
+        }
+        /* UI Touch Target Sizes */
+        .grade-k [data-answer-option] {
+            min-height: 80px;
+            font-size: 2.25rem;
+            padding: 1.5rem 2rem;
+            border-radius: 2rem;
+        }
+        .grade-g1 [data-answer-option] {
+            min-height: 65px;
+            font-size: 1.75rem;
+            padding: 1rem 1.5rem;
+            border-radius: 1.5rem;
+        }
+        .grade-g2 [data-answer-option] {
+            min-height: 55px;
+            font-size: 1.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.25rem;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -1670,6 +1718,7 @@
             subject: null,
             grade: null,
             elaCategory: null,
+            consecutiveMisses: 0,
             persona: null,
             activityIndex: 0,
             stars: loadStars(),
@@ -2105,6 +2154,9 @@
                 state.suppressNextActivityRoutineVoice = false;
                 return true;
             }
+            if (state.grade === 'g1' || state.grade === 'g2') {
+                return true;
+            }
             return false;
         }
 
@@ -2166,6 +2218,9 @@
             state.isProcessingAnswer = false;
             state.answerLockKey = '';
             document.querySelectorAll('[data-answer-option]').forEach((button) => {
+                if (button.classList.contains('opacity-30') || button.style.opacity === '0.3') {
+                    return;
+                }
                 button.disabled = false;
                 button.removeAttribute('aria-disabled');
                 button.classList.remove('opacity-70', 'pointer-events-none');
@@ -2381,13 +2436,14 @@
         }
 
         function loadLearningPerformance() {
-            const fallback = { totalCorrect: 0, totalIncorrect: 0, byKey: {}, missedItems: {} };
+            const fallback = { totalCorrect: 0, totalIncorrect: 0, byKey: {}, missedItems: {}, rewards: { tiara_gems: 0, unlocked_decorations: [] } };
             const saved = readJsonStorage('zoeLearningPerformance', fallback);
             return {
                 totalCorrect: Number(saved.totalCorrect) || 0,
                 totalIncorrect: Number(saved.totalIncorrect) || 0,
                 byKey: saved.byKey && typeof saved.byKey === 'object' ? saved.byKey : {},
-                missedItems: saved.missedItems && typeof saved.missedItems === 'object' ? saved.missedItems : {}
+                missedItems: saved.missedItems && typeof saved.missedItems === 'object' ? saved.missedItems : {},
+                rewards: saved.rewards && typeof saved.rewards === 'object' ? saved.rewards : { tiara_gems: 0, unlocked_decorations: [] }
             };
         }
 
@@ -2402,6 +2458,21 @@
         function saveLearningPerformance() {
             localStorage.setItem('zoeLearningPerformance', JSON.stringify(state.performance));
         }
+
+        function updateZoeRewards(key, value) {
+            if (!state.performance.rewards) {
+                state.performance.rewards = { tiara_gems: 0, unlocked_decorations: [] };
+            }
+            if (key === 'tiara_gems') {
+                state.performance.rewards.tiara_gems = value;
+            } else if (key === 'unlocked_decorations') {
+                if (!state.performance.rewards.unlocked_decorations.includes(value)) {
+                    state.performance.rewards.unlocked_decorations.push(value);
+                }
+            }
+            saveLearningPerformance();
+        }
+        window.updateZoeRewards = updateZoeRewards;
 
         function loadCompletedLessons() {
             const saved = readJsonStorage('zoeCompletedLessons', { sets: {}, total: 0, badgeUnlocked: false });
@@ -3181,6 +3252,10 @@
 
         // --- ENGINE: DYNAMIC RENDERER ---
         function renderActivity(container) {
+            state.consecutiveMisses = 0;
+            if (typeof clearVisualHints === 'function') {
+                clearVisualHints();
+            }
             const t = uiText[state.lang];
             const princess = subjectGuidePrincess();
             const dataset = getCurrentActivityList();
@@ -3206,7 +3281,7 @@
                     </div>`;
             
             // Layout Shell
-            html += `<div class="animate-pop text-center max-w-3xl mx-auto pt-16 md:pt-10">`;
+            html += `<div class="grade-${state.grade || 'k'} animate-pop text-center max-w-3xl mx-auto pt-16 md:pt-10">`;
             html += `<div class="mb-4 text-sm font-extrabold text-slate-500">${Math.min(state.activityIndex + 1, dataset.length)} / ${dataset.length}${activityRef.isRetry ? ' • Review' : ''}</div>`;
 
             if (data.type === 'flashcard') {
@@ -3377,6 +3452,13 @@
         window.nextActivity = function() {
             if (state.activityTransitionLocked) return;
             state.activityTransitionLocked = true;
+
+            if (state.currentMiniRound) {
+                state.activityTransitionLocked = false;
+                renderMiniGames(document.getElementById('app-container'));
+                return;
+            }
+
             const list = getCurrentActivityList();
             if (list.length === 0) { navigate(state.subject === 'ela' ? 'elaHub' : 'gradeSelect'); return; }
 
@@ -3394,15 +3476,19 @@
             }
             state.activityIndex = nextIndex;
             navigate('activity');
-        }
+        };
 
-        window.handleQuizAnswer = function(selected, target) {
-            if (!lockCurrentAnswer()) return;
-            if (isMatchingAnswer(selected, target)) {
+        window.evaluateAnswer = function(selected, target) {
+            const isCorrect = isMatchingAnswer(selected, target);
+            if (isCorrect) {
+                state.consecutiveMisses = 0;
+                clearVisualHints();
+                
                 state.streak++;
                 updateStarDisplay();
                 recordPerformance(true, selected);
                 showFeedback(true);
+                
                 if (state.streak > 0 && state.streak % 3 === 0) {
                     scheduleRouteTimer(() => {
                         state.stars[state.lang]++;
@@ -3412,14 +3498,142 @@
                         fireConfetti();
                     }, 600);
                 }
+                
                 scheduleRouteTimer(nextActivity, 1800);
+                return true;
             } else {
+                state.consecutiveMisses = (state.consecutiveMisses || 0) + 1;
                 state.streak = 0;
                 updateStarDisplay();
-                recordPerformance(false, selected);
-                showFeedback(false);
-                scheduleRouteTimer(unlockCurrentAnswer, 900);
+                
+                if (state.consecutiveMisses === 1) {
+                    let hintText = '';
+                    let cueType = 'fallback';
+                    
+                    const ref = state.currentActivityRef;
+                    const subject = state.subject || (ref ? splitActivityKey(ref.key).subject : 'ela');
+                    const category = ref ? splitActivityKey(ref.key).category : 'letters';
+                    
+                    if (state.lang === 'es') {
+                        hintText = `¡Buen intento! Miremos de cerca e intentemos de nuevo.`;
+                        if (subject === 'ela') {
+                            if (category === 'blend' || category === 'sentences') {
+                                cueType = 'underline_digraph';
+                            } else {
+                                cueType = 'highlight_first_letter';
+                            }
+                        } else if (subject === 'math') {
+                            cueType = 'color_code_tens_ones';
+                        }
+                    } else {
+                        hintText = `Good try! Let's look closer and try again.`;
+                        if (subject === 'ela') {
+                            if (category === 'blend' || category === 'sentences') {
+                                cueType = 'underline_digraph';
+                            } else {
+                                cueType = 'highlight_first_letter';
+                            }
+                        } else if (subject === 'math') {
+                            cueType = 'color_code_tens_ones';
+                        }
+                    }
+                    
+                    triggerVisualHint(hintText, cueType, selected);
+                    playRoutineVoice("STRIKE_1_ENCOURAGEMENT", { fallbackText: hintText });
+                    
+                    scheduleRouteTimer(unlockCurrentAnswer, 900);
+                    return false;
+                } else {
+                    clearVisualHints();
+                    state.consecutiveMisses = 0;
+                    
+                    const softTransitionText = state.lang === 'en' 
+                        ? "Let's save this one for later practice and try a new activity!" 
+                        : "¡Guardemos esta para practicarla luego y probemos una nueva actividad!";
+                    
+                    playRoutineVoice("STRIKE_2_TRANSITION", { fallbackText: softTransitionText });
+                    showFeedback(false);
+                    recordPerformance(false, selected);
+                    
+                    scheduleRouteTimer(() => {
+                        unlockCurrentAnswer();
+                        if (state.currentMiniRound) {
+                            state.currentMiniRound = null;
+                            renderMiniGames(document.getElementById('app-container'));
+                        } else {
+                            nextActivity();
+                        }
+                    }, 2200);
+                    return false;
+                }
             }
+        };
+
+        function triggerVisualHint(text, cueType, wrongAnswer) {
+            showSimpleToast(text);
+            
+            const buttons = document.querySelectorAll('[data-answer-option]');
+            buttons.forEach(btn => {
+                const textVal = btn.textContent.trim().toLowerCase();
+                const wrong = wrongAnswer.toLowerCase();
+                if (textVal === wrong) {
+                    btn.classList.add('opacity-30');
+                    btn.style.opacity = '0.3';
+                    btn.disabled = true;
+                }
+            });
+            
+            if (cueType === 'underline_digraph') {
+                const elements = document.querySelectorAll('.mirror-frame h3, .mirror-frame p, .bg-white p');
+                elements.forEach(el => {
+                    const html = el.innerHTML;
+                    const regex = /\b(ch|sh|th|wh|ph)/gi;
+                    el.innerHTML = html.replace(regex, '<span class="underline decoration-purple-500 decoration-4">$1</span>');
+                });
+            }
+            
+            if (cueType === 'color_code_tens_ones') {
+                const elements = document.querySelectorAll('.mirror-frame h3, .mirror-frame p');
+                elements.forEach(el => {
+                    el.innerHTML = el.innerHTML.replace(/\b(\d)(\d)\b/g, '<span class="text-orange-500 font-bold">$1</span><span class="text-blue-500 font-bold">$2</span>');
+                });
+            }
+            
+            if (cueType === 'highlight_first_letter') {
+                const elements = document.querySelectorAll('.mirror-frame h3, .mirror-frame p');
+                elements.forEach(el => {
+                    el.innerHTML = el.innerHTML.replace(/\b(\w)/g, '<span class="text-pink-500 font-extrabold underline">$1</span>');
+                });
+            }
+        }
+
+        function clearVisualHints() {
+            const buttons = document.querySelectorAll('[data-answer-option]');
+            buttons.forEach(btn => {
+                btn.classList.remove('opacity-30');
+                btn.style.opacity = '';
+                btn.disabled = false;
+            });
+        }
+
+        function getCappedOptions(item, correctAnswer, maxCount) {
+            let opts = [];
+            if (item && Array.isArray(item.options)) {
+                opts = item.options.slice();
+            } else {
+                opts = [correctAnswer];
+            }
+            if (!opts.includes(correctAnswer)) {
+                opts.unshift(correctAnswer);
+            }
+            const otherOpts = opts.filter(o => o !== correctAnswer);
+            const cappedOthers = shuffleArray(otherOpts).slice(0, maxCount - 1);
+            return shuffleArray([correctAnswer, ...cappedOthers]);
+        }
+
+        window.handleQuizAnswer = function(selected, target) {
+            if (!lockCurrentAnswer()) return;
+            window.evaluateAnswer(selected, target);
         };
 
         function renderProgress(container) {
@@ -3603,69 +3817,142 @@
         }
 
         function renderMiniGames(container) {
-            container.innerHTML = `
-                <div class="animate-pop text-center max-w-5xl mx-auto pt-10">
-                    <button onclick="navigate('hub')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <h2 class="text-4xl font-black text-slate-700 mb-8 mt-14 md:mt-0">Mini Games</h2>
-                    <div class="mini-grid">
-                        <button onclick="startMiniGame('letterTreasure')" class="btn-kid bg-blue-300 text-white p-8 rounded-[2rem] text-3xl font-black">💎 Letter Treasure Hunt</button>
-                        <button onclick="startMiniGame('numberJewels')" class="btn-kid bg-pink-300 text-white p-8 rounded-[2rem] text-3xl font-black">🔢 Number Jewel Sorting</button>
-                        <button onclick="startMiniGame('spanishGarden')" class="btn-kid bg-purple-300 text-white p-8 rounded-[2rem] text-3xl font-black">🌸 Spanish Garden Match</button>
+            const subject = state.subject || 'ela';
+            const grade = state.grade || 'k';
+            const lang = state.lang || 'en';
+
+            let list = [];
+            // Generate list of items from the curriculum based on subject, grade, lang
+            if (subject === 'ela') {
+                const elaData = curriculum[lang]?.ela?.[grade];
+                if (elaData) {
+                    if (Array.isArray(elaData.match)) {
+                        list = list.concat(elaData.match);
+                    }
+                    if (Array.isArray(elaData.letters)) {
+                        list = list.concat(elaData.letters.map(x => ({
+                            q: lang === 'es' ? `Busca la letra: ${x.item}` : `Find the letter: ${x.item}`,
+                            a: x.item,
+                            options: [x.item, ...shuffleArray(elaData.letters.filter(y => y.item !== x.item)).slice(0, 4).map(y => y.item)],
+                            audio: x.audio || x.item,
+                            emoji: '✨'
+                        })));
+                    }
+                }
+            } else if (subject === 'math') {
+                const mathData = curriculum[lang]?.math?.[grade];
+                if (Array.isArray(mathData)) {
+                    list = list.concat(mathData.filter(x => x.type === 'quiz'));
+                }
+            } else if (subject === 'science') {
+                const sciData = curriculum[lang]?.science?.[grade];
+                if (Array.isArray(sciData)) {
+                    list = list.concat(sciData.filter(x => x.type === 'quiz'));
+                }
+            } else if (subject === 'spanish') {
+                const esEla = curriculum.es?.ela?.[grade];
+                if (esEla && Array.isArray(esEla.sight)) {
+                    esEla.sight.forEach(x => {
+                        const distractors = shuffleArray(esEla.sight.filter(y => y.item !== x.item))
+                            .slice(0, 4)
+                            .map(y => y.item);
+                        list.push({
+                            type: 'quiz',
+                            q: lang === 'es' ? `¿Qué significa: "${x.desc}"?` : `Find the Spanish word for: "${x.desc}"`,
+                            a: x.item,
+                            options: [x.item, ...distractors],
+                            emoji: x.emoji || '🌸',
+                            audio: x.audio || x.item
+                        });
+                    });
+                }
+            }
+
+            // Shuffle and choose one item
+            let item = shuffleArray(list)[0];
+            if (!item) {
+                // Fallback item
+                item = {
+                    q: lang === 'es' ? "¡Encuentra la corona!" : "Find the crown!",
+                    options: ["👑", "💎", "⭐"],
+                    a: "👑",
+                    emoji: "👑",
+                    audio: lang === 'es' ? "Encuentra la corona." : "Find the crown."
+                };
+            }
+
+            // Construct state.currentMiniRound
+            state.currentMiniRound = item;
+            state.currentActivityRef = {
+                id: 'minigame_' + Math.random().toString(36).substr(2, 9),
+                key: `${lang}|${subject}|${grade}`,
+                data: item
+            };
+
+            // Set up themed container classes
+            let themeClass = 'magic-mirror-container';
+            let princessName = 'Belle';
+            if (subject === 'math') {
+                themeClass = 'pumpkin-patch-container';
+                princessName = 'Cinderella';
+            } else if (subject === 'science') {
+                themeClass = 'ocean-sorter-container';
+                princessName = 'Moana';
+            } else if (subject === 'spanish') {
+                themeClass = 'painting-wall-container';
+                princessName = 'Rapunzel';
+            }
+
+            // Cap options
+            const expectedCaps = { k: 3, g1: 4, g2: 5 };
+            const maxCount = expectedCaps[grade] || 3;
+            const cappedOpts = getCappedOptions(item, item.a, maxCount);
+
+            const backTarget = subject === 'ela' ? 'elaHub' : 'gradeSelect';
+            
+            let html = `
+                <div class="grade-${grade} animate-pop text-center max-w-3xl mx-auto pt-16 md:pt-10 ${themeClass} rounded-[3rem] p-8 shadow-2xl min-h-[500px] relative">
+                    <button onclick="state.currentMiniRound = null; navigate('${backTarget}')" class="absolute top-4 left-4 bg-white/80 text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl z-20">← Back</button>
+                    <div class="mb-4 text-xs font-bold text-slate-500 uppercase tracking-wider">${princessName}'s Academy Mini Game</div>
+                    
+                    <div class="mirror-frame flex flex-col items-center justify-center bg-white/90 border-4 rounded-[2rem] p-8 shadow-inner min-h-[220px] mb-8">
+                        <h3 class="text-4xl font-black text-slate-800 line-clamp-3">${item.q}</h3>
+                        ${item.emoji ? `<div class="text-8xl mt-4 animate-bounce-slight">${item.emoji}</div>` : ''}
+                        ${(grade === 'g1' || grade === 'g2') ? `
+                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="mt-4 btn-kid bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold text-sm px-4 py-2 rounded-full inline-flex items-center space-x-1">
+                                <span>🔊</span> <span>Tap to Listen</span>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-${Math.min(3, cappedOpts.length)} gap-6">
+                        ${cappedOpts.map(opt => `
+                            <button data-answer-option onclick="handleMiniGameAnswer(${jsString(opt)}, ${jsString(item.a)})" class="kid-option btn-kid text-2xl font-black py-6 rounded-[2rem] border-4 border-slate-200 bg-white hover:bg-slate-50 shadow-md">
+                                ${opt}
+                            </button>
+                        `).join('')}
                     </div>
                 </div>
             `;
+            container.innerHTML = html;
+            
+            // Auto play for K, skip for G1/G2
+            if (grade === 'k' && item.audio) {
+                playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', { fallbackText: item.audio });
+            }
         }
 
         window.startMiniGame = function(game) {
-            state.currentMiniGame = game;
-            navigate('miniGame', { game });
+            navigate('miniGames');
         };
 
-        function renderMiniGame(container, game = state.currentMiniGame || 'letterTreasure') {
-            state.currentMiniGame = game;
-            const round = buildMiniGameRound(game);
-            state.currentMiniRound = round;
-            container.innerHTML = `
-                <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
-                    <button onclick="navigate('miniGames')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <h2 class="text-4xl font-black text-slate-700 mb-5">${round.title}</h2>
-                    <div class="bg-white border-4 border-yellow-200 rounded-[3rem] p-8 shadow-xl mb-8"><div class="text-7xl mb-3">${round.icon}</div><p class="text-3xl font-black text-slate-800">${round.prompt}</p></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">${round.options.map((opt) => `<button onclick='handleMiniGameAnswer(${jsString(opt)})' class="kid-option btn-kid">${opt}</button>`).join('')}</div>
-                </div>
-            `;
-            if (round.audio) playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', { fallbackText: round.audio });
+        function renderMiniGame(container, game) {
+            renderMiniGames(container);
         }
 
-        function buildMiniGameRound(game) {
-            if (game === 'numberJewels') {
-                const item = shuffleArray(curriculum.en.math.g1.filter((x) => x.type === 'quiz'))[0];
-                return { title: 'Number Jewel Sorting', icon: '💎', prompt: item.q, options: shuffleArray(item.options), answer: item.a, audio: item.audio, reward: ['number-jewel', 'Number Jewel'] };
-            }
-            if (game === 'spanishGarden') {
-                const item = shuffleArray(curriculum.es.ela.k.sight)[0];
-                const options = shuffleArray([item.item, ...shuffleArray(curriculum.es.ela.k.sight.filter((x) => x.item !== item.item)).slice(0, 2).map((x) => x.item)]);
-                return { title: 'Spanish Garden Match', icon: '🌸', prompt: `Choose: ${item.item}`, options, answer: item.item, audio: item.audio, reward: ['spanish-garden-star', 'Spanish Garden Star'] };
-            }
-            const item = shuffleArray(curriculum.en.ela.k.letters)[0];
-            const options = shuffleArray([item.item, ...shuffleArray(curriculum.en.ela.k.letters.filter((x) => x.item !== item.item)).slice(0, 2).map((x) => x.item)]);
-            return { title: 'Letter Treasure Hunt', icon: '💎', prompt: `Find ${item.desc}`, options, answer: item.item, audio: item.audio, reward: ['phonics-crown', 'Phonics Crown'] };
-        }
-
-        window.handleMiniGameAnswer = function(selected) {
-            const round = state.currentMiniRound;
-            if (!round) return;
-            if (selected === round.answer) {
-                state.streak++;
-                state.stars[state.lang]++;
-                saveStars();
-                unlockReward(round.reward[0], round.reward[1]);
-                showFeedback(true);
-                setTimeout(() => renderMiniGame(document.getElementById('app-container'), state.currentMiniGame), 1100);
-            } else {
-                state.streak = 0;
-                updateStarDisplay();
-                showSimpleToast("Nice try! Let's try again.");
-            }
+        window.handleMiniGameAnswer = function(selected, target) {
+            if (!lockCurrentAnswer()) return;
+            window.evaluateAnswer(selected, target);
         };
 
         function renderStoryMode(container) {
