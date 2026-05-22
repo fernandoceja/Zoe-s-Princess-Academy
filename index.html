@@ -5,8 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zoe's Princess Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            font-size: 24px;
+            vertical-align: middle;
+        }
+
+        :root {
+            /* Global Colors */
+            --color-gold-frame: #ebd373;
+            --color-gold-text: #856404;
+            --color-surface: #fdfcfe;
+            
+            /* Subject Gradients */
+            --grad-reading: linear-gradient(135deg, #60a5fa, #3b82f6);
+            --grad-math: linear-gradient(135deg, #f472b6, #db4f9c);
+            --grad-science: linear-gradient(135deg, #6ee7a8, #34c779);
+            --grad-spanish: linear-gradient(135deg, #b982f4, #8b5cf6);
+            --grad-lesson-bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+
+            /* UI Spacing & Radius */
+            --radius-card: 28px;
+            --radius-button: 999px;
+            --border-gold: 4px solid var(--color-gold-frame);
+            
+            /* AI Accents */
+            --color-ai-sparkle: #a78bfa; /* Lavender/Purple */
+        }
+
         body {
             font-family: 'Nunito', sans-serif;
             /* Magical pastel gradient background */
@@ -22,7 +53,7 @@
         }
         
         .app-frame {
-            border: 4px solid #ebd373;
+            border: 4px solid var(--color-gold-frame);
             border-radius: 16px;
             min-height: calc(100vh - 16px);
             min-height: calc(100svh - 16px);
@@ -53,16 +84,265 @@
         .btn-kid {
             transition: all 0.2s ease;
             box-shadow: 0 8px 0px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
         .btn-kid:active {
             transform: translateY(6px);
             box-shadow: 0 2px 0px rgba(0,0,0,0.1);
+        }
+        
+        /* Reusable Visual Classes */
+        .chamber-card {
+            min-height: 190px;
+            border: 0;
+            border-radius: var(--radius-card);
+            padding: 24px;
+            text-align: left;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 0 rgba(31, 41, 55, 0.10), 0 18px 24px rgba(31, 41, 55, 0.12);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        .chamber-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(15,23,42,0.28), rgba(15,23,42,0.02));
+            pointer-events: none;
+        }
+        .chamber-card .subject-art {
+            position: absolute;
+            right: 12px;
+            bottom: -10px;
+            z-index: 1;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            object-fit: cover;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15);
+        }
+        .princess-portrait {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            object-fit: cover;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15);
+        }
+        .princess-guide {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.94);
+            border: var(--border-gold);
+            border-radius: 24px;
+            padding: 16px 20px;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            margin: 16px auto 24px;
+            max-width: 90%;
+            text-align: left;
+        }
+        .princess-guide-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            object-fit: cover;
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+            flex-shrink: 0;
+        }
+        .voice-bubble {
+            position: relative;
+            background: #fff;
+            border-radius: 18px;
+            padding: 12px 18px;
+            color: #334155;
+            font-weight: 700;
+            font-size: 1.05rem;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            flex-grow: 1;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .voice-bubble::before {
+            content: "";
+            position: absolute;
+            left: -10px;
+            top: 28px;
+            border-width: 6px 10px 6px 0;
+            border-style: solid;
+            border-color: transparent #fff transparent transparent;
+            display: block;
+            width: 0;
+            z-index: 2;
+        }
+        .voice-bubble::after {
+            content: "";
+            position: absolute;
+            left: -11px;
+            top: 28px;
+            border-width: 6px 10px 6px 0;
+            border-style: solid;
+            border-color: transparent rgba(148, 163, 184, 0.2) transparent transparent;
+            display: block;
+            width: 0;
+            z-index: 1;
+        }
+        
+        .activity-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-card);
+            border: var(--border-gold);
+            padding: 24px;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+            position: relative;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .btn-audio-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 2px solid #bae6fd;
+            border-radius: var(--radius-button);
+            padding: 12px 24px;
+            font-weight: 800;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.05);
+        }
+        .btn-audio-primary:hover {
+            background: #bae6fd;
+        }
+        .btn-audio-replay {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.05);
+        }
+        .btn-audio-replay:hover {
+            background: #e2e8f0;
+        }
+        .parent-insight-card {
+            background: #f8fafc;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
+        }
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fef08a, #fde047);
+            color: #856404;
+            border: 2px solid #facc15;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            font-size: 2.2rem;
+            box-shadow: 0 8px 16px rgba(234, 179, 8, 0.2);
+            animation: bounce-slight 2s infinite;
+        }
+        .progress-stars {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+        .skill-label {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+        }
+        .vocab-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 4px solid #a7f3d0;
+            border-radius: var(--radius-card);
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.05);
+            transition: all 0.2s ease;
+        }
+        .vocab-card:hover {
+            border-color: #34d399;
+            transform: translateY(-2px);
+        }
+        .sorting-bin {
+            transition: all 0.2s ease;
+        }
+        .sorting-bin:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+        }
+        .dashboard-stat-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        /* Responsive foundations & tap targets */
+        * {
+            box-sizing: border-box;
+        }
+        button, a, select, input {
+            min-height: 48px;
+            min-width: 48px;
+        }
+        @media (max-width: 700px) {
+            .app-frame {
+                border-width: 2px;
+            }
+            .room-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .chamber-card {
+                min-height: 160px;
+            }
         }
         .hidden { display: none !important; }
 
         button:focus-visible {
             outline: 4px solid rgba(14, 165, 233, 0.55);
             outline-offset: 4px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-delay: -1ms !important;
+                animation-duration: 1ms !important;
+                animation-iteration-count: 1 !important;
+                background-attachment: initial !important;
+                scroll-behavior: auto !important;
+                transition-duration: 1ms !important;
+                transition-delay: -1ms !important;
+            }
         }
 
         .home-shell {
@@ -326,15 +606,45 @@
         }
 
         .adult-button {
-            border-radius: 10px;
-            padding: 12px 14px;
+            border-radius: 16px;
+            padding: 14px 20px;
             font-weight: 900;
-            background: #0f172a;
+            background: #1e293b;
             color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            transition: all 0.15s ease;
         }
 
-        .adult-button.secondary { background: #e2e8f0; color: #0f172a; }
-        .adult-button.danger { background: #b91c1c; color: white; }
+        .adult-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background: #0f172a;
+        }
+
+        .adult-button:active {
+            transform: translateY(1px);
+        }
+
+        .adult-button.secondary { 
+            background: #f1f5f9; 
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .adult-button.secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .adult-button.danger { 
+            background: #ef4444; 
+            color: white; 
+        }
+
+        .adult-button.danger:hover {
+            background: #dc2626;
+        }
 
         .mini-grid, .reward-grid {
             display: grid;
@@ -520,6 +830,80 @@
             padding: 0.75rem 1.25rem;
             border-radius: 1.25rem;
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(31, 41, 55, 0.08);
+        }
+        .btn-kid-blue {
+            background-color: #60a5fa !important;
+            color: white !important;
+            border-bottom: 8px solid #2563eb !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-blue:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .btn-kid-pink {
+            background-color: #f472b6 !important;
+            color: white !important;
+            border-bottom: 8px solid #db2777 !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-pink:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .btn-kid-purple {
+            background-color: #a78bfa !important;
+            color: white !important;
+            border-bottom: 8px solid #7c3aed !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-purple:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .btn-kid-orange {
+            background-color: #fb923c !important;
+            color: white !important;
+            border-bottom: 8px solid #ea580c !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-orange:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .btn-kid-green {
+            background-color: #4ade80 !important;
+            color: white !important;
+            border-bottom: 8px solid #16a34a !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-green:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .btn-kid-yellow {
+            background-color: #facc15 !important;
+            color: #443800 !important;
+            border-bottom: 8px solid #ca8a04 !important;
+            transition: all 0.1s ease;
+        }
+        .btn-kid-yellow:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px !important;
+        }
+        .jewel-glow {
+            box-shadow: 0 0 15px 5px rgba(96, 165, 250, 0.4);
+            background: radial-gradient(circle at 30% 30%, #ffffff, #60a5fa);
+        }
+        .frame-border {
+            border: 2px dashed #94a3b8;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -529,7 +913,7 @@
 
     <!-- Global Header -->
     <header class="bg-transparent p-2 md:p-3 flex justify-between items-center z-10 sticky top-0">
-        <div class="flex items-center space-x-2 cursor-pointer z-20" onclick="navigate('hub')">
+        <div class="flex items-center justify-center cursor-pointer z-20 w-12 h-12" onclick="navigate('hub')" role="button" aria-label="Academy Hub" tabindex="0">
             <span class="text-3xl hover:scale-110 transition-transform">🐶</span>
         </div>
         
@@ -551,7 +935,7 @@
                 <span class="ml-1 text-xl">🔥</span>
             </div>
             <button onclick="navigate('parentDashboard')" aria-label="Parent Dashboard" class="text-2xl hover:scale-110 transition-transform btn-kid bg-white rounded-xl px-3 py-2 border border-slate-200">📊</button>
-            <div class="flex items-center bg-[#fff8d6] px-4 py-2 rounded-full border border-[#ebd373] font-bold text-yellow-700 cursor-pointer shadow-sm hover:bg-[#ffedb3] transition-colors" onclick="navigate('progress')">
+            <div class="flex items-center bg-[#fff8d6] px-4 h-12 rounded-full border border-[#ebd373] font-bold text-yellow-700 cursor-pointer shadow-sm hover:bg-[#ffedb3] transition-colors" onclick="navigate('progress')" role="button" aria-label="Progress Dashboard" tabindex="0">
                 <span id="star-count-header" class="mr-2 text-lg">0</span>
                 <span class="text-xl">⭐</span>
             </div>
@@ -1862,15 +2246,19 @@
         const personas = {
             en: {
                 belle: { greeting: "Hi! I'm Belle. Let's explore a story together!" },
-                rapunzel: { greeting: "Hi! I'm Rapunzel. Let's explore some math!" },
+                elsa: { greeting: "Hi! I'm Elsa. Let's explore some math!" },
+                rapunzel: { greeting: "Hi! I'm Rapunzel. Let's discover science!" },
                 moana: { greeting: "Hi! I'm Moana. Let's discover the world!" },
-                elena: { greeting: "Hi! I'm Elena. Let's learn some Spanish!" }
+                elena: { greeting: "Hi! I'm Elena. Let's learn some Spanish!" },
+                zoe: { greeting: "Hi! I'm Zoe. Welcome to the Princess Academy!" }
             },
             es: {
                 belle: { greeting: "¡Hola! Soy Bella. ¡Vamos a leer un cuento!" },
-                rapunzel: { greeting: "¡Hola! Soy Rapunzel. ¡Vamos a explorar las matemáticas!" },
+                elsa: { greeting: "¡Hola! Soy Elsa. ¡Vamos a explorar las matemáticas!" },
+                rapunzel: { greeting: "¡Hola! Soy Rapunzel. ¡Vamos a descubrir la ciencia!" },
                 moana: { greeting: "¡Hola! Soy Moana. ¡Vamos a descubrir el mundo!" },
-                elena: { greeting: "¡Hola! Soy Elena. ¡Vamos a aprender español!" }
+                elena: { greeting: "¡Hola! Soy Elena. ¡Vamos a aprender español!" },
+                zoe: { greeting: "¡Hola! Soy Zoe. ¡Bienvenida a la Academia de Princesas!" }
             }
         };
 
@@ -1965,6 +2353,22 @@
         const restrictedImageEnvironment = isRestrictedImageEnvironment();
 
         function getPrincessByName(name) {
+            if (name === 'Zoe') {
+                return {
+                    name: 'Zoe',
+                    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMks8RvtzUx4BzWqU41q22U_s1Bx0QR3j5wSHBxGGlL1thH6k-1lRENMAnr4Sv9BRyX1bfTdiNVwDoEOoEFO1-q9ERnpJDj8nXLjqIIbpvO4oYJrCMHHZQMh2K_LmEmvNDZeTKJuiB5mibYg8gNdQbTFY1f7i4mA-7CBcupccgV8cJvvSBS-H26Zb4jQw-JQsUilaD7FkMud95OuuML0j8eU4T_czDQGXIjf8LSIH5z34JT1C_P7KuefR35M1CNSs51kVCDSWVy7fr',
+                    greeting: state.lang === 'en' ? "Welcome! Let's learn together!" : "¡Bienvenida! ¡Vamos a aprender juntas!",
+                    themeColor: '#ff7ebb'
+                };
+            }
+            if (name === 'Cinderella') {
+                return {
+                    name: 'Cinderella',
+                    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDvQrHU_lJ6uTuOo4zURAE9N_MSH4vYvgYF1AcQJCU8vkOKmrHOGU0NsW2gkjNwIW1n2tUcMsnwx8UK1nq6BLKY52drNm35KbjjSjPv6-WnL0x-bPazppsQmirlQRFvf4L1mS0z49opSPZgV5j2BjhbFdLn5F-rnN0usZsbdAneTJQGsNJRjvWOVIXMT79SCDfRucVpQTLrb66E2Y45z5nDRAoXKSO40DsLMxyTnUDqbk2FPAadv5u2wMxNRcf_-WNsrR2tHHalLWx4',
+                    greeting: "Ready to pick a grade?",
+                    themeColor: '#4ba3e3'
+                };
+            }
             return princesses.find((princess) => princess.name === name);
         }
 
@@ -2875,7 +3279,7 @@
         }
 
         function subjectGuidePrincess() {
-            if (state.persona === 'elena') return getPrincessByName('Elena') || getPrincessByName('Tiana') || state.princess;
+            if (state.lang === 'es' || state.persona === 'elena' || state.persona === 'zoe') return getPrincessByName('Zoe');
             if (state.subject === 'math') return getPrincessByName('Elsa') || state.princess;
             if (state.subject === 'science') return getPrincessByName('Rapunzel') || state.princess;
             if (state.subject === 'ela') return getPrincessByName('Belle') || state.princess;
@@ -2883,6 +3287,7 @@
         }
 
         function subjectVoiceId(subject, persona) {
+            if (persona === 'zoe') return 'SUBJECT_SPANISH_01';
             if (persona === 'elena') return 'SUBJECT_SPANISH_01';
             if (subject === 'math') return 'SUBJECT_MATH_01';
             if (subject === 'science') return 'SUBJECT_SCIENCE_01';
@@ -3083,62 +3488,103 @@
 
         function renderHub(container) {
             const t = uiText[state.lang];
-            const princess = state.princess;
-            const introText = `Hello, I am ${princess.name}`;
-            const readingPrincess = getPrincessByName('Belle') || princess;
-            const mathPrincess = getPrincessByName('Elsa') || princess;
-            const sciencePrincess = getPrincessByName('Rapunzel') || princess;
-            const spanishPrincess = getPrincessByName('Elena') || getPrincessByName('Tiana') || princess;
+            const zoePrincess = getPrincessByName('Zoe');
+            const readingPrincess = getPrincessByName('Belle');
+            const mathPrincess = getPrincessByName('Elsa');
+            const sciencePrincess = getPrincessByName('Rapunzel');
+            const spanishPrincess = getPrincessByName('Zoe');
             const dueReviews = getDueReviewItems(true).length;
+
+            const roomTexts = {
+                en: {
+                    elaTitle: "Belle's Library",
+                    elaDesc: "Visit Belle's Library for letters, sounds, stories, and sight words.",
+                    mathTitle: "Elsa's Number Palace",
+                    mathDesc: "Practice with Elsa using jewels, ten frames, and number power.",
+                    sciTitle: "Rapunzel's Discovery Tower",
+                    sciDesc: "Explore animals, seasons, maps, and science surprises.",
+                    spanTitle: "Zoe's Spanish Garden",
+                    spanDesc: "Grow words in Zoe's Garden with Listen, Say, and Choose."
+                },
+                es: {
+                    elaTitle: "Biblioteca de Bella",
+                    elaDesc: "Visita la Biblioteca de Bella para aprender letras, sonidos, cuentos y palabras clave.",
+                    mathTitle: "Palacio de Números de Elsa",
+                    mathDesc: "Practica con Elsa usando joyas, marcos de diez y poder numérico.",
+                    sciTitle: "Torre de Descubrimiento de Rapunzel",
+                    sciDesc: "Explora animales, estaciones, mapas y sorpresas científicas.",
+                    spanTitle: "Jardín de Español de Zoe",
+                    spanDesc: "Cultiva palabras en el Jardín de Zoe con Escuchar, Decir y Elegir."
+                }
+            }[state.lang];
+
+            const toolbarTexts = {
+                en: {
+                    miniGames: "🎮 Mini Games",
+                    rewards: "🏅 Royal Rewards",
+                    reviewMissed: "✨ Review Missed",
+                    parentDashboard: "📊 Parent Dashboard"
+                },
+                es: {
+                    miniGames: "🎮 Minijuegos",
+                    rewards: "🏅 Recompensas Reales",
+                    reviewMissed: "✨ Repasar Errores",
+                    parentDashboard: "📊 Panel de Padres"
+                }
+            }[state.lang];
+
             container.innerHTML = `
                 <div class="home-shell animate-pop">
                     <div class="magic-book" aria-hidden="true">📖</div>
                     <h2 class="home-title">${t.title}</h2>
                     <p class="home-subtitle">${t.hubSub}</p>
-                    <div class="princess-greeting-pill">
-                            <span aria-hidden="true">👑</span>
-                            <span>${introText}${princess.greeting ? ` — ${princess.greeting}` : ''}</span>
+                    
+                    <div class="princess-guide">
+                        ${renderPrincessImage(zoePrincess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <span>${personas[state.lang].zoe.greeting}</span>
                         </div>
+                    </div>
 
                     <div class="academy-toolbar">
-                        <button onclick="navigate('miniGames')" class="academy-chip btn-kid">🎮 Mini Games</button>
-                        <button onclick="navigate('rewards')" class="academy-chip btn-kid">🏅 Royal Rewards</button>
-                        <button onclick="navigate('missedReview')" class="academy-chip btn-kid">✨ Review Missed ${dueReviews ? `(${dueReviews})` : ''}</button>
-                        <button onclick="navigate('parentDashboard')" class="academy-chip btn-kid">📊 Parent Dashboard</button>
+                        <button onclick="navigate('miniGames')" class="academy-chip btn-kid">${toolbarTexts.miniGames}</button>
+                        <button onclick="navigate('rewards')" class="academy-chip btn-kid">${toolbarTexts.rewards}</button>
+                        <button onclick="navigate('missedReview')" class="academy-chip btn-kid">${toolbarTexts.reviewMissed}${dueReviews ? ` (${dueReviews})` : ''}</button>
+                        <button onclick="navigate('parentDashboard')" class="academy-chip btn-kid">${toolbarTexts.parentDashboard}</button>
                     </div>
 
                     <div class="room-grid">
-                        <button onclick="selectSubject('ela', 'belle')" class="room-card subject-card-blue btn-kid" aria-label="Visit Belle's Library">
+                        <button onclick="selectSubject('ela', 'belle')" class="chamber-card subject-card-blue btn-kid" aria-label="Visit Belle's Library">
                             <span class="room-content">
-                                <span class="room-title">Belle's Library</span>
-                                <span class="room-desc">Visit Belle's Library for letters, sounds, stories, and sight words.</span>
+                                <span class="room-title">${roomTexts.elaTitle}</span>
+                                <span class="room-desc">${roomTexts.elaDesc}</span>
                                 <span class="room-badge">${roomStatus('ela')}</span>
                             </span>
                             ${renderPrincessImage(readingPrincess, "subject-art")}
                         </button>
                         
-                        <button onclick="selectSubject('math', 'rapunzel')" class="room-card subject-card-pink btn-kid" aria-label="Practice with Elsa">
+                        <button onclick="selectSubject('math', 'elsa')" class="chamber-card subject-card-pink btn-kid" aria-label="Practice with Elsa">
                             <span class="room-content">
-                                <span class="room-title">Elsa's Number Palace</span>
-                                <span class="room-desc">Practice with Elsa using jewels, ten frames, and number power.</span>
+                                <span class="room-title">${roomTexts.mathTitle}</span>
+                                <span class="room-desc">${roomTexts.mathDesc}</span>
                                 <span class="room-badge">${roomStatus('math')}</span>
                             </span>
                             ${renderPrincessImage(mathPrincess, "subject-art")}
                         </button>
                         
-                        <button onclick="selectSubject('science', 'moana')" class="room-card subject-card-green btn-kid" aria-label="Explore Rapunzel's Tower">
+                        <button onclick="selectSubject('science', 'rapunzel')" class="chamber-card subject-card-green btn-kid" aria-label="Explore Rapunzel's Tower">
                             <span class="room-content">
-                                <span class="room-title">Rapunzel's Discovery Tower</span>
-                                <span class="room-desc">Explore animals, seasons, maps, and science surprises.</span>
+                                <span class="room-title">${roomTexts.sciTitle}</span>
+                                <span class="room-desc">${roomTexts.sciDesc}</span>
                                 <span class="room-badge">${roomStatus('science')}</span>
                             </span>
                             ${renderPrincessImage(sciencePrincess, "subject-art")}
                         </button>
                         
-                        <button onclick="selectSubject('ela', 'elena', 'es')" class="room-card subject-card-purple btn-kid" aria-label="Grow words in Elena's Garden">
+                        <button onclick="selectSubject('ela', 'zoe', 'es')" class="chamber-card subject-card-purple btn-kid" aria-label="Grow words in Zoe's Garden">
                             <span class="room-content">
-                                <span class="room-title">Elena's Spanish Garden</span>
-                                <span class="room-desc">Grow words in Elena's Garden with Listen, Say, and Choose.</span>
+                                <span class="room-title">${roomTexts.spanTitle}</span>
+                                <span class="room-desc">${roomTexts.spanDesc}</span>
                                 <span class="room-badge">${roomStatus('ela', 'sight')}</span>
                             </span>
                             ${renderPrincessImage(spanishPrincess, "subject-art")}
@@ -3170,17 +3616,132 @@
         function renderGradeSelect(container, fromHub = false) {
             const t = uiText[state.lang];
             const target = state.subject === 'ela' ? 'elaHub' : 'subjectMenu';
+
+            const gradeTexts = {
+                en: {
+                    back: "Go Back",
+                    title: "Choose Your Grade",
+                    sub: "Which magical kingdom shall we explore today, Princess Zoe?",
+                    k: "Kindergarten",
+                    g1: "1st Grade",
+                    g2: "2nd Grade",
+                    badgeK: "Ages 4-5",
+                    badgeG1: "Ages 6-7",
+                    badgeG2: "Ages 7-8",
+                    tipTitle: "Princess Cinderella's Tip:",
+                    tipDesc: "Don't worry! You can always try a different grade later if you want a new challenge. We'll be here to help you every step of the way!"
+                },
+                es: {
+                    back: "Volver",
+                    title: "Elige tu Grado",
+                    sub: "¿Qué reino mágico exploraremos hoy, Princesa Zoe?",
+                    k: "Kínder",
+                    g1: "1er Grado",
+                    g2: "2do Grado",
+                    badgeK: "Edades 4-5",
+                    badgeG1: "Edades 6-7",
+                    badgeG2: "Edades 7-8",
+                    tipTitle: "Consejo de la Princesa Cenicienta:",
+                    tipDesc: "¡No te preocupes! Siempre puedes probar un grado diferente más tarde si quieres un nuevo desafío. ¡Estaremos aquí para ayudarte en cada paso del camino!"
+                }
+            }[state.lang];
+
+            const cinderella = getPrincessByName('Cinderella');
+
             container.innerHTML = `
-                <div class="text-center animate-pop max-w-2xl mx-auto mt-10">
-                    <button onclick="navigate('hub')" class="absolute top-0 left-0 bg-white/80 backdrop-blur text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl">${t.back}</button>
-                    <h2 class="text-4xl font-extrabold text-slate-700 mb-10 mt-16 md:mt-0">${t.gradeTitle}</h2>
-                    <div class="flex flex-col space-y-6">
-                        <button onclick="selectGrade('k', '${target}')" class="btn-kid bg-teal-300 hover:bg-teal-400 text-white p-8 rounded-[2rem] text-3xl font-bold border-b-8 border-teal-500">${t.k}</button>
-                        <button onclick="selectGrade('g1', '${target}')" class="btn-kid bg-indigo-300 hover:bg-indigo-400 text-white p-8 rounded-[2rem] text-3xl font-bold border-b-8 border-indigo-500">${t.g1}</button>
-                        <button onclick="selectGrade('g2', '${target}')" class="btn-kid bg-rose-300 hover:bg-rose-400 text-white p-8 rounded-[2rem] text-3xl font-bold border-b-8 border-rose-500">${t.g2}</button>
+                <div class="flex flex-col items-center justify-center p-6 md:p-12 gap-8 relative max-w-6xl mx-auto mt-8 animate-pop">
+                    <!-- Back Button -->
+                    <button onclick="navigate('hub')" class="absolute top-0 left-0 md:top-6 md:left-6 btn-kid group flex items-center gap-2 bg-white/80 backdrop-blur text-slate-700 px-6 py-4 rounded-full border-b-[6px] border-slate-300 font-extrabold text-lg shadow-md z-10">
+                        <span class="material-symbols-outlined font-bold" data-icon="arrow_back">arrow_back</span>
+                        <span>${gradeTexts.back}</span>
+                    </button>
+                    
+                    <!-- Title Section -->
+                    <div class="text-center mt-20 md:mt-0">
+                        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-700 mb-4">${gradeTexts.title}</h2>
+                        <p class="text-lg md:text-xl text-slate-500 max-w-xl mx-auto">${gradeTexts.sub}</p>
+                    </div>
+                    
+                    <!-- Grade Selection Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-6xl mt-8">
+                        <!-- Kindergarten Card -->
+                        <div class="flex flex-col gap-4 group">
+                            <button onclick="selectGrade('k', '${target}')" class="btn-kid relative h-72 md:h-96 w-full bg-[#2dd4bf] rounded-[2rem] overflow-hidden border-b-[12px] border-[#0f766e] flex flex-col items-center justify-center p-8 text-white transition-all hover:scale-105 shadow-xl">
+                                <div class="magical-glow"></div>
+                                <div class="absolute inset-0 opacity-20 pointer-events-none">
+                                    <div class="w-full h-full" style="background-image: radial-gradient(circle at 20% 20%, white 2px, transparent 2px); background-size: 30px 30px;"></div>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center gap-6">
+                                    <div class="bg-white/20 p-6 rounded-full backdrop-blur-sm flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-7xl md:text-8xl" data-icon="child_care">child_care</span>
+                                    </div>
+                                    <span class="font-bold text-3xl md:text-4xl text-center drop-shadow-md">${gradeTexts.k}</span>
+                                </div>
+                                <div class="absolute bottom-6 right-6 w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                                    <span class="material-symbols-outlined text-white text-3xl" data-icon="auto_awesome">auto_awesome</span>
+                                </div>
+                            </button>
+                            <div class="text-center">
+                                <span class="px-6 py-2 bg-teal-100 text-teal-800 rounded-full font-extrabold text-sm uppercase tracking-widest shadow-sm">${gradeTexts.badgeK}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 1st Grade Card -->
+                        <div class="flex flex-col gap-4 group">
+                            <button onclick="selectGrade('g1', '${target}')" class="btn-kid relative h-72 md:h-96 w-full bg-[#6366f1] rounded-[2rem] overflow-hidden border-b-[12px] border-[#3730a3] flex flex-col items-center justify-center p-8 text-white transition-all hover:scale-105 shadow-xl">
+                                <div class="magical-glow"></div>
+                                <div class="absolute inset-0 opacity-20 pointer-events-none">
+                                    <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, white, white 2px, transparent 2px, transparent 15px);"></div>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center gap-6">
+                                    <div class="bg-white/20 p-6 rounded-full backdrop-blur-sm flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-7xl md:text-8xl" data-icon="school">school</span>
+                                    </div>
+                                    <span class="font-bold text-3xl md:text-4xl text-center drop-shadow-md">${gradeTexts.g1}</span>
+                                </div>
+                                <div class="absolute bottom-6 right-6 w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                                    <span class="material-symbols-outlined text-white text-3xl" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                                </div>
+                            </button>
+                            <div class="text-center">
+                                <span class="px-6 py-2 bg-indigo-100 text-indigo-800 rounded-full font-extrabold text-sm uppercase tracking-widest shadow-sm">${gradeTexts.badgeG1}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 2nd Grade Card -->
+                        <div class="flex flex-col gap-4 group">
+                            <button onclick="selectGrade('g2', '${target}')" class="btn-kid relative h-72 md:h-96 w-full bg-[#f43f5e] rounded-[2rem] overflow-hidden border-b-[12px] border-[#9f1239] flex flex-col items-center justify-center p-8 text-white transition-all hover:scale-105 shadow-xl">
+                                <div class="magical-glow"></div>
+                                <div class="absolute inset-0 opacity-20 pointer-events-none">
+                                    <div class="w-full h-full" style="background-image: radial-gradient(circle at 50% 50%, white 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center gap-6">
+                                    <div class="bg-white/20 p-6 rounded-full backdrop-blur-sm flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-7xl md:text-8xl" data-icon="menu_book">menu_book</span>
+                                    </div>
+                                    <span class="font-bold text-3xl md:text-4xl text-center drop-shadow-md">${gradeTexts.g2}</span>
+                                </div>
+                                <div class="absolute bottom-6 right-6 w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                                    <span class="material-symbols-outlined text-white text-3xl" data-icon="workspace_premium" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                                </div>
+                            </button>
+                            <div class="text-center">
+                                <span class="px-6 py-2 bg-rose-100 text-rose-800 rounded-full font-extrabold text-sm uppercase tracking-widest shadow-sm">${gradeTexts.badgeG2}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer Character Hint -->
+                    <div class="princess-guide" style="margin-top: 32px; max-width: 768px; width: 100%;">
+                        ${renderPrincessImage(cinderella, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-bold text-pink-600 mb-1 text-lg">${gradeTexts.tipTitle}</h4>
+                            <p class="text-slate-600 leading-relaxed text-base">${gradeTexts.tipDesc}</p>
+                        </div>
                     </div>
                 </div>
             `;
+            initializePrincessImages(container);
 
             if (state.suppressNextRouteVoice) {
                 state.suppressNextRouteVoice = false;
@@ -3194,34 +3755,79 @@
 
         function renderElaHub(container) {
             const t = uiText[state.lang];
-            const extraMode = state.persona === 'elena' || state.lang === 'es'
-                ? `<button onclick="navigate('spanishPractice')" class="btn-kid bg-emerald-300 hover:bg-emerald-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between md:col-span-2"><span>Listen, Say, Choose</span><span class="text-4xl bg-white/30 p-3 rounded-full">💬</span></button>`
-                : `<button onclick="navigate('storyMode')" class="btn-kid bg-amber-300 hover:bg-amber-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between md:col-span-2"><span>Decodable Mini Stories</span><span class="text-4xl bg-white/30 p-3 rounded-full">📚</span></button>`;
+            const isSpanish = state.persona === 'elena' || state.lang === 'es';
+            const guidePrincess = isSpanish ? getPrincessByName('Zoe') : getPrincessByName('Belle');
+            
+            const title = isSpanish ? "Zoe's Spanish Garden" : "Belle's Library";
+            const sub = isSpanish 
+                ? "¡Bienvenidos al Jardín de Español! Let's practice reading and vocabulary!" 
+                : "Welcome to my Library! Let's practice reading and phonics today!";
+            const greetingText = isSpanish 
+                ? "¡Hola! Soy Zoe. Let's learn Spanish letters, sounds, and words together!" 
+                : "Hello, Princess! I'm Belle. Let's explore letters, sounds, stories, and sight words together!";
+            
+            const extraMode = isSpanish
+                ? `<button onclick="navigate('spanishPractice')" class="btn-kid bg-emerald-400 hover:bg-emerald-500 text-white p-6 rounded-[2rem] border-b-[8px] border-emerald-600 text-2xl font-bold flex items-center justify-between md:col-span-2">
+                    <span>Listen, Say, Choose</span>
+                    <span class="text-4xl bg-white/30 p-3 rounded-full">💬</span>
+                   </button>`
+                : `<button onclick="navigate('storyMode')" class="btn-kid bg-amber-400 hover:bg-amber-500 text-white p-6 rounded-[2rem] border-b-[8px] border-amber-600 text-2xl font-bold flex items-center justify-between md:col-span-2">
+                    <span>Decodable Mini Stories</span>
+                    <span class="text-4xl bg-white/30 p-3 rounded-full">📚</span>
+                   </button>`;
+
             container.innerHTML = `
-                <div class="text-center animate-pop max-w-4xl mx-auto mt-10">
-                    <button onclick="navigate('gradeSelect')" class="absolute top-0 left-0 bg-white/80 backdrop-blur text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl">${t.back}</button>
-                    <h2 class="text-4xl font-extrabold text-slate-700 mb-10 mt-16 md:mt-0">${t.elaHubTitle}</h2>
+                <div class="flex flex-col items-center justify-center p-6 md:p-12 gap-8 relative max-w-5xl mx-auto mt-8 animate-pop">
+                    <!-- Back Button -->
+                    <button onclick="navigate('gradeSelect')" class="absolute top-0 left-0 md:top-6 md:left-6 btn-kid group flex items-center gap-2 bg-white/80 backdrop-blur text-slate-700 px-6 py-4 rounded-full border-b-[6px] border-slate-300 font-extrabold text-lg shadow-md z-10">
+                        <span class="material-symbols-outlined font-bold" data-icon="arrow_back">arrow_back</span>
+                        <span>${t.back}</span>
+                    </button>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                        <button onclick="selectElaCategory('letters')" class="btn-kid bg-blue-300 hover:bg-blue-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between">
-                            <span>${t.btnLearnLetters}</span><span class="text-4xl bg-white/30 p-3 rounded-full">🔤</span>
-                        </button>
-                        <button onclick="selectElaCategory('match')" class="btn-kid bg-pink-300 hover:bg-pink-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between">
-                            <span>${t.btnMatchSounds}</span><span class="text-4xl bg-white/30 p-3 rounded-full">🧩</span>
-                        </button>
-                        <button onclick="selectElaCategory('blend')" class="btn-kid bg-purple-300 hover:bg-purple-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between">
-                            <span>${t.btnBlendWords}</span><span class="text-4xl bg-white/30 p-3 rounded-full">🗣️</span>
-                        </button>
-                        <button onclick="selectElaCategory('sentences')" class="btn-kid bg-orange-300 hover:bg-orange-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between">
-                            <span>${t.btnReadSentences}</span><span class="text-4xl bg-white/30 p-3 rounded-full">📖</span>
-                        </button>
-                        <button onclick="selectElaCategory('sight')" class="btn-kid bg-green-300 hover:bg-green-400 text-white p-6 rounded-3xl text-2xl font-bold flex items-center justify-between md:col-span-2 md:w-2/3 mx-auto">
-                            <span>${t.btnSightWords}</span><span class="text-4xl bg-white/30 p-3 rounded-full">👁️</span>
-                        </button>
-                        ${extraMode}
+                    <!-- Title Section -->
+                    <div class="text-center mt-20 md:mt-0">
+                        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-700 mb-4">${title}</h2>
+                        <p class="text-lg md:text-xl text-slate-500 max-w-xl mx-auto">${sub}</p>
+                    </div>
+                    
+                    <!-- Princess Guide Box -->
+                    <div class="princess-guide" style="margin-top: 16px; max-width: 768px; width: 100%;">
+                        ${renderPrincessImage(guidePrincess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-bold text-pink-600 mb-1 text-lg">${guidePrincess.name}</h4>
+                            <p class="text-slate-600 leading-relaxed text-base">${greetingText}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Card: Storybook / Gold Frame Styling -->
+                    <div class="activity-card w-full max-w-4xl mt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <button onclick="selectElaCategory('letters')" class="btn-kid bg-blue-400 hover:bg-blue-500 text-white p-6 rounded-[2rem] border-b-[8px] border-blue-600 text-2xl font-bold flex items-center justify-between">
+                                <span>${t.btnLearnLetters}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">🔤</span>
+                            </button>
+                            <button onclick="selectElaCategory('match')" class="btn-kid bg-pink-400 hover:bg-pink-500 text-white p-6 rounded-[2rem] border-b-[8px] border-pink-600 text-2xl font-bold flex items-center justify-between">
+                                <span>${t.btnMatchSounds}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">🧩</span>
+                            </button>
+                            <button onclick="selectElaCategory('blend')" class="btn-kid bg-purple-400 hover:bg-purple-500 text-white p-6 rounded-[2rem] border-b-[8px] border-purple-600 text-2xl font-bold flex items-center justify-between">
+                                <span>${t.btnBlendWords}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">🗣️</span>
+                            </button>
+                            <button onclick="selectElaCategory('sentences')" class="btn-kid bg-orange-400 hover:bg-orange-500 text-white p-6 rounded-[2rem] border-b-[8px] border-orange-600 text-2xl font-bold flex items-center justify-between">
+                                <span>${t.btnReadSentences}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">📖</span>
+                            </button>
+                            <button onclick="selectElaCategory('sight')" class="btn-kid bg-green-400 hover:bg-green-500 text-white p-6 rounded-[2rem] border-b-[8px] border-green-600 text-2xl font-bold flex items-center justify-between md:col-span-2 md:w-2/3 mx-auto">
+                                <span>${t.btnSightWords}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">👁️</span>
+                            </button>
+                            ${extraMode}
+                        </div>
                     </div>
                 </div>
             `;
+            initializePrincessImages(container);
             if (state.suppressNextRouteVoice) {
                 state.suppressNextRouteVoice = false;
             } else {
@@ -3231,26 +3837,72 @@
 
         function renderSubjectMenu(container) {
             const t = uiText[state.lang];
-            const title = state.subject === 'math'
-                ? "Choose Math Practice"
-                : "Choose Discovery Practice";
-            const richButton = state.subject === 'math'
-                ? `<button onclick="navigate('visualMath')" class="btn-kid bg-pink-300 hover:bg-pink-400 text-white p-8 rounded-[2rem] text-3xl font-bold">🔢 Visual Math</button>`
-                : `<button onclick="navigate('scienceSort')" class="btn-kid bg-green-300 hover:bg-green-400 text-white p-8 rounded-[2rem] text-3xl font-bold">🔬 Sorting Lab</button>`;
+            const isMath = state.subject === 'math';
+            const guidePrincess = isMath ? getPrincessByName('Elsa') : getPrincessByName('Rapunzel');
+            
+            const title = isMath ? "Elsa's Number Palace" : "Rapunzel's Discovery Tower";
+            const sub = isMath 
+                ? "Welcome to my Number Palace! Let's explore some math together!" 
+                : "Welcome to my Discovery Tower! Let's explore science and sorting together!";
+            const greetingText = isMath 
+                ? (state.lang === 'en' ? "Hi! I'm Elsa. Let's practice with numbers and frames!" : "¡Hola! Soy Elsa. ¡Practiquemos con números y marcos!")
+                : (state.lang === 'en' ? "Hi! I'm Rapunzel. Let's discover science and sorting!" : "¡Hola! Soy Rapunzel. ¡Descubramos la ciencia y la clasificación!");
+
+            const richButton = isMath
+                ? `<button onclick="navigate('visualMath')" class="btn-kid bg-pink-400 hover:bg-pink-500 text-white p-6 rounded-[2rem] border-b-[8px] border-pink-600 text-2xl font-bold flex items-center justify-between">
+                    <span>🔢 Visual Math</span>
+                    <span class="text-3xl bg-white/30 p-2 rounded-full">⚡</span>
+                   </button>`
+                : `<button onclick="navigate('scienceSort')" class="btn-kid bg-green-400 hover:bg-green-500 text-white p-6 rounded-[2rem] border-b-[8px] border-green-600 text-2xl font-bold flex items-center justify-between">
+                    <span>🔬 Sorting Lab</span>
+                    <span class="text-3xl bg-white/30 p-2 rounded-full">⚡</span>
+                   </button>`;
+
             container.innerHTML = `
-                <div class="text-center animate-pop max-w-3xl mx-auto mt-10">
-                    <button onclick="navigate('gradeSelect')" class="absolute top-0 left-0 bg-white/80 backdrop-blur text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl">${t.back}</button>
-                    <h2 class="text-4xl font-extrabold text-slate-700 mb-8 mt-16 md:mt-0">${title}</h2>
-                    <div class="grid grid-cols-1 gap-6">
-                        <button onclick="startSubjectLecture()" class="btn-kid bg-blue-300 hover:bg-blue-400 text-white p-8 rounded-[2rem] text-3xl font-bold">⭐ Princess Practice</button>
-                        ${richButton}
-                        <button onclick="navigate('miniGames')" class="btn-kid bg-yellow-300 hover:bg-yellow-400 text-yellow-900 p-8 rounded-[2rem] text-3xl font-bold">🎮 Mini Games</button>
+                <div class="flex flex-col items-center justify-center p-6 md:p-12 gap-8 relative max-w-4xl mx-auto mt-8 animate-pop">
+                    <!-- Back Button -->
+                    <button onclick="navigate('gradeSelect')" class="absolute top-0 left-0 md:top-6 md:left-6 btn-kid group flex items-center gap-2 bg-white/80 backdrop-blur text-slate-700 px-6 py-4 rounded-full border-b-[6px] border-slate-300 font-extrabold text-lg shadow-md z-10">
+                        <span class="material-symbols-outlined font-bold" data-icon="arrow_back">arrow_back</span>
+                        <span>${t.back}</span>
+                    </button>
+                    
+                    <!-- Title Section -->
+                    <div class="text-center mt-20 md:mt-0">
+                        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-700 mb-4">${title}</h2>
+                        <p class="text-lg md:text-xl text-slate-500 max-w-xl mx-auto">${sub}</p>
+                    </div>
+                    
+                    <!-- Princess Guide Box -->
+                    <div class="princess-guide" style="margin-top: 16px; max-width: 768px; width: 100%;">
+                        ${renderPrincessImage(guidePrincess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-bold text-pink-600 mb-1 text-lg">${guidePrincess.name}</h4>
+                            <p class="text-slate-600 leading-relaxed text-base">${greetingText}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Card: Storybook / Gold Frame Styling -->
+                    <div class="activity-card w-full max-w-3xl mt-4">
+                        <div class="flex flex-col gap-6">
+                            <button onclick="startSubjectLecture()" class="btn-kid bg-blue-400 hover:bg-blue-500 text-white p-6 rounded-[2rem] border-b-[8px] border-blue-600 text-2xl font-bold flex items-center justify-between">
+                                <span>⭐ Princess Practice</span>
+                                <span class="text-3xl bg-white/30 p-2 rounded-full">✨</span>
+                            </button>
+                            ${richButton}
+                            <button onclick="navigate('miniGames')" class="btn-kid bg-yellow-400 hover:bg-yellow-500 text-yellow-900 p-6 rounded-[2rem] border-b-[8px] border-yellow-600 text-2xl font-bold flex items-center justify-between">
+                                <span>🎮 Mini Games</span>
+                                <span class="text-3xl bg-white/30 p-2 rounded-full">👑</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
+            initializePrincessImages(container);
         }
 
         // --- ENGINE: DYNAMIC RENDERER ---
+
+
         function renderActivity(container) {
             state.consecutiveMisses = 0;
             if (typeof clearVisualHints === 'function') {
@@ -3274,118 +3926,219 @@
             }
 
             const backTarget = state.subject === 'ela' ? 'elaHub' : 'gradeSelect';
-            let html = `<button onclick="navigate('${backTarget}')" class="absolute top-0 left-0 bg-white/80 backdrop-blur text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl z-20">${t.back}</button>`;
-            html += `<div class="absolute top-0 right-0 mt-0 mr-0 md:mt-1 md:mr-1 flex items-center gap-2 rounded-full border bg-white/90 px-3 py-2 shadow-md backdrop-blur-sm" style="border-color: ${princess.themeColor};">
-                        ${renderPrincessImage(princess, "h-10 w-10 rounded-full object-cover border border-white shadow-sm")}
-                        <span class="hidden sm:inline text-sm font-bold text-slate-700">${princess.name}</span>
-                    </div>`;
-            
-            // Layout Shell
-            html += `<div class="grade-${state.grade || 'k'} animate-pop text-center max-w-3xl mx-auto pt-16 md:pt-10">`;
-            html += `<div class="mb-4 text-sm font-extrabold text-slate-500">${Math.min(state.activityIndex + 1, dataset.length)} / ${dataset.length}${activityRef.isRetry ? ' • Review' : ''}</div>`;
+
+            // Skill mappings for parent insights
+            const skillMap = {
+                'letters': state.lang === 'en' ? 'Letter Identification & Sounds' : 'Identificación de Letras y Sonidos',
+                'match': state.lang === 'en' ? 'Phonics & Sound Matching' : 'Fonética y Asociación de Sonidos',
+                'blend': state.lang === 'en' ? 'Word Blending & Decoding' : 'Combinación y Decodificación de Palabras',
+                'sentences': state.lang === 'en' ? 'Sentence Reading & Comprehension' : 'Lectura y Comprensión de Oraciones',
+                'sight': state.lang === 'en' ? 'Sight Words Recognition' : 'Reconocimiento de Palabras Comunes',
+                'math': state.lang === 'en' ? 'Mathematical Reasoning & Operations' : 'Razonamiento Matemático y Operaciones',
+                'science': state.lang === 'en' ? 'Scientific Observation & Categorization' : 'Observación Científica y Categorización',
+                'practice': state.lang === 'en' ? 'General Skill Practice' : 'Práctica de Habilidades Generales'
+            };
+            const skillLabel = skillMap[state.elaCategory] || skillMap[state.subject] || skillMap['practice'];
+
+            // Instruction Text depending on type
+            let instructionText = '';
+            if (data.type === 'quiz') {
+                instructionText = data.q;
+            } else if (data.type === 'listening') {
+                instructionText = data.q;
+            } else if (data.type === 'blend') {
+                instructionText = state.lang === 'en' ? 'Tap each sound, then read the word!' : '¡Toca cada sonido y lee la palabra!';
+            } else if (data.type === 'sentence') {
+                instructionText = state.lang === 'en' ? 'Tap the words to read the sentence!' : '¡Toca las palabras para leer la oración!';
+            } else {
+                instructionText = state.lang === 'en' ? 'Look at this card! Can you read it?' : '¡Mira esta tarjeta! ¿Puedes leerla?';
+            }
+
+            // Outer container with grade class for grade-based themes
+            let html = `<div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">`;
+
+            // Clear, spacious header with Back Button and Progress Indicators
+            html += `
+                <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                    <button onclick="navigate('${backTarget}')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
+                        <span>⬅️</span> <span>${t.back}</span>
+                    </button>
+                    <div class="text-lg font-black text-slate-600 bg-white/90 px-6 py-2.5 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
+                        <span>📖</span>
+                        <span>${Math.min(state.activityIndex + 1, dataset.length)} / ${dataset.length}${activityRef.isRetry ? ' • ' + (state.lang === 'en' ? 'Review' : 'Repaso') : ''}</span>
+                    </div>
+                </div>
+            `;
+
+            // Princess Guide Banner (Guide portrait + Bubble greeting instruction)
+            html += `
+                <div class="princess-guide w-full mb-6">
+                    ${renderPrincessImage(princess, "princess-guide-avatar")}
+                    <div class="voice-bubble">
+                        <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                            <span>${princess.name}</span>
+                            <span class="text-xs uppercase tracking-wider text-slate-400 font-extrabold">${skillLabel}</span>
+                        </h4>
+                        <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${instructionText}</p>
+                    </div>
+                </div>
+            `;
+
+            // Storybook/Gold framed lesson card container
+            html += `<div class="activity-card w-full p-6 md:p-10 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">`;
+
+            // Hint UI Placeholder (visual only, no AI calls)
+            html += `
+                <div class="absolute top-4 right-4 z-10">
+                    <button onclick="toggleVisualHintBubble(event)" class="btn-kid bg-purple-50 hover:bg-purple-100 text-purple-700 border-2 border-purple-200 rounded-full px-4 py-2 font-black text-sm flex items-center gap-1.5 shadow-sm">
+                        <span>✨</span> <span>${state.lang === 'en' ? 'Hint' : 'Ayuda'}</span>
+                    </button>
+                    <div id="hint-tooltip-bubble" class="hidden absolute right-0 mt-3 w-64 bg-purple-900 text-white text-sm font-bold rounded-2xl p-4 shadow-xl border border-purple-500 after:content-[''] after:absolute after:bottom-full after:right-5 after:border-8 after:border-transparent after:border-b-purple-900">
+                        <p class="leading-relaxed">${state.lang === 'en' ? "Listen to the guide's audio again or check the options carefully!" : "¡Escucha el audio de la guía otra vez o revisa las opciones con cuidado!"}</p>
+                    </div>
+                </div>
+            `;
 
             if (data.type === 'flashcard') {
                 html += `
-                    <div class="bg-white border-4 border-blue-200 rounded-[3rem] p-10 shadow-xl mb-10 cursor-pointer hover:bg-blue-50 transition" onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })'>
-                        <div class="text-8xl md:text-9xl font-black text-slate-800 tracking-widest">${data.item}</div>
-                        <div class="mt-8 text-8xl">${data.emoji}</div>
-                        <div class="text-4xl font-bold text-slate-600 mt-6">${data.desc}</div>
+                    <div class="p-8 cursor-pointer hover:bg-slate-50/50 rounded-3xl transition duration-200 mb-6 mt-4" onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })'>
+                        <div class="text-8xl md:text-9xl font-black text-slate-800 tracking-widest mb-6">${data.item}</div>
+                        <div class="text-7xl mb-4">${data.emoji}</div>
+                        <div class="text-3xl font-extrabold text-slate-600">${data.desc}</div>
                     </div>
-                    <div class="grid grid-cols-2 gap-6">
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid bg-yellow-400 text-yellow-900 font-bold text-2xl py-6 rounded-[2rem] flex items-center justify-center space-x-2">
+                    
+                    <div class="audio-controls justify-center mb-8">
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-primary">
                             <span>🔊</span> <span>${t.read}</span>
                         </button>
-                        <button onclick="nextActivity()" class="btn-kid bg-blue-400 hover:bg-blue-500 text-white font-bold text-2xl py-6 rounded-[2rem]">${t.next}</button>
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-replay">
+                            <span>🔁</span>
+                        </button>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button onclick="nextActivity()" class="btn-kid bg-blue-500 hover:bg-blue-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-blue-700 w-full max-w-xs">${t.next}</button>
                     </div>
                 `;
-                if (!shouldSkipActivityRoutineVoice()) playActivityIntro(data);
             } 
             else if (data.type === 'quiz') {
-                // Randomize options
                 const opts = [...data.options].sort(() => Math.random() - 0.5);
                 html += `
-                    <div class="bg-white border-4 border-pink-200 rounded-[3rem] p-8 shadow-xl mb-10 cursor-pointer" onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })'>
-                        <p class="text-4xl font-extrabold text-slate-800 mb-4">${data.q}</p>
-                        ${data.emoji ? `<div class="text-7xl mt-4">${data.emoji}</div>` : ''}
+                    <div class="p-6 cursor-pointer hover:bg-slate-50/50 rounded-3xl transition duration-200 mb-6 mt-4" onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })'>
+                        <p class="text-3xl font-extrabold text-slate-800 mb-4">${data.q}</p>
+                        ${data.emoji ? `<div class="text-7xl">${data.emoji}</div>` : ''}
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="audio-controls justify-center mb-8">
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-primary">
+                            <span>🔊</span> <span>${t.read}</span>
+                        </button>
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-replay">
+                            <span>🔁</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         ${opts.map((opt) => `
-                            <button data-answer-option onclick='handleQuizAnswer(${jsString(opt)}, ${jsString(data.a)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-pink-300 rounded-[2rem] p-8 text-3xl font-bold text-slate-700">
+                            <button data-answer-option onclick='handleQuizAnswer(${jsString(opt)}, ${jsString(data.a)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-pink-300 rounded-[2rem] p-6 text-2xl font-black text-slate-700 shadow-md border-b-[8px] transition duration-200">
                                 ${opt}
                             </button>
                         `).join('')}
                     </div>
                 `;
-                if (!shouldSkipActivityRoutineVoice()) playActivityIntro(data);
             }
             else if (data.type === 'listening') {
                 const opts = shuffleArray(data.options || []);
                 html += `
-                    <div class="bg-white border-4 border-sky-200 rounded-[3rem] p-8 shadow-xl mb-8">
+                    <div class="bg-blue-50/60 border-4 border-blue-100 rounded-[2rem] p-8 shadow-sm mb-6 mt-4">
                         <div class="text-6xl mb-4">${data.emoji || '🎧'}</div>
-                        <p class="text-2xl md:text-3xl font-bold text-slate-700 leading-snug mb-6">${data.story}</p>
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.story)} })' class="btn-kid bg-yellow-400 text-yellow-900 font-bold text-xl px-7 py-4 rounded-full inline-flex items-center space-x-2">
-                            <span>🔊</span> <span>${t.read}</span>
-                        </button>
+                        <p class="text-xl md:text-2xl font-bold text-slate-700 leading-relaxed mb-6">${data.story}</p>
+                        <div class="audio-controls justify-center">
+                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.story)} })' class="btn-kid btn-audio-primary">
+                                <span>🔊</span> <span>${t.read}</span>
+                            </button>
+                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.story)} })' class="btn-kid btn-audio-replay">
+                                <span>🔁</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="bg-white/90 border-4 border-pink-100 rounded-[2rem] p-6 shadow-lg mb-8">
-                        <p class="text-3xl font-extrabold text-slate-800">${data.q}</p>
+                    
+                    <div class="bg-pink-50/50 border-2 border-pink-100 rounded-[1.5rem] p-6 mb-6">
+                        <p class="text-2xl font-black text-slate-800">${data.q}</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         ${opts.map((opt) => `
-                            <button data-answer-option onclick='handleQuizAnswer(${jsString(opt)}, ${jsString(data.a)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-sky-300 rounded-[2rem] p-8 text-3xl font-bold text-slate-700">
+                            <button data-answer-option onclick='handleQuizAnswer(${jsString(opt)}, ${jsString(data.a)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-sky-300 rounded-[2rem] p-6 text-2xl font-black text-slate-700 shadow-md border-b-[8px] transition duration-200">
                                 ${opt}
                             </button>
                         `).join('')}
                     </div>
                 `;
-                if (!shouldSkipActivityRoutineVoice()) playActivityIntro(data);
             }
             else if (data.type === 'blend') {
                 html += `
-                    <div class="text-9xl mb-8 animate-bounce-slight">${data.emoji}</div>
-                    <div class="flex flex-wrap justify-center gap-4 mb-10">
+                    <div class="text-8xl mb-8 mt-4 animate-bounce-slight">${data.emoji}</div>
+                    
+                    <div class="flex flex-wrap justify-center gap-4 mb-8">
                         ${data.sounds.map((sound, i) => `
-                            <button onclick='playRoutineVoice("BLEND_SOUND_DYNAMIC", { fallbackText: ${jsString(data.phonemes[i])} })' class="btn-kid w-24 h-24 md:w-32 md:h-32 bg-white border-4 border-purple-200 rounded-[2rem] text-5xl md:text-7xl font-bold text-slate-700 flex items-center justify-center hover:bg-purple-50">
+                            <button onclick='playRoutineVoice("BLEND_SOUND_DYNAMIC", { fallbackText: ${jsString(data.phonemes[i])} })' class="btn-kid w-24 h-24 md:w-28 md:h-28 bg-white border-4 border-purple-200 hover:border-purple-300 rounded-[2rem] text-4xl md:text-5xl font-black text-slate-700 flex items-center justify-center shadow-md border-b-[8px] transition duration-200">
                                 ${sound}
                             </button>
                         `).join('')}
                     </div>
-                    <div class="flex flex-col space-y-6 max-w-sm mx-auto">
-                        <button onclick='playRoutineVoice("BLEND_WORD_DYNAMIC", { fallbackText: ${jsString(data.item)} })' class="btn-kid bg-purple-400 hover:bg-purple-500 text-white font-bold text-3xl py-6 rounded-full flex items-center justify-center space-x-3">
+
+                    <div class="audio-controls justify-center mb-8">
+                        <button onclick='playRoutineVoice("BLEND_WORD_DYNAMIC", { fallbackText: ${jsString(data.item)} })' class="btn-kid btn-audio-primary">
                             <span>🗣️</span> <span>${t.read}</span>
                         </button>
-                        <button onclick="nextActivity()" class="btn-kid bg-slate-200 text-slate-700 font-bold text-2xl py-5 rounded-full">${t.next}</button>
+                        <button onclick='playRoutineVoice("BLEND_WORD_DYNAMIC", { fallbackText: ${jsString(data.item)} })' class="btn-kid btn-audio-replay">
+                            <span>🔁</span>
+                        </button>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button onclick="nextActivity()" class="btn-kid bg-purple-500 hover:bg-purple-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-purple-700 w-full max-w-xs">${t.next}</button>
                     </div>
                 `;
-                if (!shouldSkipActivityRoutineVoice()) playActivityIntro(data);
             }
             else if (data.type === 'sentence') {
                 const words = data.text.split(' ');
                 html += `
-                    <div class="bg-white p-8 rounded-[3rem] shadow-lg border-4 border-orange-100 flex flex-wrap justify-center gap-4 mb-12">
+                    <div class="bg-orange-50/50 p-8 rounded-[2.5rem] shadow-sm border-4 border-orange-100 flex flex-wrap justify-center gap-4 mb-8 mt-4">
                         ${words.map(w => {
                             const cleanWord = w.replace(/[^\w\sáéíóúüñ]/gi, ""); 
                             return `
-                                <button onclick='playRoutineVoice("SENTENCE_WORD_DYNAMIC", { fallbackText: ${jsString(cleanWord)} })' class="text-5xl md:text-6xl font-bold text-slate-800 hover:text-orange-400 transition-colors p-2 rounded-xl hover:bg-orange-50">
+                                <button onclick='playRoutineVoice("SENTENCE_WORD_DYNAMIC", { fallbackText: ${jsString(cleanWord)} })' class="text-4xl md:text-5xl font-black text-slate-800 hover:text-orange-500 transition-colors p-2 rounded-xl hover:bg-orange-50">
                                     ${w}
                                 </button>
                             `;
                         }).join('')}
                     </div>
-                    <div class="flex justify-center space-x-6">
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.text)} })' class="btn-kid bg-yellow-400 text-yellow-900 font-bold text-2xl px-8 py-6 rounded-full flex items-center space-x-3">
+
+                    <div class="audio-controls justify-center mb-8">
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.text)} })' class="btn-kid btn-audio-primary">
                             <span>🔊</span> <span>${t.read}</span>
                         </button>
-                        <button onclick="nextActivity()" class="btn-kid bg-orange-400 hover:bg-orange-500 text-white font-bold text-2xl px-8 py-6 rounded-full">${t.next}</button>
+                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.text)} })' class="btn-kid btn-audio-replay">
+                            <span>🔁</span>
+                        </button>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button onclick="nextActivity()" class="btn-kid bg-orange-500 hover:bg-orange-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-orange-700 w-full max-w-xs">${t.next}</button>
                     </div>
                 `;
-                if (!shouldSkipActivityRoutineVoice()) playActivityIntro(data);
             }
 
-            html += `</div>`;
+            html += `</div>`; // closes .activity-card
+            html += `</div>`; // closes grade container
             container.innerHTML = html;
             initializePrincessImages(container);
+
+            if (!shouldSkipActivityRoutineVoice()) {
+                playActivityIntro(data);
+            }
         }
 
         function completeLessonSet() {
@@ -3419,20 +4172,68 @@
         function renderLessonComplete(container) {
             const t = uiText[state.lang];
             const princess = subjectGuidePrincess();
+            const zoe = getPrincessByName('Zoe');
+            const rewards = [
+                ['first-crown', 'First Crown', '👑'],
+                ['lesson-certificate', 'Lesson Certificate', '📜'],
+                ['royal-mastery', 'Royal Mastery Badge', '💎'],
+                ['review-hero', 'Royal Review Hero', '🛡️'],
+                ['sparkle-streak', 'Sparkle Streak', '🔥']
+            ];
+            const unlockedHtml = rewards.map(([id, title, emoji]) => {
+                const unlocked = state.unlockedRewards?.unlocked?.[id];
+                return `
+                    <div class="flex flex-col items-center">
+                        <div class="reward-badge ${unlocked ? '' : 'opacity-40 grayscale'} flex items-center justify-center text-3xl select-none" title="${title}">
+                            ${unlocked ? emoji : '🔒'}
+                        </div>
+                        <span class="text-xs font-bold text-slate-500 mt-2">${title}</span>
+                    </div>
+                `;
+            }).join('');
+
             container.innerHTML = `
-                <div class="animate-pop text-center max-w-2xl mx-auto pt-16">
-                    <div class="mb-6 flex justify-center">
-                        <div class="rounded-[2rem] border-4 bg-white/95 p-3 shadow-lg" style="border-color: ${princess.themeColor};">
-                            ${renderPrincessImage(princess, "h-28 w-28 md:h-32 md:w-32 rounded-[1.5rem] object-cover bg-white")}
+                <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
+                    <!-- Zoe hosting the celebration banner -->
+                    <div class="princess-guide w-full mb-6">
+                        ${renderPrincessImage(zoe, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                                <span>${zoe.name}</span>
+                                <span class="skill-label uppercase tracking-wider text-xs">${state.lang === 'en' ? 'Royal Celebration' : 'Celebración Real'}</span>
+                            </h4>
+                            <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${state.lang === 'en' ? "Amazing job! You finished your lesson! Keep shining!" : "¡Trabajo increíble! ¡Terminaste tu lección! ¡Sigue brillando!"}</p>
                         </div>
                     </div>
-                    <div class="bg-white border-4 border-yellow-300 rounded-[3rem] p-10 shadow-xl">
-                        <div class="text-8xl mb-5">🏆</div>
-                        <h2 class="text-4xl md:text-5xl font-black text-slate-800 mb-4">${t.lessonComplete}</h2>
-                        <p class="text-2xl text-slate-600 font-semibold mb-8">${t.lessonPrompt}</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <button onclick="playAgain()" class="btn-kid bg-yellow-400 text-yellow-900 font-bold text-2xl py-5 rounded-[2rem]">${t.playAgain}</button>
-                            <button onclick="chooseSomethingNew()" class="btn-kid bg-blue-400 hover:bg-blue-500 text-white font-bold text-2xl py-5 rounded-[2rem]">${t.chooseNew}</button>
+
+                    <div class="activity-card w-full p-8 md:p-12 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">
+                        <div class="text-7xl mb-4 animate-bounce-slight">🏆</div>
+                        <h2 class="text-4xl font-extrabold text-slate-800 mb-2">${t.lessonComplete}</h2>
+                        
+                        <div class="progress-stars justify-center my-6">
+                            ${Array.from({ length: 5 }, () => `<span class="text-3xl animate-pulse">⭐</span>`).join('')}
+                        </div>
+                        
+                        <p class="text-2xl font-black text-amber-500 mb-6">
+                            🌟 ${state.stars[state.lang] || 0} ${state.lang === 'en' ? 'Stars Collected' : 'Estrellas Coleccionadas'}
+                        </p>
+
+                        <!-- Badges Cabinet -->
+                        <div class="bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-6 mb-8">
+                            <h4 class="text-lg font-bold text-slate-700 mb-4">${state.lang === 'en' ? 'Royal Rewards Cabinet' : 'Gabinete de Premios Reales'}</h4>
+                            <div class="flex flex-wrap items-center justify-center gap-6">
+                                ${unlockedHtml}
+                            </div>
+                        </div>
+
+                        <!-- Navigation Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <button onclick="playAgain()" class="btn-kid bg-yellow-400 text-yellow-900 hover:bg-yellow-500 font-bold text-2xl py-5 rounded-[2rem] border-b-[8px] border-yellow-500 active:border-b-2 active:translate-y-1 transition duration-150">
+                                ${t.playAgain}
+                            </button>
+                            <button onclick="chooseSomethingNew()" class="btn-kid bg-sky-400 text-white hover:bg-sky-500 font-bold text-2xl py-5 rounded-[2rem] border-b-[8px] border-sky-500 active:border-b-2 active:translate-y-1 transition duration-150">
+                                ${t.chooseNew}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -3616,6 +4417,14 @@
             });
         }
 
+        window.toggleVisualHintBubble = function(event) {
+            if (event) event.stopPropagation();
+            const tooltip = document.getElementById('hint-tooltip-bubble');
+            if (tooltip) {
+                tooltip.classList.toggle('hidden');
+            }
+        };
+
         function getCappedOptions(item, correctAnswer, maxCount) {
             let opts = [];
             if (item && Array.isArray(item.options)) {
@@ -3680,56 +4489,182 @@
             const rows = buildProgressRows();
             const recs = buildRecommendations();
             const missed = getMostMissed();
+
+            const zoe = getPrincessByName('Zoe');
+
+            const totalAttempts = state.performance.totalCorrect + state.performance.totalIncorrect;
+            const overallAccuracy = totalAttempts > 0 ? Math.round((state.performance.totalCorrect / totalAttempts) * 100) : 100;
+
+            let insightText = "";
+            if (totalAttempts === 0) {
+                insightText = state.lang === 'en' 
+                    ? "No practice sessions recorded yet. Start a lesson to generate personalized learning insights!" 
+                    : "Aún no se han registrado sesiones de práctica. ¡Inicia una lección para generar comentarios de aprendizaje personalizados!";
+            } else if (overallAccuracy >= 85) {
+                insightText = state.lang === 'en'
+                    ? `Outstanding! Zoe is showing a strong grasp of current activities with an accuracy of ${overallAccuracy}%. They are ready for more advanced challenges!`
+                    : `¡Sobresaliente! Zoe está demostrando una sólida comprensión de las actividades con una precisión del ${overallAccuracy}%. ¡Está lista para desafíos más avanzados!`;
+            } else if (overallAccuracy >= 70) {
+                insightText = state.lang === 'en'
+                    ? `Doing great! Zoe is learning steadily with an accuracy of ${overallAccuracy}%. Encouraging them to review missed questions will help solidify their progress.`
+                    : `¡Va muy bien! Zoe está aprendiendo constantemente con una precisión del ${overallAccuracy}%. Animarla a repasar las preguntas falladas ayudará a consolidar su progreso.`;
+            } else {
+                insightText = state.lang === 'en'
+                    ? `Zoe is practicing hard! With an accuracy of ${overallAccuracy}%, focus on playing ELA Letter games or Math count rounds together to boost their confidence.`
+                    : `¡Zoe está practicando duro! Con una precisión del ${overallAccuracy}%, concéntrense en jugar juntos a las letras en ELA o a contar en Matemáticas para aumentar su confianza.`;
+            }
+
+            const metrics = [
+                { label: state.lang === 'en' ? 'Total Stars' : 'Estrellas Totales', value: totalStars, icon: '⭐' },
+                { label: state.lang === 'en' ? 'Completed Lessons' : 'Lecciones Completadas', value: state.completedLessons.total, icon: '📜' },
+                { label: state.lang === 'en' ? 'Correct Answers' : 'Respuestas Correctas', value: state.performance.totalCorrect, icon: '✅' },
+                { label: state.lang === 'en' ? 'Incorrect Answers' : 'Respuestas Incorrectas', value: state.performance.totalIncorrect, icon: '❌' },
+                { label: state.lang === 'en' ? 'Total Sessions' : 'Sesiones Totales', value: state.practiceSessions.total, icon: '⏱️' },
+                { label: state.lang === 'en' ? 'Last Practiced' : 'Última Práctica', value: state.practiceSessions.lastPracticed ? new Date(state.practiceSessions.lastPracticed).toLocaleDateString() : (state.lang === 'en' ? 'Not yet' : 'Aún no'), icon: '📅' },
+                { label: state.lang === 'en' ? 'Active Reviews' : 'Repasos Activos', value: getDueReviewItems(true).length, icon: '🔄' },
+                { label: state.lang === 'en' ? 'Rewards Earned' : 'Premios Ganados', value: Object.keys(state.unlockedRewards.unlocked || {}).length, icon: '🏆' }
+            ];
+
             container.innerHTML = `
-                <div class="parent-shell animate-pop">
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div class="parent-shell animate-pop max-w-5xl mx-auto pt-6 px-4">
+                    <!-- Dashboard Header -->
+                    <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
                         <div>
-                            <h2 class="text-3xl md:text-4xl font-black text-slate-900">Parent Dashboard</h2>
-                            <p class="text-slate-600 font-semibold">Local-only progress from this device. No login, no backend.</p>
+                            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800">Parent Dashboard</h2>
+                            <p class="text-slate-500 font-semibold text-sm">Local-only progress from this device. No login, no backend.</p>
                         </div>
-                        <button onclick="navigate('hub')" class="adult-button secondary">Back to Academy</button>
+                        <div class="flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-3xl shadow-sm">
+                            ${renderPrincessImage(zoe, "w-14 h-14 rounded-full border-2 border-pink-200 object-cover")}
+                            <div>
+                                <h3 class="text-base font-extrabold text-slate-800">${state.lang === 'en' ? "Zoe's Profile" : "Perfil de Zoe"}</h3>
+                                <p class="text-xs text-slate-500 font-semibold">${state.lang === 'en' ? "Active Grade: " + (state.grade || 'K').toUpperCase() : "Grado Activo: " + (state.grade || 'K').toUpperCase()}</p>
+                            </div>
+                        </div>
                     </div>
-                    <section class="parent-panel mb-4">
-                        <h3 class="text-xl font-black mb-3">Overview</h3>
-                        <div class="parent-grid">
-                            ${metricBox('Stars', totalStars)}
-                            ${metricBox('Completed Lessons', state.completedLessons.total)}
-                            ${metricBox('Correct', state.performance.totalCorrect)}
-                            ${metricBox('Incorrect', state.performance.totalIncorrect)}
-                            ${metricBox('Sessions', state.practiceSessions.total)}
-                            ${metricBox('Last Practiced', state.practiceSessions.lastPracticed ? new Date(state.practiceSessions.lastPracticed).toLocaleDateString() : 'Not yet')}
-                            ${metricBox('Active Reviews', getDueReviewItems(true).length)}
-                            ${metricBox('Rewards', Object.keys(state.unlockedRewards.unlocked || {}).length)}
+
+                    <!-- Derived AI Learning Insights -->
+                    <div class="parent-insight-card border border-indigo-100 bg-indigo-50/20 p-6 rounded-3xl mb-8 flex items-start gap-4">
+                        <div class="text-4xl">✨</div>
+                        <div>
+                            <h4 class="font-extrabold text-indigo-900 text-lg mb-1">${state.lang === 'en' ? 'Royal Learning Insights (Derived)' : 'Comentarios de Aprendizaje Reales (Derivados)'}</h4>
+                            <p class="text-slate-700 leading-relaxed font-semibold text-sm md:text-base">${insightText}</p>
+                        </div>
+                    </div>
+
+                    <!-- Grid Stats Overview -->
+                    <section class="mb-8">
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                            <span>📈</span> <span>Overview</span>
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            ${metrics.map(m => `
+                                <div class="dashboard-stat-card flex flex-col items-center justify-center p-6 border border-slate-200 rounded-2xl bg-white hover:border-slate-300 transition duration-150 shadow-sm">
+                                    <span class="text-3xl mb-2">${m.icon}</span>
+                                    <span class="text-xs font-bold text-slate-500 text-center uppercase tracking-wider">${m.label}</span>
+                                    <span class="text-2xl font-black text-slate-800 mt-1">${m.value}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </section>
-                    <section class="parent-panel mb-4 overflow-x-auto">
-                        <h3 class="text-xl font-black mb-3">Subject / Grade Progress</h3>
-                        <table class="w-full text-left text-sm">
-                            <thead><tr class="border-b"><th class="py-2">Subject</th><th>Grade</th><th>Category</th><th>Correct</th><th>Incorrect</th><th>Accuracy</th><th>Status</th></tr></thead>
-                            <tbody>${rows.length ? rows.map((row) => `<tr class="border-b border-slate-100"><td class="py-2">${categoryLabel(row.subject)}</td><td>${gradeLabel(row.grade)}</td><td>${categoryLabel(row.category)}</td><td>${row.correct}</td><td>${row.incorrect}</td><td>${row.accuracy}%</td><td><strong>${row.status}</strong></td></tr>`).join('') : `<tr><td colspan="7" class="py-4 text-slate-500">No practice recorded yet.</td></tr>`}</tbody>
+
+                    <!-- Subject / Grade Progress Table -->
+                    <section class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm mb-8 overflow-x-auto">
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                            <span>📊</span> <span>Subject & Skill Progress</span>
+                        </h3>
+                        <table class="w-full text-left text-sm border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-bold">
+                                    <th class="py-3 px-4">Subject</th>
+                                    <th class="py-3 px-4">Grade</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4 text-center">Correct</th>
+                                    <th class="py-3 px-4 text-center">Incorrect</th>
+                                    <th class="py-3 px-4 text-center">Accuracy</th>
+                                    <th class="py-3 px-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-slate-700 font-semibold">
+                                ${rows.length ? rows.map((row) => `
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                        <td class="py-3 px-4 font-extrabold text-slate-800">${categoryLabel(row.subject)}</td>
+                                        <td class="py-3 px-4"><span class="skill-label font-bold text-slate-600 bg-slate-100 border-0">${gradeLabel(row.grade)}</span></td>
+                                        <td class="py-3 px-4 text-slate-600 font-bold">${categoryLabel(row.category)}</td>
+                                        <td class="py-3 px-4 text-center font-bold text-emerald-600">${row.correct}</td>
+                                        <td class="py-3 px-4 text-center font-bold text-rose-500">${row.incorrect}</td>
+                                        <td class="py-3 px-4 text-center font-black">${row.accuracy}%</td>
+                                        <td class="py-3 px-4 text-right"><span class="font-extrabold text-indigo-600">${row.status}</span></td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="7" class="py-8 text-center text-slate-400 font-bold">No practice recorded yet.</td>
+                                    </tr>
+                                `}
+                            </tbody>
                         </table>
                     </section>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <section class="parent-panel">
-                            <h3 class="text-xl font-black mb-3">Most Missed Skills</h3>
-                            ${missed.length ? missed.map((item) => `<div class="border-b border-slate-100 py-2"><strong>${categoryLabel(item.category || item.subject)}</strong><div class="text-slate-600">${item.prompt}</div><div class="text-sm text-slate-500">Misses: ${item.missCount} · Status: ${item.reviewStatus}</div></div>`).join('') : `<p class="text-slate-600">No missed questions saved. Impressive. Suspiciously tidy, but impressive.</p>`}
-                        </section>
-                        <section class="parent-panel">
-                            <h3 class="text-xl font-black mb-3">Recommended Next Practice</h3>
-                            <div class="space-y-2">${recs.map((rec) => `<button onclick='${rec.action}' class="w-full text-left adult-button secondary">${rec.label}</button>`).join('')}</div>
-                        </section>
-                    </div>
-                    <section class="parent-panel mt-4">
-                        <h3 class="text-xl font-black mb-3">Parent Actions</h3>
-                        <div class="flex flex-wrap gap-3">
-                            <button onclick="startRecommendedPractice()" class="adult-button">Start Recommended Practice</button>
-                            <button onclick="navigate('missedReview')" class="adult-button secondary">Review Missed Questions</button>
-                            <button onclick="resetAllProgress()" class="adult-button danger">Reset Progress</button>
-                            <button onclick="navigate('hub')" class="adult-button secondary">Back to Academy</button>
+
+                    <!-- Split Panels for Missed Skills and Next Recommendations -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <!-- Most Missed Skills -->
+                        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                            <h3 class="text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                                <span>🔍</span> <span>Most Missed Skills</span>
+                            </h3>
+                            <div class="space-y-4">
+                                ${missed.length ? missed.map((item) => `
+                                    <div class="border-b border-slate-100 last:border-0 pb-4 last:pb-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="font-bold text-slate-800">${categoryLabel(item.category || item.subject)}</span>
+                                            <span class="text-xs font-black bg-rose-50 text-rose-600 px-2.5 py-1 rounded-full">Misses: ${item.missCount}</span>
+                                        </div>
+                                        <div class="text-slate-600 text-sm italic font-medium mb-1">"${item.prompt}"</div>
+                                        <div class="text-xs text-slate-500 flex items-center gap-2">
+                                            <span>Status:</span> <span class="font-bold text-indigo-500">${item.reviewStatus}</span>
+                                        </div>
+                                    </div>
+                                `).join('') : `
+                                    <p class="text-slate-500 font-semibold py-4 text-center">No missed questions saved. Impressive. Suspiciously tidy, but impressive.</p>
+                                `}
+                            </div>
                         </div>
-                    </section>
+
+                        <!-- Recommended Next Practice -->
+                        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col">
+                            <h3 class="text-xl font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                                <span>🎯</span> <span>Recommended Next Practice</span>
+                            </h3>
+                            <div class="space-y-3 mb-6">
+                                ${recs.map((rec) => `
+                                    <button onclick='${rec.action}' class="w-full text-left bg-indigo-50/50 hover:bg-indigo-50 text-indigo-800 border border-indigo-100 font-bold px-4 py-3 rounded-2xl transition duration-150">
+                                        ✨ ${rec.label}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Parent Actions toolbar -->
+                    <div class="bg-slate-100/80 border border-slate-200 rounded-3xl p-6">
+                        <h3 class="text-lg font-extrabold text-slate-800 mb-4">${state.lang === 'en' ? 'Administrative Actions' : 'Acciones Administrativas'}</h3>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <button onclick="startRecommendedPractice()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-2xl transition duration-150">
+                                🚀 Start Recommended Practice
+                            </button>
+                            <button onclick="navigate('missedReview')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-2xl transition duration-150">
+                                🔄 Review Missed Questions
+                            </button>
+                            <button onclick="resetAllProgress()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-6 py-3 rounded-2xl transition duration-150 md:ml-auto">
+                                ⚠️ Reset Progress
+                            </button>
+                            <button onclick="navigate('hub')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-6 py-3 rounded-2xl transition duration-150">
+                                Back to Academy
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
+            initializePrincessImages(container);
         }
 
         function metricBox(label, value) {
@@ -3889,19 +4824,19 @@
                 data: item
             };
 
-            // Set up themed container classes
-            let themeClass = 'magic-mirror-container';
+            // Set up themed princess and guide info
             let princessName = 'Belle';
             if (subject === 'math') {
-                themeClass = 'pumpkin-patch-container';
-                princessName = 'Cinderella';
+                princessName = 'Elsa';
             } else if (subject === 'science') {
-                themeClass = 'ocean-sorter-container';
-                princessName = 'Moana';
-            } else if (subject === 'spanish') {
-                themeClass = 'painting-wall-container';
                 princessName = 'Rapunzel';
+            } else if (subject === 'spanish') {
+                princessName = 'Zoe';
             }
+
+            const princess = getPrincessByName(princessName) || { name: princessName, image: 'assets/belle.jpg' };
+            const skillLabel = state.lang === 'en' ? `${princessName}'s Mini Game` : `Mini Juego de ${princessName}`;
+            const t = uiText[state.lang];
 
             // Cap options
             const expectedCaps = { k: 3, g1: 4, g2: 5 };
@@ -3909,32 +4844,60 @@
             const cappedOpts = getCappedOptions(item, item.a, maxCount);
 
             const backTarget = subject === 'ela' ? 'elaHub' : 'gradeSelect';
-            
+
+            const starCount = state.stars[state.lang] || 0;
+            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+
             let html = `
-                <div class="grade-${grade} animate-pop text-center max-w-3xl mx-auto pt-16 md:pt-10 ${themeClass} rounded-[3rem] p-8 shadow-2xl min-h-[500px] relative">
-                    <button onclick="state.currentMiniRound = null; navigate('${backTarget}')" class="absolute top-4 left-4 bg-white/80 text-slate-700 px-6 py-3 rounded-full font-bold btn-kid text-xl z-20">← Back</button>
-                    <div class="mb-4 text-xs font-bold text-slate-500 uppercase tracking-wider">${princessName}'s Academy Mini Game</div>
-                    
-                    <div class="mirror-frame flex flex-col items-center justify-center bg-white/90 border-4 rounded-[2rem] p-8 shadow-inner min-h-[220px] mb-8">
-                        <h3 class="text-4xl font-black text-slate-800 line-clamp-3">${item.q}</h3>
-                        ${item.emoji ? `<div class="text-8xl mt-4 animate-bounce-slight">${item.emoji}</div>` : ''}
-                        ${(grade === 'g1' || grade === 'g2') ? `
-                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="mt-4 btn-kid bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold text-sm px-4 py-2 rounded-full inline-flex items-center space-x-1">
-                                <span>🔊</span> <span>Tap to Listen</span>
-                            </button>
-                        ` : ''}
+                <div class="grade-${grade} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <button onclick="state.currentMiniRound = null; navigate('${backTarget}')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
+                            <span>⬅️</span> <span>${t.back}</span>
+                        </button>
+                        ${starsHtml}
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-${Math.min(3, cappedOpts.length)} gap-6">
-                        ${cappedOpts.map(opt => `
-                            <button data-answer-option onclick="handleMiniGameAnswer(${jsString(opt)}, ${jsString(item.a)})" class="kid-option btn-kid text-2xl font-black py-6 rounded-[2rem] border-4 border-slate-200 bg-white hover:bg-slate-50 shadow-md">
-                                ${opt}
-                            </button>
-                        `).join('')}
+                    <div class="princess-guide w-full mb-6">
+                        ${renderPrincessImage(princess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                                <span>${princess.name}</span>
+                                <span class="skill-label uppercase tracking-wider text-xs">${skillLabel}</span>
+                            </h4>
+                            <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${state.lang === 'en' ? "Welcome to the mini game arena! Let's choose the matching card." : "¡Bienvenida a los mini juegos! Elijamos la tarjeta correcta."}</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-card w-full p-6 md:p-10 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">
+                        <!-- Mirror/Frame style game card question -->
+                        <div class="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border-4 border-indigo-100 rounded-[2.5rem] p-8 shadow-sm mb-6 mt-4">
+                            <h3 class="text-3xl font-black text-slate-800 mb-4">${item.q}</h3>
+                            ${item.emoji ? `<div class="text-8xl mt-4 animate-bounce-slight">${item.emoji}</div>` : ''}
+                            
+                            <!-- Standard audio controls -->
+                            <div class="audio-controls justify-center mt-6">
+                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-primary">
+                                    <span>🔊</span> <span>${t.read}</span>
+                                </button>
+                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-replay">
+                                    <span>🔁</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kid-friendly bouncy option buttons -->
+                        <div class="grid grid-cols-1 md:grid-cols-${Math.min(3, cappedOpts.length)} gap-6">
+                            ${cappedOpts.map(opt => `
+                                <button data-answer-option onclick="handleMiniGameAnswer(${jsString(opt)}, ${jsString(item.a)})" class="btn-kid bg-white border-4 border-slate-200 hover:border-indigo-300 rounded-[2rem] p-6 text-2xl font-black text-slate-700 shadow-md border-b-[8px] transition duration-200">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             `;
             container.innerHTML = html;
+            initializePrincessImages(container);
             
             // Auto play for K, skip for G1/G2
             if (grade === 'k' && item.audio) {
@@ -4032,14 +4995,68 @@
             state.currentVisualMath = { item, nums, index: selectedRef.index, key: visualMathKey, id };
             state.currentActivityRef = { data: item, index: selectedRef.index, id, key: visualMathKey, isRetry: false };
             const totalDots = visualMathDotCount(item, nums);
+
+            const princess = getPrincessByName('Elsa') || { name: 'Elsa', image: 'assets/elsa.png' };
+            const skillLabel = state.lang === 'en' ? 'Mathematical Reasoning' : 'Razonamiento Matemático';
+            const t = uiText[state.lang];
+
+            const starCount = state.stars[state.lang] || 0;
+            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+
+            const shuffledOptions = shuffleArray(item.options);
+
             container.innerHTML = `
-                <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
-                    <button onclick="navigate('subjectMenu')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <h2 class="text-4xl font-black text-slate-700 mb-6">Visual Math</h2>
-                    <div class="bg-white border-4 border-pink-200 rounded-[3rem] p-8 shadow-xl mb-8"><p class="text-4xl font-black mb-6">${item.q}</p><div class="ten-frame">${Array.from({ length: 10 }, (_, i) => `<span class="ten-dot ${i < totalDots ? 'filled' : ''}"></span>`).join('')}</div></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">${shuffleArray(item.options).map((opt) => `<button data-answer-option onclick='handleVisualMathAnswer(${jsString(opt)})' class="kid-option btn-kid">${opt}</button>`).join('')}</div>
+                <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <button onclick="navigate('subjectMenu')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
+                            <span>⬅️</span> <span>${t.back}</span>
+                        </button>
+                        ${starsHtml}
+                    </div>
+
+                    <div class="princess-guide w-full mb-6">
+                        ${renderPrincessImage(princess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                                <span>${princess.name}</span>
+                                <span class="skill-label uppercase tracking-wider text-xs">${skillLabel}</span>
+                            </h4>
+                            <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${state.lang === 'en' ? "Count the counters in the ten-frame to find the answer!" : "¡Cuenta las fichas en el marco de diez para encontrar la respuesta!"}</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-card w-full p-6 md:p-10 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">
+                        <div class="p-6 cursor-pointer hover:bg-slate-50/50 rounded-3xl transition duration-200 mb-6 mt-4" onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })'>
+                            <p class="text-3xl font-extrabold text-slate-800 mb-6">${item.q}</p>
+                            
+                            <!-- Improved ten-frame container with background border and padding -->
+                            <div class="inline-block bg-sky-50 border-4 border-sky-100 rounded-[2rem] p-6 shadow-inner mx-auto mb-4">
+                                <div class="ten-frame">
+                                    ${Array.from({ length: 10 }, (_, i) => `<span class="ten-dot ${i < totalDots ? 'filled' : ''}"></span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="audio-controls justify-center mb-8">
+                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-primary">
+                                <span>🔊</span> <span>${t.read}</span>
+                            </button>
+                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-replay">
+                                <span>🔁</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            ${shuffledOptions.map((opt) => `
+                                <button data-answer-option onclick='handleVisualMathAnswer(${jsString(opt)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-pink-300 rounded-[2rem] p-6 text-3xl font-black text-slate-700 shadow-md border-b-[8px] transition duration-200">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
                 </div>
             `;
+            initializePrincessImages(container);
             playActivityIntro(item);
         }
 
@@ -4076,17 +5093,56 @@
                 { item: 'Water', answer: 'Non-living', icon: '💧' }
             ];
             state.currentScienceSort = shuffleArray(rounds)[0];
+
+            const princess = getPrincessByName('Rapunzel') || { name: 'Rapunzel', image: 'assets/rapunzel.jpg' };
+            const skillLabel = state.lang === 'en' ? 'Scientific Categorization' : 'Categorización Científica';
+            const t = uiText[state.lang];
+
+            const starCount = state.stars[state.lang] || 0;
+            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+
             container.innerHTML = `
-                <div class="animate-pop text-center max-w-4xl mx-auto pt-16">
-                    <button onclick="navigate('subjectMenu')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <h2 class="text-4xl font-black text-slate-700 mb-4">Science Sorting Lab</h2>
-                    <div class="bg-white border-4 border-green-200 rounded-[3rem] p-8 shadow-xl mb-8"><div class="text-8xl">${state.currentScienceSort.icon}</div><p class="text-4xl font-black">${state.currentScienceSort.item}</p></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <button onclick="handleScienceSort('Living')" class="sort-bin btn-kid text-3xl font-black text-green-700">🌱 Living</button>
-                        <button onclick="handleScienceSort('Non-living')" class="sort-bin btn-kid text-3xl font-black text-slate-700">🪨 Non-living</button>
+                <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <button onclick="navigate('subjectMenu')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
+                            <span>⬅️</span> <span>${t.back}</span>
+                        </button>
+                        ${starsHtml}
+                    </div>
+
+                    <div class="princess-guide w-full mb-6">
+                        ${renderPrincessImage(princess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                                <span>${princess.name}</span>
+                                <span class="skill-label uppercase tracking-wider text-xs">${skillLabel}</span>
+                            </h4>
+                            <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${state.lang === 'en' ? "Is this item living or non-living? Tap the correct bin!" : "¿Este objeto es vivo o no vivo? ¡Toca el contenedor correcto!"}</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-card w-full p-6 md:p-10 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">
+                        <!-- Tappable item card -->
+                        <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-4 border-amber-100 rounded-[2.5rem] p-8 shadow-md max-w-sm mx-auto mb-8 cursor-pointer transform hover:scale-[1.02] transition-transform duration-200">
+                            <div class="text-8xl mb-4 animate-bounce-slight">${state.currentScienceSort.icon}</div>
+                            <p class="text-4xl font-black text-slate-800 tracking-wide">${state.currentScienceSort.item}</p>
+                        </div>
+
+                        <!-- Sorting bins container -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <button onclick="handleScienceSort('Living')" class="sort-bin sorting-bin btn-kid text-3xl font-black text-green-700 flex flex-col items-center justify-center gap-2 border-green-300 hover:border-green-400 bg-green-50/40 hover:bg-green-50/60 transition duration-200">
+                                <span class="text-5xl">🌱</span>
+                                <span>${state.lang === 'en' ? 'Living' : 'Ser Vivo'}</span>
+                            </button>
+                            <button onclick="handleScienceSort('Non-living')" class="sort-bin sorting-bin btn-kid text-3xl font-black text-slate-600 flex flex-col items-center justify-center gap-2 border-slate-300 hover:border-slate-400 bg-slate-50/40 hover:bg-slate-50/60 transition duration-200">
+                                <span class="text-5xl">🪨</span>
+                                <span>${state.lang === 'en' ? 'Non-living' : 'No Vivo'}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
+            initializePrincessImages(container);
         }
 
         window.handleScienceSort = function(answer) {
@@ -4105,18 +5161,64 @@
             const item = shuffleArray(curriculum.es.ela[state.grade || 'k'].sight)[0];
             const options = shuffleArray([item.item, ...shuffleArray(curriculum.es.ela[state.grade || 'k'].sight.filter((x) => x.item !== item.item)).slice(0, 2).map((x) => x.item)]);
             state.currentSpanishPractice = item;
+
+            const princess = getPrincessByName('Zoe');
+            const skillLabel = state.lang === 'en' ? 'Bilingual Practice' : 'Práctica Bilingüe';
+            const t = uiText[state.lang];
+
+            const starCount = state.stars.es || 0;
+            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+
             container.innerHTML = `
-                <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
-                    <button onclick="navigate('elaHub')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <div class="bg-white border-4 border-emerald-200 rounded-[3rem] p-8 shadow-xl mb-8">
-                        <div class="text-7xl mb-4">💬</div>
-                        <h2 class="text-4xl font-black text-slate-800 mb-3">Listen, Say, Choose</h2>
-                        <p class="text-2xl font-bold text-slate-600 mb-5">Listen first, say it out loud, then tap the match.</p>
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.item)} })' class="btn-kid bg-yellow-400 text-yellow-900 font-bold text-xl px-7 py-4 rounded-full">🔊 Listen</button>
+                <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <button onclick="navigate('elaHub')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
+                            <span>⬅️</span> <span>${t.back}</span>
+                        </button>
+                        ${starsHtml}
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">${options.map((opt) => `<button onclick='handleSpanishPractice(${jsString(opt)})' class="kid-option btn-kid">${opt}</button>`).join('')}</div>
+
+                    <div class="princess-guide w-full mb-6">
+                        ${renderPrincessImage(princess, "princess-guide-avatar")}
+                        <div class="voice-bubble">
+                            <h4 class="font-black text-pink-600 mb-1 text-base flex items-center justify-between flex-wrap gap-2">
+                                <span>${princess.name}</span>
+                                <span class="skill-label uppercase tracking-wider text-xs">${skillLabel}</span>
+                            </h4>
+                            <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${state.lang === 'en' ? "Listen first, say it out loud, then tap the match!" : "¡Escucha primero, dilo en voz alta y luego toca la pareja!"}</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-card w-full p-6 md:p-10 mb-8 bg-white/95 backdrop-blur-sm shadow-2xl relative">
+                        <!-- Listen Card -->
+                        <div class="vocab-card p-8 mb-6 mt-4">
+                            <div class="text-7xl mb-4 animate-bounce-slight">💬</div>
+                            <h3 class="text-3xl font-black text-slate-800 mb-4">${state.lang === 'en' ? 'Listen, Say, Choose' : 'Escucha, Di, Elige'}</h3>
+                            <p class="text-xl font-bold text-slate-600 mb-6">${state.lang === 'en' ? 'Tap the audio button to hear the Spanish word.' : 'Toca el botón de audio para escuchar la palabra en español.'}</p>
+                            
+                            <!-- Standardized audio controls -->
+                            <div class="audio-controls justify-center">
+                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.item)} })' class="btn-kid btn-audio-primary">
+                                    <span>🔊</span> <span>${t.read}</span>
+                                </button>
+                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.item)} })' class="btn-kid btn-audio-replay">
+                                    <span>🔁</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kid-friendly bouncy option buttons -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            ${options.map((opt) => `
+                                <button data-answer-option onclick='handleSpanishPractice(${jsString(opt)})' class="btn-kid bg-white border-4 border-slate-200 hover:border-emerald-300 rounded-[2rem] p-6 text-3xl font-black text-slate-700 shadow-md border-b-[8px] transition duration-200">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
                 </div>
             `;
+            initializePrincessImages(container);
         }
 
         window.handleSpanishPractice = function(selected) {
