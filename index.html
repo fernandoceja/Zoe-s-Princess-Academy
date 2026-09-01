@@ -2,7 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ebd373">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Zoe Academy">
+    <meta name="description" content="Zoe's Princess Academy — a kid-friendly learning app for reading, math, science, and Spanish. Progress stays on this device.">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <title>Zoe's Princess Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -43,7 +52,6 @@
             /* Magical pastel gradient background */
             background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 50%, #e6f7ff 100%);
             -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
             min-height: 100vh;
             min-height: 100svh;
             margin: 0;
@@ -267,6 +275,20 @@
             gap: 6px;
             justify-content: center;
             margin: 12px 0;
+        }
+        .activity-progress {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #7c3aed;
+            background: #faf5ff;
+            border: 2px solid #e9d5ff;
+            border-radius: 999px;
+            padding: 0.45rem 1rem;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.08);
+            white-space: nowrap;
         }
         .skill-label {
             display: inline-block;
@@ -781,6 +803,23 @@
             .adult-button, .academy-chip { width: 100%; }
             .ten-frame { grid-template-columns: repeat(5, 34px); gap: 6px; }
             .ten-dot { width: 34px; height: 34px; }
+            .princess-guide {
+                max-width: 100%;
+                gap: 10px;
+                padding: 12px 14px;
+                margin: 8px auto 16px;
+            }
+            .princess-guide-avatar {
+                width: 56px;
+                height: 56px;
+            }
+            .activity-progress {
+                font-size: 0.95rem;
+                padding: 0.35rem 0.85rem;
+            }
+            .activity-card {
+                padding: 1.1rem !important;
+            }
         }
 
         /* Multi-Grade & Princess Theme Layouts */
@@ -2123,10 +2162,15 @@
             currentReviewItem: null,
             currentMiniGame: null,
             currentMiniRound: null,
+            miniGameProgress: 0,
             currentStory: null,
             currentVisualMath: null,
             currentScienceSort: null,
+            scienceSortQueue: null,
+            scienceSortIndex: 0,
             currentSpanishPractice: null,
+            spanishPracticeQueue: null,
+            spanishPracticeIndex: 0,
             suppressNextActivityRoutineVoice: false,
             lastLectureVoiceKey: '',
             routeToken: 0,
@@ -2376,6 +2420,29 @@
             return princess.image;
         }
 
+        function princessImageSources(princess) {
+            const sources = [];
+            const image = princess && princess.image;
+            if (image && /\.png$/i.test(image)) {
+                sources.push(image.replace(/\.png$/i, '.webp'));
+            }
+            if (image) sources.push(image);
+            if (princess && princess.base64) sources.push(princess.base64);
+            return sources.filter(Boolean);
+        }
+
+        function activityProgressHtml(current, total, extra = '') {
+            const safeTotal = Math.max(1, Number(total) || 1);
+            const safeCurrent = Math.min(Math.max(1, Number(current) || 1), safeTotal);
+            const extraLabel = extra ? ` • ${extra}` : '';
+            return `
+                <div class="activity-progress" aria-live="polite" aria-atomic="true" aria-label="${safeCurrent} of ${safeTotal}">
+                    <span aria-hidden="true">✦</span>
+                    <span>${safeCurrent} / ${safeTotal}${extraLabel}</span>
+                </div>
+            `;
+        }
+
         function renderPrincessImage(princess, imageClass, style = '') {
             const loadingText = imageClass.includes('h-10') ? '👑' : 'Loading image...';
             return `
@@ -2408,7 +2475,7 @@
                 return;
             }
 
-            const sources = [princess.image, princess.base64].filter(Boolean);
+            const sources = princessImageSources(princess);
             for (const source of sources) {
                 try {
                     const loadedSource = await testImageSource(source);
@@ -2746,9 +2813,18 @@
             };
         };
 
+        function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            if (location.protocol === 'file:') return;
+            navigator.serviceWorker.register('./sw.js').catch(() => {
+                // Offline shell is optional; the app still runs online without it.
+            });
+        }
+
         function init() {
             loadVoiceMap();
             updateStarDisplay();
+            registerServiceWorker();
             navigate('hub');
             document.body.addEventListener('click', unlockAudio, { once: true, capture: true });
             document.body.addEventListener('touchstart', unlockAudio, { once: true, capture: true });
@@ -3468,12 +3544,28 @@
                 case 'parentDashboard': renderParentDashboard(container); break;
                 case 'missedReview': renderMissedReview(container); break;
                 case 'rewards': renderRewards(container); break;
-                case 'miniGames': renderMiniGames(container); break;
-                case 'miniGame': renderMiniGame(container, params.game); break;
+                case 'miniGames':
+                    state.currentMiniRound = null;
+                    state.miniGameProgress = 0;
+                    renderMiniGames(container);
+                    break;
+                case 'miniGame':
+                    state.currentMiniRound = null;
+                    state.miniGameProgress = 0;
+                    renderMiniGame(container, params.game);
+                    break;
                 case 'storyMode': renderStoryMode(container); break;
                 case 'visualMath': renderVisualMathMode(container); break;
-                case 'scienceSort': renderScienceSortMode(container); break;
-                case 'spanishPractice': renderSpanishPractice(container); break;
+                case 'scienceSort':
+                    state.scienceSortQueue = null;
+                    state.scienceSortIndex = 0;
+                    renderScienceSortMode(container);
+                    break;
+                case 'spanishPractice':
+                    state.spanishPracticeQueue = null;
+                    state.spanishPracticeIndex = 0;
+                    renderSpanishPractice(container);
+                    break;
             }
         }
 
@@ -3963,10 +4055,11 @@
                     <button onclick="navigate('${backTarget}')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
                         <span>⬅️</span> <span>${t.back}</span>
                     </button>
-                    <div class="text-lg font-black text-slate-600 bg-white/90 px-6 py-2.5 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
-                        <span>📖</span>
-                        <span>${Math.min(state.activityIndex + 1, dataset.length)} / ${dataset.length}${activityRef.isRetry ? ' • ' + (state.lang === 'en' ? 'Review' : 'Repaso') : ''}</span>
-                    </div>
+                    ${activityProgressHtml(
+                        Math.min((state.activityIndex || 0) + 1, state.activityQueue.length || dataset.length),
+                        state.activityQueue.length || dataset.length,
+                        activityRef.isRetry ? (state.lang === 'en' ? 'Review' : 'Repaso') : ''
+                    )}
                 </div>
             `;
 
@@ -4691,7 +4784,10 @@
             container.innerHTML = `
                 <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
                     <button onclick="navigate('hub')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
-                    <div class="mb-4 text-sm font-black text-slate-500">Review · ${reviewItem.missCount} miss${reviewItem.missCount === 1 ? '' : 'es'}</div>
+                    <div class="mb-4 flex items-center justify-center gap-3 flex-wrap">
+                        ${activityProgressHtml(1, due.length)}
+                        <div class="text-sm font-black text-slate-500">Review · ${reviewItem.missCount} miss${reviewItem.missCount === 1 ? '' : 'es'}</div>
+                    </div>
                     <div class="bg-white border-4 border-purple-200 rounded-[3rem] p-8 shadow-xl mb-8">
                         <div class="text-6xl mb-3">✨</div>
                         <p class="text-2xl font-black text-purple-700 mb-3">Let's try this one again.</p>
@@ -4845,8 +4941,9 @@
 
             const backTarget = subject === 'ela' ? 'elaHub' : 'gradeSelect';
 
-            const starCount = state.stars[state.lang] || 0;
-            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+            state.miniGameProgress = (state.miniGameProgress || 0) + 1;
+            if (state.miniGameProgress > 5) state.miniGameProgress = 1;
+            const progressHtml = activityProgressHtml(state.miniGameProgress, 5);
 
             let html = `
                 <div class="grade-${grade} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
@@ -4854,7 +4951,7 @@
                         <button onclick="state.currentMiniRound = null; navigate('${backTarget}')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
                             <span>⬅️</span> <span>${t.back}</span>
                         </button>
-                        ${starsHtml}
+                        ${progressHtml}
                     </div>
 
                     <div class="princess-guide w-full mb-6">
@@ -4949,7 +5046,7 @@
                 navigate('elaHub');
                 return;
             }
-            document.getElementById('app-container').innerHTML = `<div class="animate-pop text-center max-w-3xl mx-auto pt-16"><h2 class="text-4xl font-black mb-8">${q[0]}</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6">${shuffleArray(q[1]).map((opt) => `<button onclick='handleStoryAnswer(${index}, ${jsString(opt)}, ${jsString(q[2])})' class="kid-option btn-kid">${opt}</button>`).join('')}</div></div>`;
+            document.getElementById('app-container').innerHTML = `<div class="animate-pop text-center max-w-3xl mx-auto pt-16"><div class="flex justify-end mb-4">${activityProgressHtml(index + 1, story.qs.length)}</div><h2 class="text-4xl font-black mb-8">${q[0]}</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-6">${shuffleArray(q[1]).map((opt) => `<button onclick='handleStoryAnswer(${index}, ${jsString(opt)}, ${jsString(q[2])})' class="kid-option btn-kid">${opt}</button>`).join('')}</div></div>`;
         };
 
         window.handleStoryAnswer = function(index, selected, answer) {
@@ -4999,9 +5096,8 @@
             const princess = getPrincessByName('Elsa') || { name: 'Elsa', image: 'assets/elsa.png' };
             const skillLabel = state.lang === 'en' ? 'Mathematical Reasoning' : 'Razonamiento Matemático';
             const t = uiText[state.lang];
-
-            const starCount = state.stars[state.lang] || 0;
-            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+            const shownPos = visualMathItems.findIndex(({ index }) => index === selectedRef.index);
+            const progressHtml = activityProgressHtml((shownPos >= 0 ? shownPos : 0) + 1, Math.max(1, visualMathItems.length));
 
             const shuffledOptions = shuffleArray(item.options);
 
@@ -5011,7 +5107,7 @@
                         <button onclick="navigate('subjectMenu')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
                             <span>⬅️</span> <span>${t.back}</span>
                         </button>
-                        ${starsHtml}
+                        ${progressHtml}
                     </div>
 
                     <div class="princess-guide w-full mb-6">
@@ -5092,14 +5188,16 @@
                 { item: 'Bird', answer: 'Living', icon: '🐦' },
                 { item: 'Water', answer: 'Non-living', icon: '💧' }
             ];
-            state.currentScienceSort = shuffleArray(rounds)[0];
+            if (!Array.isArray(state.scienceSortQueue) || state.scienceSortIndex >= state.scienceSortQueue.length) {
+                state.scienceSortQueue = shuffleArray(rounds);
+                state.scienceSortIndex = 0;
+            }
+            state.currentScienceSort = state.scienceSortQueue[state.scienceSortIndex];
 
             const princess = getPrincessByName('Rapunzel') || { name: 'Rapunzel', image: 'assets/rapunzel.jpg' };
             const skillLabel = state.lang === 'en' ? 'Scientific Categorization' : 'Categorización Científica';
             const t = uiText[state.lang];
-
-            const starCount = state.stars[state.lang] || 0;
-            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+            const progressHtml = activityProgressHtml(state.scienceSortIndex + 1, state.scienceSortQueue.length);
 
             container.innerHTML = `
                 <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
@@ -5107,7 +5205,7 @@
                         <button onclick="navigate('subjectMenu')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
                             <span>⬅️</span> <span>${t.back}</span>
                         </button>
-                        ${starsHtml}
+                        ${progressHtml}
                     </div>
 
                     <div class="princess-guide w-full mb-6">
@@ -5151,6 +5249,7 @@
                 saveStars();
                 unlockReward('science-explorer', 'Science Explorer Badge');
                 showFeedback(true);
+                state.scienceSortIndex = (state.scienceSortIndex || 0) + 1;
                 setTimeout(() => renderScienceSortMode(document.getElementById('app-container')), 1000);
             } else {
                 showSimpleToast("Good observation. Try the other group.");
@@ -5158,16 +5257,19 @@
         };
 
         function renderSpanishPractice(container) {
-            const item = shuffleArray(curriculum.es.ela[state.grade || 'k'].sight)[0];
-            const options = shuffleArray([item.item, ...shuffleArray(curriculum.es.ela[state.grade || 'k'].sight.filter((x) => x.item !== item.item)).slice(0, 2).map((x) => x.item)]);
+            const sight = curriculum.es.ela[state.grade || 'k'].sight || [];
+            if (!Array.isArray(state.spanishPracticeQueue) || state.spanishPracticeIndex >= state.spanishPracticeQueue.length) {
+                state.spanishPracticeQueue = shuffleArray(sight).slice(0, Math.min(5, sight.length || 1));
+                state.spanishPracticeIndex = 0;
+            }
+            const item = state.spanishPracticeQueue[state.spanishPracticeIndex] || sight[0];
+            const options = shuffleArray([item.item, ...shuffleArray(sight.filter((x) => x.item !== item.item)).slice(0, 2).map((x) => x.item)]);
             state.currentSpanishPractice = item;
 
             const princess = getPrincessByName('Zoe');
             const skillLabel = state.lang === 'en' ? 'Bilingual Practice' : 'Práctica Bilingüe';
             const t = uiText[state.lang];
-
-            const starCount = state.stars.es || 0;
-            const starsHtml = `<div class="progress-stars">${Array.from({ length: Math.min(5, starCount) }, () => `<span class="text-2xl">⭐</span>`).join('')}</div>`;
+            const progressHtml = activityProgressHtml(state.spanishPracticeIndex + 1, Math.max(1, state.spanishPracticeQueue.length));
 
             container.innerHTML = `
                 <div class="grade-${state.grade || 'k'} animate-pop text-center max-w-4xl mx-auto pt-16 md:pt-6 px-4">
@@ -5175,7 +5277,7 @@
                         <button onclick="navigate('elaHub')" class="bg-white/90 hover:bg-white text-slate-700 px-6 py-3 rounded-full font-extrabold btn-kid text-lg shadow-sm border border-slate-200 flex items-center gap-2">
                             <span>⬅️</span> <span>${t.back}</span>
                         </button>
-                        ${starsHtml}
+                        ${progressHtml}
                     </div>
 
                     <div class="princess-guide w-full mb-6">
@@ -5227,6 +5329,7 @@
                 saveStars();
                 unlockReward('spanish-garden-star', 'Spanish Garden Star');
                 showFeedback(true);
+                state.spanishPracticeIndex = (state.spanishPracticeIndex || 0) + 1;
                 setTimeout(() => renderSpanishPractice(document.getElementById('app-container')), 1000);
             } else {
                 showSimpleToast("Buen intento. Escucha otra vez.");
