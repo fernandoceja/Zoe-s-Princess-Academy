@@ -1,5 +1,5 @@
 /* Zoe's Princess Academy — offline shell + local assets. No analytics. */
-const CACHE_NAME = 'zoe-academy-pwa-v1';
+const CACHE_NAME = 'zoe-academy-pwa-v2';
 
 const PRECACHE_URLS = [
   './',
@@ -71,7 +71,7 @@ async function networkFirst(request) {
   try {
     const fresh = await fetch(request);
     if (fresh && fresh.ok) {
-      cache.put(request, fresh.clone());
+      await cache.put(request, fresh.clone());
     }
     return fresh;
   } catch (error) {
@@ -89,7 +89,7 @@ async function cacheFirst(request) {
   if (cached) return cached;
   const fresh = await fetch(request);
   if (fresh && fresh.ok) {
-    cache.put(request, fresh.clone());
+    await cache.put(request, fresh.clone());
   }
   return fresh;
 }
