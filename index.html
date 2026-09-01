@@ -164,6 +164,102 @@
             box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
             flex-shrink: 0;
         }
+        @keyframes princess-talk-pulse {
+            0%, 100% { box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12), 0 0 0 0 rgba(251, 191, 36, 0.6); }
+            50% { box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18), 0 0 0 8px rgba(251, 191, 36, 0); }
+        }
+        .princess-speak-btn {
+            position: relative;
+            display: inline-flex;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .princess-speak-btn:focus-visible {
+            outline: 4px solid rgba(14, 165, 233, 0.55);
+            outline-offset: 4px;
+        }
+        .princess-speak-badge {
+            position: absolute;
+            right: -4px;
+            bottom: -2px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: #fbbf24;
+            color: #78350f;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+            pointer-events: none;
+        }
+        [data-princess-frame].princess-talking .princess-guide-avatar,
+        [data-princess-frame].princess-talking img,
+        [data-princess-frame].princess-talking [data-princess-loading] {
+            animation: princess-talk-pulse 0.7s ease-in-out infinite, bounce-slight 1.2s ease-in-out infinite;
+        }
+        .word-of-day {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            width: 100%;
+            max-width: 90%;
+            margin: 0 auto 18px;
+            padding: 14px 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #fff7ed, #fdf4ff);
+            border: 3px solid #fbbf24;
+            color: #334155;
+            text-align: left;
+        }
+        .word-of-day-label {
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #b45309;
+        }
+        .word-of-day-word {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #0f172a;
+        }
+        .word-of-day-hint {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+        .btn-audio-slow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #fcd34d;
+            border-radius: var(--radius-button);
+            padding: 12px 18px;
+            font-weight: 800;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.05);
+        }
+        .btn-audio-slow:hover {
+            background: #fde68a;
+        }
+        .princess-tap-hint {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b45309;
+        }
         .voice-bubble {
             position: relative;
             background: #fff;
@@ -2291,20 +2387,20 @@
 
         const personas = {
             en: {
-                belle: { greeting: "Hi! I'm Belle. Let's explore a story together!" },
-                elsa: { greeting: "Hi! I'm Elsa. Let's explore some math!" },
-                rapunzel: { greeting: "Hi! I'm Rapunzel. Let's discover science!" },
+                belle: { greeting: "Hi! I'm Belle. Books make us brave. Let's explore a story together!" },
+                elsa: { greeting: "Hi! I'm Elsa. Take a calm breath. Numbers love a steady mind!" },
+                rapunzel: { greeting: "Hi! I'm Rapunzel. Every question is a new lantern. Let's discover science!" },
                 moana: { greeting: "Hi! I'm Moana. Let's discover the world!" },
                 elena: { greeting: "Hi! I'm Elena. Let's learn some Spanish!" },
-                zoe: { greeting: "Hi! I'm Zoe. Welcome to the Princess Academy!" }
+                zoe: { greeting: "Hi! I'm Zoe. Welcome to the Princess Academy! Tap a princess to hear her voice." }
             },
             es: {
-                belle: { greeting: "¡Hola! Soy Bella. ¡Vamos a leer un cuento!" },
-                elsa: { greeting: "¡Hola! Soy Elsa. ¡Vamos a explorar las matemáticas!" },
-                rapunzel: { greeting: "¡Hola! Soy Rapunzel. ¡Vamos a descubrir la ciencia!" },
+                belle: { greeting: "¡Hola! Soy Bella. Los libros nos hacen valientes. ¡Vamos a leer un cuento!" },
+                elsa: { greeting: "¡Hola! Soy Elsa. Respira con calma. ¡A los números les gusta una mente serena!" },
+                rapunzel: { greeting: "¡Hola! Soy Rapunzel. Cada pregunta es una linterna nueva. ¡Vamos a descubrir la ciencia!" },
                 moana: { greeting: "¡Hola! Soy Moana. ¡Vamos a descubrir el mundo!" },
                 elena: { greeting: "¡Hola! Soy Elena. ¡Vamos a aprender español!" },
-                zoe: { greeting: "¡Hola! Soy Zoe. ¡Bienvenida a la Academia de Princesas!" }
+                zoe: { greeting: "¡Hola! Soy Zoe. ¡Bienvenida a la Academia de Princesas! Toca una princesa para oír su voz." }
             }
         };
 
@@ -2388,6 +2484,133 @@
                   }
         ];
 
+        const princessVoiceProfiles = {
+            Belle: {
+                rate: 0.82, pitch: 1.12,
+                voiceHints: ['Samantha', 'Victoria', 'Karen', 'Google US English Female', 'Female'],
+                greetings: {
+                    en: "Hello! I am Belle. Books make us brave. Let's read together.",
+                    es: "¡Hola! Soy Bella. Los libros nos hacen valientes. Vamos a leer juntas."
+                },
+                praise: {
+                    en: ["What a wonderful reader!", "Your story brain is glowing!", "Belle is so proud of that thinking!"],
+                    es: ["¡Qué lectora tan maravillosa!", "¡Tu mente de cuentos brilla!", "¡Bella está muy orgullosa de ese pensamiento!"]
+                },
+                encourage: {
+                    en: ["Readers try again. Let's look one more time.", "Almost! Sound it out slowly with me.", "That was brave. Let's listen and try once more."],
+                    es: ["Las lectoras lo intentan otra vez. Miremos una vez más.", "¡Casi! Suena las letras despacio conmigo.", "Eso fue valiente. Escuchemos e intentemos otra vez."]
+                }
+            },
+            Elsa: {
+                rate: 0.88, pitch: 1.02,
+                voiceHints: ['Samantha', 'Karen', 'Tessa', 'Google US English', 'Female'],
+                greetings: {
+                    en: "Hello! I am Elsa. Take a calm breath. Numbers love a steady mind.",
+                    es: "¡Hola! Soy Elsa. Respira con calma. A los números les gusta una mente serena."
+                },
+                praise: {
+                    en: ["Brilliant and icy-clear thinking!", "Your number magic sparkled!", "That answer was as bright as ice!"],
+                    es: ["¡Pensamiento brillante y claro!", "¡Tu magia de números brilló!", "¡Esa respuesta fue tan brillante como el hielo!"]
+                },
+                encourage: {
+                    en: ["Stay calm. Count slowly and try again.", "Almost! Let's freeze, think, and recount.", "Mistakes help us grow. One more careful look."],
+                    es: ["Mantén la calma. Cuenta despacio e inténtalo otra vez.", "¡Casi! Pausemos, pensemos y contemos otra vez.", "Los errores nos ayudan a crecer. Una mirada más con cuidado."]
+                }
+            },
+            Rapunzel: {
+                rate: 0.94, pitch: 1.26,
+                voiceHints: ['Moira', 'Tessa', 'Samantha', 'Google US English Female', 'Female'],
+                greetings: {
+                    en: "Hi! I am Rapunzel. Every question is a new lantern. Let's explore!",
+                    es: "¡Hola! Soy Rapunzel. Cada pregunta es una linterna nueva. ¡Vamos a explorar!"
+                },
+                praise: {
+                    en: ["You lit up that answer!", "Explorer eyes, explorer brain!", "What a shining discovery!"],
+                    es: ["¡Iluminaste esa respuesta!", "¡Ojos de exploradora, mente de exploradora!", "¡Qué descubrimiento tan brillante!"]
+                },
+                encourage: {
+                    en: ["Scientists wonder and try again.", "Look closer. What do you notice?", "Let's shine a lantern on this clue."],
+                    es: ["Las científicas se preguntan e intentan otra vez.", "Mira más de cerca. ¿Qué notas?", "Iluminemos esta pista con una linterna."]
+                }
+            },
+            Zoe: {
+                rate: 0.86, pitch: 1.22,
+                voiceHints: ['Paulina', 'Sabina', 'Monica', 'Samantha', 'Google español', 'Female'],
+                greetings: {
+                    en: "Hi! I am Zoe. Words grow when we practice. Welcome to the academy!",
+                    es: "¡Hola! Soy Zoe. Las palabras crecen cuando practicamos. ¡Bienvenida a la academia!"
+                },
+                praise: {
+                    en: ["High five from Zoe!", "Your practice is making magic!", "That was royal work!"],
+                    es: ["¡Choca esos cinco de Zoe!", "¡Tu práctica está haciendo magia!", "¡Eso fue un trabajo real!"]
+                },
+                encourage: {
+                    en: ["We've got this. Let's try together.", "Nice try. Practice makes princess power.", "One more time, slowly and kindly."],
+                    es: ["Juntas podemos. Intentémoslo otra vez.", "Buen intento. La práctica da poder de princesa.", "Una vez más, despacio y con cariño."]
+                }
+            },
+            Cinderella: {
+                rate: 0.8, pitch: 1.16,
+                voiceHints: ['Victoria', 'Samantha', 'Karen', 'Female'],
+                greetings: {
+                    en: "Hello! I am Cinderella. One kind step at a time. You may choose any grade.",
+                    es: "¡Hola! Soy Cenicienta. Un pasito amable a la vez. Puedes elegir cualquier grado."
+                },
+                praise: {
+                    en: ["Kind and clever! That was lovely.", "You did it, one brave step at a time."],
+                    es: ["¡Amable e inteligente! Qué lindo.", "Lo lograste, un pasito valiente a la vez."]
+                },
+                encourage: {
+                    en: ["It's okay. Kind learners try again.", "Take a breath. You can choose another path."],
+                    es: ["Está bien. Las aprendizajes amables lo intentan otra vez.", "Respira. Puedes elegir otro camino."]
+                }
+            },
+            default: {
+                rate: 0.85, pitch: 1.2,
+                voiceHints: ['Samantha', 'Female', 'Google', 'Paulina'],
+                greetings: {
+                    en: "Hello! Let's learn something wonderful together.",
+                    es: "¡Hola! Aprendamos algo maravilloso juntas."
+                },
+                praise: {
+                    en: ["Great job!", "You earned a sparkle!", "Brilliant thinking!"],
+                    es: ["¡Gran trabajo!", "¡Ganaste un brillo!", "¡Qué mente brillante!"]
+                },
+                encourage: {
+                    en: ["Nice try. Let's try again.", "You've got this.", "Princesses practice too."],
+                    es: ["Buen intento. Intentemos otra vez.", "Tú puedes.", "Las princesas también practican."]
+                }
+            }
+        };
+
+        function getPrincessVoiceProfile(princess) {
+            const name = typeof princess === 'string' ? princess : (princess && princess.name) || '';
+            return princessVoiceProfiles[name] || princessVoiceProfiles.default;
+        }
+
+        function pickPrincessVoice(profile, langCode) {
+            if (!availableVoices.length && 'speechSynthesis' in window) {
+                availableVoices = window.speechSynthesis.getVoices();
+            }
+            const langPrefix = String(langCode || 'en').split('-')[0].toLowerCase();
+            const langVoices = availableVoices.filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith(langPrefix));
+            const pool = langVoices.length ? langVoices : availableVoices;
+            const hints = (profile && profile.voiceHints) || [];
+            for (const hint of hints) {
+                const found = pool.find((voice) => voice.name && voice.name.toLowerCase().includes(String(hint).toLowerCase()));
+                if (found) return found;
+            }
+            return pool.find((voice) => /female|samantha|victoria|karen|moira|tessa|paulina|sabina|monica|google/i.test(voice.name || '')) || pool[0] || null;
+        }
+
+        function setPrincessTalking(active, princessName = '') {
+            document.querySelectorAll('[data-princess-frame]').forEach((frame) => {
+                const named = frame.querySelector('[data-princess-name]');
+                const matches = !princessName || !named || named.dataset.princessName === princessName;
+                frame.classList.toggle('princess-talking', Boolean(active && matches));
+            });
+        }
+
         function selectRandomPrincess() {
             return princesses[Math.floor(Math.random() * princesses.length)];
         }
@@ -2411,7 +2634,7 @@
                 return {
                     name: 'Cinderella',
                     image: 'assets/cinderella.jpg',
-                    greeting: "Ready to pick a grade?",
+                    greeting: state.lang === 'en' ? 'Ready to pick a grade?' : '¿Lista para elegir un grado?',
                     themeColor: '#4ba3e3'
                 };
             }
@@ -2445,13 +2668,22 @@
             `;
         }
 
-        function renderPrincessImage(princess, imageClass, style = '') {
+        function renderPrincessImage(princess, imageClass, style = '', options = {}) {
+            const safePrincess = princess || { name: 'Princess' };
             const loadingText = imageClass.includes('h-10') ? '👑' : 'Loading image...';
-            return `
+            const speakable = options.speakable !== false && !imageClass.includes('subject-art');
+            const frame = `
                 <span class="inline-flex ${imageClass.includes('subject-art') ? 'subject-art-frame' : ''}" data-princess-frame>
                     <span class="${imageClass} flex items-center justify-center bg-amber-50 p-3 text-center text-sm font-bold text-slate-500" style="${style}" data-princess-loading>${loadingText}</span>
-                    <img alt="${princess.name} princess image" data-princess-image data-princess-name="${princess.name}" class="${imageClass} hidden" style="${style}">
+                    <img alt="${safePrincess.name} princess image" data-princess-image data-princess-name="${safePrincess.name}" class="${imageClass} hidden" style="${style}">
                 </span>
+            `;
+            if (!speakable) return frame;
+            return `
+                <button type="button" class="princess-speak-btn" data-hear-princess="${safePrincess.name}" aria-label="Hear ${safePrincess.name}">
+                    ${frame}
+                    <span class="princess-speak-badge" aria-hidden="true">🔊</span>
+                </button>
             `;
         }
 
@@ -2504,6 +2736,14 @@
 
         function initializePrincessImages(root = document) {
             root.querySelectorAll('img[data-princess-image]').forEach((img) => loadPrincessImage(img));
+            root.querySelectorAll('[data-hear-princess]').forEach((button) => {
+                if (button.dataset.hearBound === 'true') return;
+                button.dataset.hearBound = 'true';
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    hearPrincess(button.dataset.hearPrincess);
+                });
+            });
         }
 
         state.princess = selectRandomPrincess();
@@ -2579,9 +2819,11 @@
             const topic = state.subject === 'ela'
                 ? categoryLabel(state.elaCategory || 'letters')
                 : categoryLabel(state.subject || 'practice');
+            const guide = subjectGuidePrincess();
+            const name = guide && guide.name ? guide.name : 'your princess';
             return state.lang === 'es'
-                ? `Zoe, empecemos ${grade} ${topic}.`
-                : `Zoe, let's begin ${grade} ${topic}.`;
+                ? `Hola, soy ${name}. Empecemos ${grade} ${topic}.`
+                : `Hi, I am ${name}. Let's begin ${grade} ${topic}.`;
         }
 
         function playLectureStartVoice() {
@@ -2708,6 +2950,7 @@
                 currentVoiceAudio.load();
                 currentVoiceAudio = null;
             }
+            setPrincessTalking(false);
             if (cancelSpeech && 'speechSynthesis' in window) window.speechSynthesis.cancel();
         }
 
@@ -2731,7 +2974,7 @@
             lastVoiceRequest = { key: voiceKey, at: now };
 
             if (!path) {
-                if (fallbackText) speak(fallbackText, rate, pitch);
+                if (fallbackText) speak(fallbackText);
                 if (typeof afterVoice === 'function') afterVoice(false);
                 return Promise.resolve(false);
             }
@@ -2750,11 +2993,14 @@
                 const audio = new Audio(path);
                 currentVoiceAudio = audio;
                 audio.preload = 'auto';
+                const talkingPrincess = (subjectGuidePrincess() && subjectGuidePrincess().name) || '';
+                setPrincessTalking(true, talkingPrincess);
 
                 audio.addEventListener('ended', () => {
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
-                    if (afterText) speak(afterText, rate, pitch);
+                    setPrincessTalking(false);
+                    if (afterText) speak(afterText);
                     if (typeof afterVoice === 'function') afterVoice(true);
                     resolve(true);
                 }, { once: true });
@@ -2762,7 +3008,8 @@
                 audio.addEventListener('error', () => {
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
-                    if (fallbackText) speak(fallbackText, rate, pitch);
+                    setPrincessTalking(false);
+                    if (fallbackText) speak(fallbackText);
                     if (typeof afterVoice === 'function') afterVoice(false);
                     resolve(false);
                 }, { once: true });
@@ -2770,7 +3017,8 @@
                 audio.play().catch(() => {
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
-                    if (fallbackText) speak(fallbackText, rate, pitch);
+                    setPrincessTalking(false);
+                    if (fallbackText) speak(fallbackText);
                     if (typeof afterVoice === 'function') afterVoice(false);
                     resolve(false);
                 });
@@ -2879,27 +3127,174 @@
             }
         }
 
-        function speak(text, rate = 0.85, pitch = 1.2) {
-            if (!('speechSynthesis' in window)) return;
+        function speak(text, rate, pitch, options = {}) {
+            if (!text || !('speechSynthesis' in window)) return;
             stopVoicePlayback({ cancelSpeech: false });
             window.speechSynthesis.cancel();
-            
-            window.currentUtterance = new SpeechSynthesisUtterance(text);
-            window.currentUtterance.rate = rate; 
-            window.currentUtterance.pitch = pitch; 
-            
-            const targetLangCode = state.lang === 'es' ? 'es-MX' : 'en-US';
+            setPrincessTalking(false);
+
+            const princess = options.princess || subjectGuidePrincess() || getPrincessByName('Zoe');
+            const profile = getPrincessVoiceProfile(princess);
+            window.currentUtterance = new SpeechSynthesisUtterance(String(text));
+            window.currentUtterance.rate = Number.isFinite(rate) ? rate : profile.rate;
+            window.currentUtterance.pitch = Number.isFinite(pitch) ? pitch : profile.pitch;
+
+            const targetLangCode = options.lang || (state.lang === 'es' ? 'es-MX' : 'en-US');
             window.currentUtterance.lang = targetLangCode;
-            
+
             if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
-            const preferredVoice = availableVoices.find(v => v.lang.includes(targetLangCode.split('-')[0]) && (v.name.includes('Samantha') || v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Paulina')));
+            const preferredVoice = pickPrincessVoice(profile, targetLangCode);
             if (preferredVoice) window.currentUtterance.voice = preferredVoice;
 
+            const princessName = princess && princess.name ? princess.name : '';
+            setPrincessTalking(true, princessName);
+            window.currentUtterance.onend = () => setPrincessTalking(false);
+            window.currentUtterance.onerror = () => setPrincessTalking(false);
             window.speechSynthesis.speak(window.currentUtterance);
         }
 
+        function hearPrincess(name) {
+            const princess = getPrincessByName(name) || { name };
+            const profile = getPrincessVoiceProfile(princess);
+            const lang = state.lang === 'es' ? 'es' : 'en';
+            const line = (profile.greetings && profile.greetings[lang])
+                || princess.greeting
+                || (personas[state.lang] && personas[state.lang][String(name || '').toLowerCase()] && personas[state.lang][String(name || '').toLowerCase()].greeting)
+                || (state.lang === 'es' ? '¡Hola! Vamos a aprender juntas.' : 'Hello! Let us learn together.');
+            speak(line, undefined, undefined, { princess });
+        }
+
+        function speakAsPrincess(name, text) {
+            speak(text, undefined, undefined, { princess: getPrincessByName(name) || { name } });
+        }
+
+        function speakSlowly(text) {
+            const princess = subjectGuidePrincess() || getPrincessByName('Zoe');
+            const profile = getPrincessVoiceProfile(princess);
+            speak(text, Math.max(0.5, (profile.rate || 0.85) - 0.28), profile.pitch, { princess });
+        }
+
+        function speakBlendCoach(phonemeText, word) {
+            const parts = String(phonemeText || '').split(/[|,\s]+/).filter(Boolean);
+            const joined = parts.join(state.lang === 'es' ? ', ' : ', ');
+            const line = state.lang === 'es'
+                ? `${joined}. Juntas suenan: ${word}.`
+                : `${joined}. Together they say ${word}.`;
+            speakSlowly(line);
+        }
+
+        function getWordOfTheDay() {
+            const grade = state.grade || 'k';
+            const lang = state.lang === 'es' ? 'es' : 'en';
+            const letters = curriculum[lang]?.ela?.[grade]?.letters || curriculum[lang]?.ela?.k?.letters || [];
+            const sight = curriculum[lang]?.ela?.[grade]?.sight || curriculum[lang]?.ela?.k?.sight || [];
+            const pool = [...letters, ...sight];
+            if (!pool.length) return null;
+            const now = new Date();
+            const seed = now.getFullYear() * 400 + now.getMonth() * 32 + now.getDate();
+            return pool[seed % pool.length];
+        }
+
+        function wordOfTheDayHtml() {
+            const word = getWordOfTheDay();
+            if (!word) return '';
+            const item = word.item || word.q || '';
+            const emoji = word.emoji || '✨';
+            const audio = word.audio || item;
+            const teacher = getPrincessByName('Zoe') || { name: 'Zoe' };
+            const label = state.lang === 'es' ? 'Palabra del día' : 'Word of the Day';
+            const hint = state.lang === 'es' ? 'Toca para oírla' : 'Tap to hear it';
+            return `
+                <button type="button" class="word-of-day btn-kid" onclick='speakAsPrincess("Zoe", ${jsString(audio)})'>
+                    <span class="word-of-day-label">${teacher.name}'s ${label}</span>
+                    <span class="word-of-day-word">${emoji} ${item}</span>
+                    <span class="word-of-day-hint">${hint}</span>
+                </button>
+            `;
+        }
+
+        function audioControlHtml(fallbackText, extra = {}) {
+            const t = uiText[state.lang];
+            const voiceId = extra.voiceId || 'CURRICULUM_ITEM_AUDIO_DYNAMIC';
+            const wrapClass = extra.wrapClass || 'mb-8';
+            const slowLabel = state.lang === 'en' ? 'Slow' : 'Despacio';
+            const slowHandler = extra.blendPhonemes
+                ? `speakBlendCoach(${jsString((extra.blendPhonemes || []).join(' '))}, ${jsString(extra.blendWord || fallbackText)})`
+                : `speakSlowly(${jsString(extra.slowText || fallbackText)})`;
+            return `
+                <div class="audio-controls justify-center ${wrapClass}">
+                    <button onclick='playRoutineVoice(${jsString(voiceId)}, { fallbackText: ${jsString(fallbackText)} })' class="btn-kid btn-audio-primary">
+                        <span>🔊</span> <span>${t.read}</span>
+                    </button>
+                    <button onclick='${slowHandler}' class="btn-kid btn-audio-slow">
+                        <span>🐢</span> <span>${slowLabel}</span>
+                    </button>
+                    <button onclick='playRoutineVoice(${jsString(voiceId)}, { fallbackText: ${jsString(fallbackText)} })' class="btn-kid btn-audio-replay" aria-label="${t.read}">
+                        <span>🔁</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        function buildTeachableMoment(data, isCorrect) {
+            if (!data) return '';
+            const answer = getCorrectAnswer(data) || data.item || '';
+            if (data.type === 'quiz' || data.type === 'listening') {
+                if (isCorrect) {
+                    return state.lang === 'es'
+                        ? `¡Sí! La respuesta es ${answer}.`
+                        : `Yes! The answer is ${answer}.`;
+                }
+                return skillHintText(data);
+            }
+            if (data.type === 'blend') {
+                const sounds = (data.phonemes || []).join(' ');
+                return state.lang === 'es'
+                    ? `${sounds} suenan ${data.item}.`
+                    : `${sounds} make ${data.item}.`;
+            }
+            return data.audio || data.item || '';
+        }
+
+        function skillHintText(data) {
+            const subject = state.subject;
+            const category = state.elaCategory || data?.type;
+            if (subject === 'math') {
+                return state.lang === 'es' ? 'Cuenta despacio. Usa los dedos o los puntos.' : 'Count slowly. Use your fingers or the dots.';
+            }
+            if (subject === 'science') {
+                return state.lang === 'es' ? 'Piensa en lo que ves, oyes o recuerdas del mundo real.' : 'Think about what you see, hear, or remember from the real world.';
+            }
+            if (category === 'letters' || data?.type === 'flashcard') {
+                return state.lang === 'es' ? 'Escucha el primer sonido. ¿Qué letra lo hace?' : 'Listen for the first sound. Which letter makes it?';
+            }
+            if (category === 'match') {
+                return state.lang === 'es' ? 'Escucha el sonido al inicio o al final de la palabra.' : 'Listen for the sound at the start or end of the word.';
+            }
+            if (category === 'blend') {
+                return state.lang === 'es' ? 'Toca cada sonido, luego únelos rápido.' : 'Tap each sound, then blend them fast.';
+            }
+            if (category === 'sentences' || data?.type === 'listening' || data?.type === 'sentence') {
+                return state.lang === 'es' ? 'Lee cada palabra. ¿Quién hace qué?' : 'Read each word. Who is doing what?';
+            }
+            if (category === 'sight') {
+                return state.lang === 'es' ? 'Mira la palabra completa. ¿La reconoces rápido?' : 'Look at the whole word. Do you know it by sight?';
+            }
+            return state.lang === 'es' ? 'Escucha a tu princesa otra vez y elige con calma.' : 'Listen to your princess again and choose slowly.';
+        }
+
+        window.hearPrincess = hearPrincess;
+        window.speakAsPrincess = speakAsPrincess;
+        window.speakSlowly = speakSlowly;
+        window.speakBlendCoach = speakBlendCoach;
+
         function getFeedback(isGood) {
-            const pool = feedbackPool[state.lang][isGood ? 'good' : 'try'];
+            const profile = getPrincessVoiceProfile(subjectGuidePrincess());
+            const lang = state.lang === 'es' ? 'es' : 'en';
+            const characterPool = isGood ? profile.praise?.[lang] : profile.encourage?.[lang];
+            const pool = (characterPool && characterPool.length)
+                ? characterPool
+                : feedbackPool[state.lang][isGood ? 'good' : 'try'];
             return pool[Math.floor(Math.random() * pool.length)];
         }
 
@@ -3497,7 +3892,9 @@
             toast.className = `fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-white px-8 py-5 rounded-full shadow-2xl border-4 z-40 transition-opacity duration-300 w-max max-w-[90vw] ${isPositive ? 'border-green-400' : 'border-blue-400'}`;
             text.className = `text-2xl font-bold ${isPositive ? 'text-green-700' : 'text-blue-700'}`;
             
-            playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', { fallbackText: msg });
+            const lessonBit = isPositive ? buildTeachableMoment(getCurrentActivityData(), true) : '';
+            const spoken = lessonBit && lessonBit !== msg ? `${msg} ${lessonBit}` : msg;
+            playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', { fallbackText: spoken });
             toast.classList.remove('hidden');
             if (feedbackHideTimer) clearTimeout(feedbackHideTimer);
             feedbackHideTimer = setTimeout(() => {
@@ -3643,8 +4040,10 @@
                         ${renderPrincessImage(zoePrincess, "princess-guide-avatar")}
                         <div class="voice-bubble">
                             <span>${personas[state.lang].zoe.greeting}</span>
+                            <span class="princess-tap-hint">${state.lang === 'en' ? 'Tap Zoe to hear her voice!' : '¡Toca a Zoe para oír su voz!'}</span>
                         </div>
                     </div>
+                    ${wordOfTheDayHtml()}
 
                     <div class="academy-toolbar">
                         <button onclick="navigate('miniGames')" class="academy-chip btn-kid">${toolbarTexts.miniGames}</button>
@@ -3837,6 +4236,7 @@
                         <div class="voice-bubble">
                             <h4 class="font-bold text-pink-600 mb-1 text-lg">${gradeTexts.tipTitle}</h4>
                             <p class="text-slate-600 leading-relaxed text-base">${gradeTexts.tipDesc}</p>
+                            <span class="princess-tap-hint">${state.lang === 'en' ? 'Tap Cinderella to hear her voice!' : '¡Toca a Cenicienta para oír su voz!'}</span>
                         </div>
                     </div>
                 </div>
@@ -4081,6 +4481,7 @@
                             <span class="text-xs uppercase tracking-wider text-slate-400 font-extrabold">${skillLabel}</span>
                         </h4>
                         <p class="text-slate-600 leading-relaxed text-sm md:text-base font-bold">${instructionText}</p>
+                            <span class="princess-tap-hint">${state.lang === 'en' ? `Tap ${princess.name} to hear her coaching voice.` : `Toca a ${princess.name} para oír su voz.`}</span>
                     </div>
                 </div>
             `;
@@ -4095,7 +4496,7 @@
                         <span>✨</span> <span>${state.lang === 'en' ? 'Hint' : 'Ayuda'}</span>
                     </button>
                     <div id="hint-tooltip-bubble" class="hidden absolute right-0 mt-3 w-64 bg-purple-900 text-white text-sm font-bold rounded-2xl p-4 shadow-xl border border-purple-500 after:content-[''] after:absolute after:bottom-full after:right-5 after:border-8 after:border-transparent after:border-b-purple-900">
-                        <p class="leading-relaxed">${state.lang === 'en' ? "Listen to the guide's audio again or check the options carefully!" : "¡Escucha el audio de la guía otra vez o revisa las opciones con cuidado!"}</p>
+                        <p class="leading-relaxed">${skillHintText(data)}</p>
                     </div>
                 </div>
             `;
@@ -4108,14 +4509,7 @@
                         <div class="text-3xl font-extrabold text-slate-600">${data.desc}</div>
                     </div>
                     
-                    <div class="audio-controls justify-center mb-8">
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-primary">
-                            <span>🔊</span> <span>${t.read}</span>
-                        </button>
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-replay">
-                            <span>🔁</span>
-                        </button>
-                    </div>
+                    ${audioControlHtml(data.audio)}
 
                     <div class="flex justify-center">
                         <button onclick="nextActivity()" class="btn-kid bg-blue-500 hover:bg-blue-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-blue-700 w-full max-w-xs">${t.next}</button>
@@ -4130,14 +4524,7 @@
                         ${data.emoji ? `<div class="text-7xl">${data.emoji}</div>` : ''}
                     </div>
 
-                    <div class="audio-controls justify-center mb-8">
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-primary">
-                            <span>🔊</span> <span>${t.read}</span>
-                        </button>
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio)} })' class="btn-kid btn-audio-replay">
-                            <span>🔁</span>
-                        </button>
-                    </div>
+                    ${audioControlHtml(data.audio)}
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         ${opts.map((opt) => `
@@ -4154,14 +4541,7 @@
                     <div class="bg-blue-50/60 border-4 border-blue-100 rounded-[2rem] p-8 shadow-sm mb-6 mt-4">
                         <div class="text-6xl mb-4">${data.emoji || '🎧'}</div>
                         <p class="text-xl md:text-2xl font-bold text-slate-700 leading-relaxed mb-6">${data.story}</p>
-                        <div class="audio-controls justify-center">
-                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.story)} })' class="btn-kid btn-audio-primary">
-                                <span>🔊</span> <span>${t.read}</span>
-                            </button>
-                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.story)} })' class="btn-kid btn-audio-replay">
-                                <span>🔁</span>
-                            </button>
-                        </div>
+                        ${audioControlHtml(data.audio || data.story, { wrapClass: '' })}
                     </div>
                     
                     <div class="bg-pink-50/50 border-2 border-pink-100 rounded-[1.5rem] p-6 mb-6">
@@ -4189,14 +4569,7 @@
                         `).join('')}
                     </div>
 
-                    <div class="audio-controls justify-center mb-8">
-                        <button onclick='playRoutineVoice("BLEND_WORD_DYNAMIC", { fallbackText: ${jsString(data.item)} })' class="btn-kid btn-audio-primary">
-                            <span>🗣️</span> <span>${t.read}</span>
-                        </button>
-                        <button onclick='playRoutineVoice("BLEND_WORD_DYNAMIC", { fallbackText: ${jsString(data.item)} })' class="btn-kid btn-audio-replay">
-                            <span>🔁</span>
-                        </button>
-                    </div>
+                    ${audioControlHtml(data.item, { voiceId: 'BLEND_WORD_DYNAMIC', blendPhonemes: data.phonemes || [], blendWord: data.item })}
 
                     <div class="flex justify-center">
                         <button onclick="nextActivity()" class="btn-kid bg-purple-500 hover:bg-purple-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-purple-700 w-full max-w-xs">${t.next}</button>
@@ -4217,14 +4590,7 @@
                         }).join('')}
                     </div>
 
-                    <div class="audio-controls justify-center mb-8">
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.text)} })' class="btn-kid btn-audio-primary">
-                            <span>🔊</span> <span>${t.read}</span>
-                        </button>
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(data.audio || data.text)} })' class="btn-kid btn-audio-replay">
-                            <span>🔁</span>
-                        </button>
-                    </div>
+                    ${audioControlHtml(data.audio || data.text)}
 
                     <div class="flex justify-center">
                         <button onclick="nextActivity()" class="btn-kid bg-orange-500 hover:bg-orange-600 text-white font-black text-2xl px-12 py-5 rounded-full shadow-lg border-b-[8px] border-orange-700 w-full max-w-xs">${t.next}</button>
@@ -4417,7 +4783,7 @@
                     const category = ref ? splitActivityKey(ref.key).category : 'letters';
                     
                     if (state.lang === 'es') {
-                        hintText = `¡Buen intento! Miremos de cerca e intentemos de nuevo.`;
+                        hintText = skillHintText(getCurrentActivityData());
                         if (subject === 'ela') {
                             if (category === 'blend' || category === 'sentences') {
                                 cueType = 'underline_digraph';
@@ -4428,7 +4794,7 @@
                             cueType = 'color_code_tens_ones';
                         }
                     } else {
-                        hintText = `Good try! Let's look closer and try again.`;
+                        hintText = skillHintText(getCurrentActivityData());
                         if (subject === 'ela') {
                             if (category === 'blend' || category === 'sentences') {
                                 cueType = 'underline_digraph';
@@ -4987,15 +5353,7 @@
                             <h3 class="text-3xl font-black text-slate-800 mb-4">${item.q}</h3>
                             ${item.emoji ? `<div class="text-8xl mt-4 animate-bounce-slight">${item.emoji}</div>` : ''}
                             
-                            <!-- Standard audio controls -->
-                            <div class="audio-controls justify-center mt-6">
-                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-primary">
-                                    <span>🔊</span> <span>${t.read}</span>
-                                </button>
-                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-replay">
-                                    <span>🔁</span>
-                                </button>
-                            </div>
+                            ${audioControlHtml(item.audio || item.q, { wrapClass: 'mt-6' })}
                         </div>
 
                         <!-- Kid-friendly bouncy option buttons -->
@@ -5046,7 +5404,8 @@
                         <div class="text-sm font-black text-amber-600 mb-2">${state.currentStory.tag}</div>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">${state.currentStory.title}</h2>
                         ${state.currentStory.sentences.map((s) => `<p class="text-4xl font-black text-slate-700 my-3">${s}</p>`).join('')}
-                        <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(storyText)} })' class="mt-6 btn-kid bg-yellow-400 text-yellow-900 font-bold text-xl px-7 py-4 rounded-full">🔊 Listen</button>
+                        <button onclick='speakAsPrincess("Belle", ${jsString(storyText)})' class="mt-6 btn-kid bg-yellow-400 text-yellow-900 font-bold text-xl px-7 py-4 rounded-full">🔊 Hear Belle read</button>
+                        <button onclick='speakSlowly(${jsString(storyText)})' class="mt-4 ml-3 btn-kid btn-audio-slow">🐢 Slow</button>
                     </div>
                     <button onclick="renderStoryQuestion(0)" class="btn-kid bg-amber-400 text-white font-black text-2xl px-8 py-5 rounded-full">Answer Questions</button>
                 </div>
@@ -5149,14 +5508,7 @@
                             </div>
                         </div>
 
-                        <div class="audio-controls justify-center mb-8">
-                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-primary">
-                                <span>🔊</span> <span>${t.read}</span>
-                            </button>
-                            <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.q)} })' class="btn-kid btn-audio-replay">
-                                <span>🔁</span>
-                            </button>
-                        </div>
+                        ${audioControlHtml(item.audio || item.q)}
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             ${shuffledOptions.map((opt) => `
@@ -5314,15 +5666,7 @@
                             <h3 class="text-3xl font-black text-slate-800 mb-4">${state.lang === 'en' ? 'Listen, Say, Choose' : 'Escucha, Di, Elige'}</h3>
                             <p class="text-xl font-bold text-slate-600 mb-6">${state.lang === 'en' ? 'Tap the audio button to hear the Spanish word.' : 'Toca el botón de audio para escuchar la palabra en español.'}</p>
                             
-                            <!-- Standardized audio controls -->
-                            <div class="audio-controls justify-center">
-                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.item)} })' class="btn-kid btn-audio-primary">
-                                    <span>🔊</span> <span>${t.read}</span>
-                                </button>
-                                <button onclick='playRoutineVoice("CURRICULUM_ITEM_AUDIO_DYNAMIC", { fallbackText: ${jsString(item.audio || item.item)} })' class="btn-kid btn-audio-replay">
-                                    <span>🔁</span>
-                                </button>
-                            </div>
+                            ${audioControlHtml(item.audio || item.item, { wrapClass: '' })}
                         </div>
 
                         <!-- Kid-friendly bouncy option buttons -->
