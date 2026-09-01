@@ -2171,6 +2171,8 @@
             currentSpanishPractice: null,
             spanishPracticeQueue: null,
             spanishPracticeIndex: 0,
+            reviewSessionTotal: 0,
+            reviewSessionCompleted: 0,
             suppressNextActivityRoutineVoice: false,
             lastLectureVoiceKey: '',
             routeToken: 0,
@@ -3542,7 +3544,13 @@
                 case 'activity': renderActivity(container); break;
                 case 'progress': renderProgress(container); break;
                 case 'parentDashboard': renderParentDashboard(container); break;
-                case 'missedReview': renderMissedReview(container); break;
+                case 'missedReview':
+                    if (!params.continueReview) {
+                        state.reviewSessionTotal = 0;
+                        state.reviewSessionCompleted = 0;
+                    }
+                    renderMissedReview(container);
+                    break;
                 case 'rewards': renderRewards(container); break;
                 case 'miniGames':
                     state.currentMiniRound = null;
@@ -4768,6 +4776,8 @@
             const due = getDueReviewItems(true);
             const reviewItem = due[0];
             if (!reviewItem) {
+                state.reviewSessionTotal = 0;
+                state.reviewSessionCompleted = 0;
                 container.innerHTML = `<div class="animate-pop text-center max-w-2xl mx-auto pt-16"><button onclick="navigate('hub')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button><div class="bg-white border-4 border-green-200 rounded-[3rem] p-10 shadow-xl"><div class="text-8xl mb-4">🌟</div><h2 class="text-4xl font-black">No review questions right now.</h2><p class="text-2xl text-slate-600 mt-4">Everything active is caught up.</p></div></div>`;
                 return;
             }
@@ -4781,11 +4791,16 @@
             state.currentReviewItem = reviewItem;
             const data = found.data;
             const opts = shuffleArray(data.options || []);
+            if (!state.reviewSessionTotal) {
+                state.reviewSessionTotal = due.length;
+                state.reviewSessionCompleted = 0;
+            }
+            const reviewCurrent = Math.min((state.reviewSessionCompleted || 0) + 1, state.reviewSessionTotal);
             container.innerHTML = `
                 <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
                     <button onclick="navigate('hub')" class="absolute top-0 left-0 bg-white/80 px-6 py-3 rounded-full font-bold btn-kid text-xl">${uiText[state.lang].back}</button>
                     <div class="mb-4 flex items-center justify-center gap-3 flex-wrap">
-                        ${activityProgressHtml(1, due.length)}
+                        ${activityProgressHtml(reviewCurrent, state.reviewSessionTotal)}
                         <div class="text-sm font-black text-slate-500">Review · ${reviewItem.missCount} miss${reviewItem.missCount === 1 ? '' : 'es'}</div>
                     </div>
                     <div class="bg-white border-4 border-purple-200 rounded-[3rem] p-8 shadow-xl mb-8">
@@ -4816,7 +4831,8 @@
                 state.stars[state.lang]++;
                 saveStars();
                 updateRewards();
-                setTimeout(() => navigate('missedReview'), 900);
+                state.reviewSessionCompleted = (state.reviewSessionCompleted || 0) + 1;
+                setTimeout(() => navigate('missedReview', { continueReview: true }), 900);
             } else {
                 item.missCount = (item.missCount || 0) + 1;
                 item.wrongAnswer = selected;
