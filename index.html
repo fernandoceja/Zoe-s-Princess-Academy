@@ -3202,11 +3202,11 @@
             const emoji = word.emoji || '✨';
             const audio = word.audio || item;
             const teacher = getPrincessByName('Zoe') || { name: 'Zoe' };
-            const label = state.lang === 'es' ? 'Palabra del día' : 'Word of the Day';
+            const label = state.lang === 'es' ? `Palabra del día de ${teacher.name}` : `${teacher.name}'s Word of the Day`;
             const hint = state.lang === 'es' ? 'Toca para oírla' : 'Tap to hear it';
             return `
                 <button type="button" class="word-of-day btn-kid" onclick='speakAsPrincess("Zoe", ${jsString(audio)})'>
-                    <span class="word-of-day-label">${teacher.name}'s ${label}</span>
+                    <span class="word-of-day-label">${label}</span>
                     <span class="word-of-day-word">${emoji} ${item}</span>
                     <span class="word-of-day-hint">${hint}</span>
                 </button>
@@ -3886,21 +3886,21 @@
             const text = document.getElementById('feedback-text');
             const icon = document.getElementById('feedback-icon');
 
-            text.innerText = msg;
+            const lessonBit = isPositive ? buildTeachableMoment(getCurrentActivityData(), true) : '';
+            const spoken = lessonBit && lessonBit !== msg ? `${msg} ${lessonBit}` : msg;
+            text.innerText = spoken;
             icon.innerText = isPositive ? "🙌" : "🤝";
             
             toast.className = `fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-white px-8 py-5 rounded-full shadow-2xl border-4 z-40 transition-opacity duration-300 w-max max-w-[90vw] ${isPositive ? 'border-green-400' : 'border-blue-400'}`;
             text.className = `text-2xl font-bold ${isPositive ? 'text-green-700' : 'text-blue-700'}`;
             
-            const lessonBit = isPositive ? buildTeachableMoment(getCurrentActivityData(), true) : '';
-            const spoken = lessonBit && lessonBit !== msg ? `${msg} ${lessonBit}` : msg;
             playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', { fallbackText: spoken });
             toast.classList.remove('hidden');
             if (feedbackHideTimer) clearTimeout(feedbackHideTimer);
             feedbackHideTimer = setTimeout(() => {
                 toast.classList.add('hidden');
                 feedbackHideTimer = null;
-            }, 2500);
+            }, 3500);
 
             if (isPositive) {
                 state.stars[state.lang]++;
