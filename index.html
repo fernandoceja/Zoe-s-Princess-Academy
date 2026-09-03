@@ -3966,6 +3966,16 @@
             }
         }
 
+        function hideFeedbackToast() {
+            const toast = document.getElementById('feedback-toast');
+            if (!toast) return;
+            if (feedbackHideTimer) {
+                clearTimeout(feedbackHideTimer);
+                feedbackHideTimer = null;
+            }
+            toast.classList.add('hidden');
+        }
+
         // --- ROUTER ---
         function navigate(view, params = {}) {
             beginRouteTransition();
@@ -4465,6 +4475,7 @@
 
         function renderActivity(container) {
             state.consecutiveMisses = 0;
+            hideFeedbackToast();
             if (typeof clearVisualHints === 'function') {
                 clearVisualHints();
             }
@@ -5544,6 +5555,7 @@
         }
 
         window.renderStoryQuestion = function(index) {
+            hideFeedbackToast();
             const story = state.currentStory;
             const q = story?.qs[index];
             if (!q) {
@@ -5582,6 +5594,7 @@
         }
 
         function renderVisualMathMode(container) {
+            hideFeedbackToast();
             const visualMathKey = [state.lang, 'visualMath', state.grade || 'k'].join('|');
             const visualMathItems = (curriculum[state.lang]?.math?.[state.grade || 'k'] || [])
                 .map((item, index) => ({ item, index }))
