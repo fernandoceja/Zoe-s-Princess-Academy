@@ -176,3 +176,21 @@ Replaced the starter curriculum (≤6 items per array) with a complete multi-gra
 
 ### Current Risk
 - The markdown docs lag behind the implemented app behavior. Treat this memory as the lighter-weight source until the README and handoff notes are refreshed.
+
+## 2026-09-03 First-Grade Support Update
+
+### Summary
+Aligned the lessons with first-grade end-of-year goals: reading short books, add/subtract/divide, and active listening for story recall. All changes are in `index.html`.
+
+### Completed Work
+- **Math — Grade 1 division.** Added a first-grade-friendly division intro (fair sharing, equal groups, halving) to `math.g1` for EN and ES, injected via a new `division` block in `applyLearningSystemCurriculum()`. Division previously existed only in `g2`. These are plain `quiz` items (they do not match `isVisualMathItem`, so they render in normal Princess Practice, not the ten-frame).
+- **Reading — grade-aware decodable "short books."** `renderStoryMode()` now keys stories by `state.grade` via `storiesByGrade` (k/g1/g2). Added four 5–6 sentence Grade 1 short books (The Lost Kitten, A Day at the Beach, The Garden Surprise, The Big Race) plus two Grade 2 stories, each with 3 comprehension questions. Story text restyled to a left-aligned, book-like block.
+- **Listening — dedicated "Story Listening" category.** Story-recall `listening` items used to be appended to the `sentences` category; they now populate a new `listening` ELA category (arrays initialized in `applyLearningSystemCurriculum()` before the push). Added the 🎧 Story Listening button to `renderElaHub`, plus `btnStoryListening` labels, `categoryLabel`, `skillMap` ("Active Listening & Story Recall"), `skillHintText`, and `elaCategoryVoiceId` wiring. Grade 1 story-recall items expanded from 5 to 10 (recall / sequence / cause).
+- **Feedback fix.** The success toast (`#feedback-toast`) auto-hid after 3500ms but questions advance at ~1800ms (900ms in Story Mode), so it lingered over the next question and showed the previous answer. Added `hideFeedbackToast()` and call it at the start of `renderActivity`, `renderVisualMathMode`, and `renderStoryQuestion`.
+
+### Validation
+- `node --check` on the inline script passes.
+- Manually tested Grade 1 in-browser: division questions appear and are answered with correct feedback; Story Listening plays a story and accepts recall answers; a Grade 1 short book renders with 5–6 sentences and comprehension questions; celebration banner now matches the current question and no longer lingers. Verified with video review.
+
+### Notes
+- Adding a new ELA category only requires an array under `curriculum[lang].ela[grade]`; `getCurrentActivityList()` and routing are generic, and no hardcoded category whitelist exists.
