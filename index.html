@@ -2303,6 +2303,11 @@
             'HUB_WELCOME_01',
             'HUB_PROMPT_01',
             'HUB_RANDOM_PRINCESS_DYNAMIC',
+            'PRINCESS_BELLE_GREETING_01',
+            'PRINCESS_ELSA_GREETING_01',
+            'PRINCESS_RAPUNZEL_GREETING_01',
+            'PRINCESS_ZOE_GREETING_01',
+            'PRINCESS_CINDERELLA_GREETING_01',
             'SUBJECT_READING_01',
             'SUBJECT_MATH_01',
             'SUBJECT_SCIENCE_01',
@@ -2963,7 +2968,8 @@
                 rate = 0.85,
                 pitch = 1.2,
                 lang = currentVoiceLang(),
-                forceFallback = false
+                forceFallback = false,
+                princess = null
             } = options;
             const path = forceFallback ? null : resolveVoicePath(id, lang);
             const voiceKey = [id, lang, path || 'fallback', fallbackText, afterText].join('|');
@@ -2972,9 +2978,10 @@
                 return Promise.resolve(false);
             }
             lastVoiceRequest = { key: voiceKey, at: now };
+            const speakPrincess = princess || subjectGuidePrincess();
 
             if (!path) {
-                if (fallbackText) speak(fallbackText);
+                if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
                 if (typeof afterVoice === 'function') afterVoice(false);
                 return Promise.resolve(false);
             }
@@ -2993,14 +3000,14 @@
                 const audio = new Audio(path);
                 currentVoiceAudio = audio;
                 audio.preload = 'auto';
-                const talkingPrincess = (subjectGuidePrincess() && subjectGuidePrincess().name) || '';
+                const talkingPrincess = (speakPrincess && speakPrincess.name) || '';
                 setPrincessTalking(true, talkingPrincess);
 
                 audio.addEventListener('ended', () => {
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
                     setPrincessTalking(false);
-                    if (afterText) speak(afterText);
+                    if (afterText) speak(afterText, undefined, undefined, { princess: speakPrincess });
                     if (typeof afterVoice === 'function') afterVoice(true);
                     resolve(true);
                 }, { once: true });
@@ -3009,7 +3016,7 @@
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
                     setPrincessTalking(false);
-                    if (fallbackText) speak(fallbackText);
+                    if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
                     if (typeof afterVoice === 'function') afterVoice(false);
                     resolve(false);
                 }, { once: true });
@@ -3018,7 +3025,7 @@
                     if (token !== currentVoiceToken) return resolve(false);
                     if (currentVoiceAudio === audio) currentVoiceAudio = null;
                     setPrincessTalking(false);
-                    if (fallbackText) speak(fallbackText);
+                    if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
                     if (typeof afterVoice === 'function') afterVoice(false);
                     resolve(false);
                 });
@@ -3161,6 +3168,17 @@
                 || princess.greeting
                 || (personas[state.lang] && personas[state.lang][String(name || '').toLowerCase()] && personas[state.lang][String(name || '').toLowerCase()].greeting)
                 || (state.lang === 'es' ? '¡Hola! Vamos a aprender juntas.' : 'Hello! Let us learn together.');
+            const voiceId = {
+                Belle: 'PRINCESS_BELLE_GREETING_01',
+                Elsa: 'PRINCESS_ELSA_GREETING_01',
+                Rapunzel: 'PRINCESS_RAPUNZEL_GREETING_01',
+                Zoe: 'PRINCESS_ZOE_GREETING_01',
+                Cinderella: 'PRINCESS_CINDERELLA_GREETING_01'
+            }[princess.name];
+            if (voiceId) {
+                playVoiceForCurrentLanguage(voiceId, { fallbackText: line, princess });
+                return;
+            }
             speak(line, undefined, undefined, { princess });
         }
 
