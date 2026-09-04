@@ -24,6 +24,31 @@
     "es": "assets/audio/ES/hub_random_princess_dynamic.mp3",
     "trigger": "renderHub / state.princess"
   },
+  "PRINCESS_BELLE_GREETING_01": {
+    "en": "assets/audio/EN/princess_belle_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_belle_greeting_01.mp3",
+    "trigger": "hearPrincess Belle"
+  },
+  "PRINCESS_ELSA_GREETING_01": {
+    "en": "assets/audio/EN/princess_elsa_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_elsa_greeting_01.mp3",
+    "trigger": "hearPrincess Elsa"
+  },
+  "PRINCESS_RAPUNZEL_GREETING_01": {
+    "en": "assets/audio/EN/princess_rapunzel_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_rapunzel_greeting_01.mp3",
+    "trigger": "hearPrincess Rapunzel"
+  },
+  "PRINCESS_ZOE_GREETING_01": {
+    "en": "assets/audio/EN/princess_zoe_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_zoe_greeting_01.mp3",
+    "trigger": "hearPrincess Zoe"
+  },
+  "PRINCESS_CINDERELLA_GREETING_01": {
+    "en": "assets/audio/EN/princess_cinderella_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_cinderella_greeting_01.mp3",
+    "trigger": "hearPrincess Cinderella"
+  },
   "SUBJECT_READING_01": {
     "en": "assets/audio/EN/subject_reading_01.mp3",
     "es": "assets/audio/ES/subject_reading_01.mp3",
