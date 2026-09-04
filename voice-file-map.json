@@ -49,6 +49,56 @@
     "es": "assets/audio/ES/princess_cinderella_greeting_01.mp3",
     "trigger": "hearPrincess Cinderella"
   },
+  "PRINCESS_BELLE_PRAISE_01": {
+    "en": "assets/audio/EN/princess_belle_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Belle"
+  },
+  "PRINCESS_ELSA_PRAISE_01": {
+    "en": "assets/audio/EN/princess_elsa_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Elsa"
+  },
+  "PRINCESS_RAPUNZEL_PRAISE_01": {
+    "en": "assets/audio/EN/princess_rapunzel_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Rapunzel"
+  },
+  "PRINCESS_ZOE_PRAISE_01": {
+    "en": "assets/audio/EN/princess_zoe_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Zoe"
+  },
+  "PRINCESS_CINDERELLA_PRAISE_01": {
+    "en": "assets/audio/EN/princess_cinderella_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Cinderella"
+  },
+  "PRINCESS_BELLE_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_belle_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Belle"
+  },
+  "PRINCESS_ELSA_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_elsa_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Elsa"
+  },
+  "PRINCESS_RAPUNZEL_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_rapunzel_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Rapunzel"
+  },
+  "PRINCESS_ZOE_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_zoe_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Zoe"
+  },
+  "PRINCESS_CINDERELLA_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_cinderella_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Cinderella"
+  },
   "SUBJECT_READING_01": {
     "en": "assets/audio/EN/subject_reading_01.mp3",
     "es": "assets/audio/ES/subject_reading_01.mp3",
