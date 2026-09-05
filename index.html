@@ -2152,7 +2152,12 @@
                         ['Lena lost her mitten at recess. Her friend found it by the slide and gave it back.', 'Where was the mitten?', ['By the slide','In the lunchbox','Under the bed'], 'By the slide', '🎧'],
                         ['Omar read a book about frogs. Then he drew a green frog with long legs.', 'What did Omar draw?', ['A frog','A boat','A star'], 'A frog', '🎧'],
                         ['The princess baked muffins with Grandma. First they mixed, then they poured, then they baked.', 'What did they do first?', ['Mixed','Baked','Ate'], 'Mixed', '🎧'],
-                        ['The class lined up quietly. They walked to the library to choose books.', 'Where did the class go?', ['Library','Pool','Garden'], 'Library', '🎧']
+                        ['The class lined up quietly. They walked to the library to choose books.', 'Where did the class go?', ['Library','Pool','Garden'], 'Library', '🎧'],
+                        ['Mia woke up early. She brushed her teeth, ate her toast, and packed her bag for school.', 'What did Mia do last?', ['Packed her bag','Woke up','Ate toast'], 'Packed her bag', '🎧'],
+                        ['Prince Leo could not find his puppy. He looked under the bed, then behind the door, and found it asleep in the basket.', 'Where was the puppy?', ['In the basket','Under the bed','Behind the door'], 'In the basket', '🎧'],
+                        ['It started to rain at the park. The princess opened her umbrella so she would stay dry.', 'Why did the princess open her umbrella?', ['So she would stay dry','To fly','To play ball'], 'So she would stay dry', '🎧'],
+                        ['Ana built a tall tower with blocks. Her cat bumped it and it fell down. Ana laughed and built it again.', 'What happened to the tower?', ['It fell down','It flew away','It turned gold'], 'It fell down', '🎧'],
+                        ['The three friends planted flowers. First they dug holes, next they dropped in seeds, and then they watered them.', 'What did they do right after digging holes?', ['Dropped in seeds','Watered them','Ate lunch'], 'Dropped in seeds', '🎧']
                     ],
                     g2: [
                         ['Maya wanted to help the garden. She pulled weeds, watered the tomatoes, and checked the soil. By Friday, the plants looked taller.', 'What is the main idea?', ['Maya cared for the garden','Maya bought tomatoes','Maya forgot the garden'], 'Maya cared for the garden', '🎧'],
@@ -2175,7 +2180,12 @@
                         ['Lena perdió su guante en el recreo. Su amiga lo encontró junto al resbaladero y se lo devolvió.', '¿Dónde estaba el guante?', ['Junto al resbaladero','En la lonchera','Debajo de la cama'], 'Junto al resbaladero', '🎧'],
                         ['Omar leyó un libro sobre ranas. Luego dibujó una rana verde con patas largas.', '¿Qué dibujó Omar?', ['Una rana','Un bote','Una estrella'], 'Una rana', '🎧'],
                         ['La princesa hizo panquecitos con la abuela. Primero mezclaron, luego sirvieron, y después hornearon.', '¿Qué hicieron primero?', ['Mezclaron','Hornearon','Comieron'], 'Mezclaron', '🎧'],
-                        ['La clase hizo fila en silencio. Caminaron a la biblioteca para escoger libros.', '¿A dónde fue la clase?', ['Biblioteca','Piscina','Jardín'], 'Biblioteca', '🎧']
+                        ['La clase hizo fila en silencio. Caminaron a la biblioteca para escoger libros.', '¿A dónde fue la clase?', ['Biblioteca','Piscina','Jardín'], 'Biblioteca', '🎧'],
+                        ['Mía se levantó temprano. Se cepilló los dientes, comió su pan y guardó su mochila para la escuela.', '¿Qué hizo Mía al final?', ['Guardó su mochila','Se levantó','Comió pan'], 'Guardó su mochila', '🎧'],
+                        ['El príncipe Leo no encontraba a su perrito. Buscó debajo de la cama, luego detrás de la puerta, y lo encontró dormido en la canasta.', '¿Dónde estaba el perrito?', ['En la canasta','Debajo de la cama','Detrás de la puerta'], 'En la canasta', '🎧'],
+                        ['Empezó a llover en el parque. La princesa abrió su paraguas para no mojarse.', '¿Por qué abrió la princesa el paraguas?', ['Para no mojarse','Para volar','Para jugar pelota'], 'Para no mojarse', '🎧'],
+                        ['Ana hizo una torre alta con bloques. Su gato la empujó y se cayó. Ana se rió y la hizo otra vez.', '¿Qué le pasó a la torre?', ['Se cayó','Voló','Se hizo de oro'], 'Se cayó', '🎧'],
+                        ['Las tres amigas sembraron flores. Primero hicieron hoyos, luego pusieron las semillas, y después las regaron.', '¿Qué hicieron justo después de hacer los hoyos?', ['Pusieron las semillas','Las regaron','Comieron'], 'Pusieron las semillas', '🎧']
                     ],
                     g2: [
                         ['Maya quiso ayudar en el jardín. Quitó hierbas, regó los tomates y revisó la tierra. Para el viernes, las plantas estaban más altas.', '¿Cuál es la idea principal?', ['Maya cuidó el jardín','Maya compró tomates','Maya olvidó el jardín'], 'Maya cuidó el jardín', '🎧'],
@@ -2206,15 +2216,57 @@
                 }
             };
 
+            // Division for early learners: fair sharing and equal groups (first-grade friendly intro).
+            const division = {
+                en: {
+                    g1: [
+                        ['Fair share: 6 cookies for 2 princesses. Each princess gets?', ['3','2','4'], '3', '🍪', 'Six cookies shared equally between two princesses gives three cookies each.'],
+                        ['Fair share: 8 jewels for 2 friends. Each friend gets?', ['4','3','5'], '4', '💎', 'Eight jewels shared equally between two friends gives four jewels each.'],
+                        ['Fair share: 10 flowers in 5 vases. Each vase gets?', ['2','3','1'], '2', '🌸', 'Ten flowers shared equally into five vases gives two flowers in each vase.'],
+                        ['Share 12 grapes with 3 friends. Each friend gets?', ['4','3','6'], '4', '🍇', 'Twelve grapes shared equally among three friends gives four grapes each.'],
+                        ['Share 9 crowns among 3 princesses. Each princess gets?', ['3','2','4'], '3', '👑', 'Nine crowns shared equally among three princesses gives three crowns each.'],
+                        ['Equal groups: 6 stars in 2 equal rows. Each row has?', ['3','2','4'], '3', '⭐', 'Six stars split into two equal rows gives three stars in each row.'],
+                        ['Half of 8 shells is?', ['4','3','5'], '4', '🐚', 'Half of eight is four. Sharing eight into two equal groups gives four each.'],
+                        ['Half of 10 cupcakes is?', ['5','4','6'], '5', '🧁', 'Half of ten is five. Sharing ten into two equal groups gives five each.']
+                    ]
+                },
+                es: {
+                    g1: [
+                        ['Repartir: 6 galletas para 2 princesas. ¿Cada princesa recibe?', ['3','2','4'], '3', '🍪', 'Seis galletas repartidas igualmente entre dos princesas dan tres galletas a cada una.'],
+                        ['Repartir: 8 joyas para 2 amigas. ¿Cada amiga recibe?', ['4','3','5'], '4', '💎', 'Ocho joyas repartidas igualmente entre dos amigas dan cuatro joyas a cada una.'],
+                        ['Repartir: 10 flores en 5 floreros. ¿Cada florero recibe?', ['2','3','1'], '2', '🌸', 'Diez flores repartidas igualmente en cinco floreros dan dos flores en cada florero.'],
+                        ['Reparte 12 uvas entre 3 amigas. ¿Cada amiga recibe?', ['4','3','6'], '4', '🍇', 'Doce uvas repartidas igualmente entre tres amigas dan cuatro uvas a cada una.'],
+                        ['Reparte 9 coronas entre 3 princesas. ¿Cada princesa recibe?', ['3','2','4'], '3', '👑', 'Nueve coronas repartidas igualmente entre tres princesas dan tres coronas a cada una.'],
+                        ['Grupos iguales: 6 estrellas en 2 filas iguales. ¿Cada fila tiene?', ['3','2','4'], '3', '⭐', 'Seis estrellas separadas en dos filas iguales dan tres estrellas en cada fila.'],
+                        ['La mitad de 8 conchas es?', ['4','3','5'], '4', '🐚', 'La mitad de ocho es cuatro. Repartir ocho en dos grupos iguales da cuatro a cada uno.'],
+                        ['La mitad de 10 pastelitos es?', ['5','4','6'], '5', '🧁', 'La mitad de diez es cinco. Repartir diez en dos grupos iguales da cinco a cada uno.']
+                    ]
+                }
+            };
+
             Object.entries(money).forEach(([lang, grades]) => {
                 Object.entries(grades).forEach(([grade, rows]) => {
                     addCurriculumItems(lang, 'math', grade, null, rows.map(([q, options, a, emoji, audio]) => ({ type: 'quiz', q, options, a, emoji, audio })));
                 });
             });
 
+            Object.entries(division).forEach(([lang, grades]) => {
+                Object.entries(grades).forEach(([grade, rows]) => {
+                    addCurriculumItems(lang, 'math', grade, null, rows.map(([q, options, a, emoji, audio]) => ({ type: 'quiz', q, options, a, emoji, audio })));
+                });
+            });
+
+            // Ensure a dedicated "Story Listening" category exists so active-listening recall is its own discoverable lesson.
+            ['en', 'es'].forEach((lang) => {
+                ['k', 'g1', 'g2'].forEach((grade) => {
+                    const elaGrade = curriculum[lang]?.ela?.[grade];
+                    if (elaGrade && !Array.isArray(elaGrade.listening)) elaGrade.listening = [];
+                });
+            });
+
             Object.entries(listening).forEach(([lang, grades]) => {
                 Object.entries(grades).forEach(([grade, rows]) => {
-                    addCurriculumItems(lang, 'ela', grade, 'sentences', rows.map(([story, q, options, a, emoji]) => ({ type: 'listening', story, q, options, a, emoji, audio: story })));
+                    addCurriculumItems(lang, 'ela', grade, 'listening', rows.map(([story, q, options, a, emoji]) => ({ type: 'listening', story, q, options, a, emoji, audio: story })));
                 });
             });
 
@@ -2373,7 +2425,7 @@
                 btnEla: "Reading<br>& ELA", btnMath: "Mathematics", btnSci: "Science & Social", btnSpan: "Spanish (Español)",
                 gradeTitle: "Choose Your Grade",
                 elaHubTitle: "What do you want to play today?",
-                btnLearnLetters: "Learn Letters", btnMatchSounds: "Match Sounds", btnBlendWords: "Blend Words", btnReadSentences: "Read Sentences", btnSightWords: "Sight Words",
+                btnLearnLetters: "Learn Letters", btnMatchSounds: "Match Sounds", btnBlendWords: "Blend Words", btnReadSentences: "Read Sentences", btnSightWords: "Sight Words", btnStoryListening: "Story Listening",
                 k: "Kindergarten", g1: "1st Grade", g2: "2nd Grade",
                 back: "⬅️ Back", next: "Next ➡️", read: "🔊 Listen", progress: "My Stars",
                 lessonComplete: "You completed this lesson!", lessonPrompt: "Play again or try something new.", playAgain: "Play Again", chooseNew: "Choose Something New"
@@ -2383,7 +2435,7 @@
                 btnEla: "Lectura<br>y Letras", btnMath: "Matemáticas", btnSci: "Ciencias", btnSpan: "Inglés (English)",
                 gradeTitle: "Elige tu Grado",
                 elaHubTitle: "¿Qué quieres jugar hoy?",
-                btnLearnLetters: "Aprender Letras", btnMatchSounds: "Juntar Sonidos", btnBlendWords: "Armar Palabras", btnReadSentences: "Leer Frases", btnSightWords: "Palabras Clave",
+                btnLearnLetters: "Aprender Letras", btnMatchSounds: "Juntar Sonidos", btnBlendWords: "Armar Palabras", btnReadSentences: "Leer Frases", btnSightWords: "Palabras Clave", btnStoryListening: "Escuchar Cuentos",
                 k: "Kínder", g1: "1er Grado", g2: "2do Grado",
                 back: "⬅️ Volver", next: "Siguiente ➡️", read: "🔊 Escuchar", progress: "Mis Estrellas",
                 lessonComplete: "¡Completaste esta lección!", lessonPrompt: "Juega otra vez o prueba algo nuevo.", playAgain: "Jugar Otra Vez", chooseNew: "Elegir Algo Nuevo"
@@ -3292,7 +3344,10 @@
             if (category === 'blend') {
                 return state.lang === 'es' ? 'Toca cada sonido, luego únelos rápido.' : 'Tap each sound, then blend them fast.';
             }
-            if (category === 'sentences' || data?.type === 'listening' || data?.type === 'sentence') {
+            if (category === 'listening' || data?.type === 'listening') {
+                return state.lang === 'es' ? 'Escucha con cuidado. ¿Qué pasó en el cuento?' : 'Listen carefully. What happened in the story?';
+            }
+            if (category === 'sentences' || data?.type === 'sentence') {
                 return state.lang === 'es' ? 'Lee cada palabra. ¿Quién hace qué?' : 'Read each word. Who is doing what?';
             }
             if (category === 'sight') {
@@ -3617,7 +3672,7 @@
         function categoryLabel(category) {
             return ({
                 ela: 'Reading', math: 'Math', science: 'Science', all: 'Practice',
-                letters: 'letters', match: 'sound matching', blend: 'blending', sentences: 'sentences', sight: 'sight words'
+                letters: 'letters', match: 'sound matching', blend: 'blending', sentences: 'sentences', sight: 'sight words', listening: 'story listening'
             })[category] || category || 'practice';
         }
 
@@ -3799,7 +3854,8 @@
                 match: 'ELA_MATCH_INTRO_01',
                 blend: 'ELA_BLEND_INTRO_01',
                 sentences: 'ELA_SENTENCES_INTRO_01',
-                sight: 'ELA_SIGHT_INTRO_01'
+                sight: 'ELA_SIGHT_INTRO_01',
+                listening: 'ELA_SENTENCES_INTRO_01'
             }[category] || 'ELA_CATEGORY_PROMPT_01';
         }
 
@@ -3926,6 +3982,16 @@
                 updateRewards();
                 fireConfetti();
             }
+        }
+
+        function hideFeedbackToast() {
+            const toast = document.getElementById('feedback-toast');
+            if (!toast) return;
+            if (feedbackHideTimer) {
+                clearTimeout(feedbackHideTimer);
+                feedbackHideTimer = null;
+            }
+            toast.classList.add('hidden');
         }
 
         // --- ROUTER ---
@@ -4336,9 +4402,13 @@
                                 <span>${t.btnReadSentences}</span>
                                 <span class="text-4xl bg-white/30 p-3 rounded-full">📖</span>
                             </button>
-                            <button onclick="selectElaCategory('sight')" class="btn-kid bg-green-400 hover:bg-green-500 text-white p-6 rounded-[2rem] border-b-[8px] border-green-600 text-2xl font-bold flex items-center justify-between md:col-span-2 md:w-2/3 mx-auto">
+                            <button onclick="selectElaCategory('sight')" class="btn-kid bg-green-400 hover:bg-green-500 text-white p-6 rounded-[2rem] border-b-[8px] border-green-600 text-2xl font-bold flex items-center justify-between">
                                 <span>${t.btnSightWords}</span>
                                 <span class="text-4xl bg-white/30 p-3 rounded-full">👁️</span>
+                            </button>
+                            <button onclick="selectElaCategory('listening')" class="btn-kid bg-sky-400 hover:bg-sky-500 text-white p-6 rounded-[2rem] border-b-[8px] border-sky-600 text-2xl font-bold flex items-center justify-between">
+                                <span>${t.btnStoryListening}</span>
+                                <span class="text-4xl bg-white/30 p-3 rounded-full">🎧</span>
                             </button>
                             ${extraMode}
                         </div>
@@ -4423,6 +4493,7 @@
 
         function renderActivity(container) {
             state.consecutiveMisses = 0;
+            hideFeedbackToast();
             if (typeof clearVisualHints === 'function') {
                 clearVisualHints();
             }
@@ -4451,6 +4522,7 @@
                 'match': state.lang === 'en' ? 'Phonics & Sound Matching' : 'Fonética y Asociación de Sonidos',
                 'blend': state.lang === 'en' ? 'Word Blending & Decoding' : 'Combinación y Decodificación de Palabras',
                 'sentences': state.lang === 'en' ? 'Sentence Reading & Comprehension' : 'Lectura y Comprensión de Oraciones',
+                'listening': state.lang === 'en' ? 'Active Listening & Story Recall' : 'Escucha Activa y Recuerdo de Cuentos',
                 'sight': state.lang === 'en' ? 'Sight Words Recognition' : 'Reconocimiento de Palabras Comunes',
                 'math': state.lang === 'en' ? 'Mathematical Reasoning & Operations' : 'Razonamiento Matemático y Operaciones',
                 'science': state.lang === 'en' ? 'Scientific Observation & Categorization' : 'Observación Científica y Categorización',
@@ -5408,12 +5480,80 @@
         };
 
         function renderStoryMode(container) {
-            const stories = [
-                { tag: 'CVC + sight words', title: 'Sam and the Cat', sentences: ['Sam has a cat.', 'The cat can nap.', 'Sam can pat the cat.'], qs: [['Who has a cat?', ['Sam','Dog','Mom'], 'Sam'], ['What can the cat do?', ['Nap','Fly','Swim'], 'Nap']] },
-                { tag: 'Beginning sounds', title: 'The Big Red Bus', sentences: ['Ben sees a bus.', 'The bus is big.', 'Ben can ride.'], qs: [['What is big?', ['Bus','Cup','Hat'], 'Bus'], ['Who sees the bus?', ['Ben','Princess','Cat'], 'Ben']] },
-                { tag: 'Sight words', title: 'I See a Princess', sentences: ['I see a princess.', 'She can read.', 'We read a book.'], qs: [['What can she do?', ['Read','Sleep','Jump'], 'Read'], ['What do we read?', ['A book','A ball','A fish'], 'A book']] }
-            ];
-            state.currentStory = shuffleArray(stories)[0];
+            const storiesByGrade = {
+                k: [
+                    { tag: 'CVC + sight words', title: 'Sam and the Cat', sentences: ['Sam has a cat.', 'The cat can nap.', 'Sam can pat the cat.'], qs: [['Who has a cat?', ['Sam','Dog','Mom'], 'Sam'], ['What can the cat do?', ['Nap','Fly','Swim'], 'Nap']] },
+                    { tag: 'Beginning sounds', title: 'The Big Red Bus', sentences: ['Ben sees a bus.', 'The bus is big.', 'Ben can ride.'], qs: [['What is big?', ['Bus','Cup','Hat'], 'Bus'], ['Who sees the bus?', ['Ben','Princess','Cat'], 'Ben']] },
+                    { tag: 'Sight words', title: 'I See a Princess', sentences: ['I see a princess.', 'She can read.', 'We read a book.'], qs: [['What can she do?', ['Read','Sleep','Jump'], 'Read'], ['What do we read?', ['A book','A ball','A fish'], 'A book']] }
+                ],
+                g1: [
+                    {
+                        tag: 'Short Book • Grade 1',
+                        title: 'The Lost Kitten',
+                        sentences: ['Princess Belle had a small kitten named Pip.', 'One day, Pip ran into the tall grass and did not come back.', 'Belle looked by the pond and under the big tree.', 'At last, she heard a soft meow near the rose bush.', 'Pip was stuck, so Belle gently lifted him out.', 'The happy kitten purred all the way home.'],
+                        qs: [
+                            ['What was the kitten\u2019s name?', ['Pip','Max','Rex'], 'Pip'],
+                            ['Where did Belle find Pip?', ['Near the rose bush','In the pond','Up the tree'], 'Near the rose bush'],
+                            ['How did Pip feel at the end?', ['Happy','Angry','Scared'], 'Happy']
+                        ]
+                    },
+                    {
+                        tag: 'Short Book • Grade 1',
+                        title: 'A Day at the Beach',
+                        sentences: ['Elsa and her sister went to the beach.', 'First, they built a big sand castle.', 'Next, they found five smooth shells.', 'Then a wave washed over their feet and they laughed.', 'Before they left, they ate a picnic lunch.'],
+                        qs: [
+                            ['What did they build first?', ['A sand castle','A boat','A house'], 'A sand castle'],
+                            ['How many shells did they find?', ['Five','Two','Ten'], 'Five'],
+                            ['What did they do before they left?', ['Ate lunch','Went swimming','Took a nap'], 'Ate lunch']
+                        ]
+                    },
+                    {
+                        tag: 'Short Book • Grade 1',
+                        title: 'The Garden Surprise',
+                        sentences: ['Rapunzel planted tiny seeds in her garden.', 'She watered them every morning before school.', 'She waited and waited for many days.', 'One sunny day, green sprouts popped up from the soil.', 'Soon the whole garden was full of bright flowers.'],
+                        qs: [
+                            ['What did Rapunzel plant?', ['Seeds','Rocks','Toys'], 'Seeds'],
+                            ['When did she water the seeds?', ['Every morning','At night','Never'], 'Every morning'],
+                            ['What popped up from the soil?', ['Green sprouts','A frog','A ball'], 'Green sprouts']
+                        ]
+                    },
+                    {
+                        tag: 'Short Book • Grade 1',
+                        title: 'The Big Race',
+                        sentences: ['Mulan wanted to win the running race at school.', 'She trained hard each day after class.', 'On race day, she felt nervous but brave.', 'She ran fast and did not give up.', 'Mulan crossed the line first and won a gold medal.'],
+                        qs: [
+                            ['What race did Mulan want to win?', ['A running race','A swim race','A bike race'], 'A running race'],
+                            ['How did she feel on race day?', ['Nervous but brave','Sleepy','Bored'], 'Nervous but brave'],
+                            ['What did Mulan win?', ['A gold medal','A book','A hat'], 'A gold medal']
+                        ]
+                    }
+                ],
+                g2: [
+                    {
+                        tag: 'Short Book • Grade 2',
+                        title: 'The Kind Dragon',
+                        sentences: ['Long ago, a small dragon lived near a quiet village.', 'The villagers were afraid of him at first.', 'But the dragon only wanted a friend to share his cave.', 'One brave girl named Tiana brought him a basket of warm bread.', 'The dragon smiled and used his breath to light the village lamps.', 'From that day on, the dragon and the village were friends.'],
+                        qs: [
+                            ['Why were the villagers afraid at first?', ['They did not know the dragon','The dragon was loud','It was raining'], 'They did not know the dragon'],
+                            ['What did Tiana bring the dragon?', ['A basket of bread','A sword','A crown'], 'A basket of bread'],
+                            ['How did the dragon help the village?', ['He lit the lamps','He built a wall','He sang songs'], 'He lit the lamps']
+                        ]
+                    },
+                    {
+                        tag: 'Short Book • Grade 2',
+                        title: 'Saving for a Notebook',
+                        sentences: ['Aurora wanted a shiny new notebook from the shop.', 'It cost more coins than she had.', 'Each week she saved a few coins in a jar.', 'She did small jobs to earn extra coins.', 'After one month, she counted her coins and had enough.', 'Aurora walked to the shop and bought the notebook with a big smile.'],
+                        qs: [
+                            ['What did Aurora want to buy?', ['A notebook','A doll','A cake'], 'A notebook'],
+                            ['How did she get enough coins?', ['She saved and earned coins','She found them','A friend gave them'], 'She saved and earned coins'],
+                            ['How did Aurora feel at the end?', ['Happy','Sad','Angry'], 'Happy']
+                        ]
+                    }
+                ]
+            };
+            const grade = state.grade || 'k';
+            const pool = storiesByGrade[grade] || storiesByGrade.k;
+            state.currentStory = shuffleArray(pool)[0];
             const storyText = state.currentStory.sentences.join(' ');
             container.innerHTML = `
                 <div class="animate-pop text-center max-w-3xl mx-auto pt-16">
@@ -5421,7 +5561,9 @@
                     <div class="bg-white border-4 border-amber-200 rounded-[3rem] p-8 shadow-xl mb-8">
                         <div class="text-sm font-black text-amber-600 mb-2">${state.currentStory.tag}</div>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">${state.currentStory.title}</h2>
-                        ${state.currentStory.sentences.map((s) => `<p class="text-4xl font-black text-slate-700 my-3">${s}</p>`).join('')}
+                        <div class="text-left max-w-2xl mx-auto">
+                        ${state.currentStory.sentences.map((s) => `<p class="text-2xl md:text-3xl font-bold text-slate-700 my-2 leading-snug">${s}</p>`).join('')}
+                        </div>
                         <button onclick='speakAsPrincess("Belle", ${jsString(storyText)})' class="mt-6 btn-kid bg-yellow-400 text-yellow-900 font-bold text-xl px-7 py-4 rounded-full">🔊 Hear Belle read</button>
                         <button onclick='speakSlowly(${jsString(storyText)})' class="mt-4 ml-3 btn-kid btn-audio-slow">🐢 Slow</button>
                     </div>
@@ -5431,6 +5573,7 @@
         }
 
         window.renderStoryQuestion = function(index) {
+            hideFeedbackToast();
             const story = state.currentStory;
             const q = story?.qs[index];
             if (!q) {
@@ -5469,6 +5612,7 @@
         }
 
         function renderVisualMathMode(container) {
+            hideFeedbackToast();
             const visualMathKey = [state.lang, 'visualMath', state.grade || 'k'].join('|');
             const visualMathItems = (curriculum[state.lang]?.math?.[state.grade || 'k'] || [])
                 .map((item, index) => ({ item, index }))
