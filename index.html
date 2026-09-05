@@ -2283,6 +2283,8 @@
         window.currentUtterance = null; // Prevent iOS Safari GC
         let currentVoiceAudio = null;
         let currentVoiceToken = 0;
+        const voiceObjectUrls = new Map();
+        let speechChunkToken = 0;
         let lastVoiceRequest = { key: '', at: 0 };
         const activeRouteTimers = new Set();
         let feedbackHideTimer = null;
@@ -2501,8 +2503,8 @@
 
         const princessVoiceProfiles = {
             Belle: {
-                rate: 0.82, pitch: 1.12,
-                voiceHints: ['Samantha', 'Victoria', 'Karen', 'Google US English Female', 'Female'],
+                rate: 0.76, pitch: 1.08,
+                voiceHints: ['Aria', 'Jenny', 'Sonia', 'Samantha', 'Victoria', 'Karen', 'Google UK English Female', 'Female'],
                 greetings: {
                     en: "Hello! I am Belle. Books make us brave. Let's read together.",
                     es: "¡Hola! Soy Bella. Los libros nos hacen valientes. Vamos a leer juntas."
@@ -2517,8 +2519,8 @@
                 }
             },
             Elsa: {
-                rate: 0.88, pitch: 1.02,
-                voiceHints: ['Samantha', 'Karen', 'Tessa', 'Google US English', 'Female'],
+                rate: 0.8, pitch: 1.0,
+                voiceHints: ['Aria', 'Jenny', 'Sonia', 'Tessa', 'Karen', 'Samantha', 'Google UK English Female', 'Female'],
                 greetings: {
                     en: "Hello! I am Elsa. Take a calm breath. Numbers love a steady mind.",
                     es: "¡Hola! Soy Elsa. Respira con calma. A los números les gusta una mente serena."
@@ -2533,8 +2535,8 @@
                 }
             },
             Rapunzel: {
-                rate: 0.94, pitch: 1.26,
-                voiceHints: ['Moira', 'Tessa', 'Samantha', 'Google US English Female', 'Female'],
+                rate: 0.84, pitch: 1.16,
+                voiceHints: ['Moira', 'Aria', 'Jenny', 'Tessa', 'Samantha', 'Google UK English Female', 'Female'],
                 greetings: {
                     en: "Hi! I am Rapunzel. Every question is a new lantern. Let's explore!",
                     es: "¡Hola! Soy Rapunzel. Cada pregunta es una linterna nueva. ¡Vamos a explorar!"
@@ -2549,8 +2551,8 @@
                 }
             },
             Zoe: {
-                rate: 0.86, pitch: 1.22,
-                voiceHints: ['Paulina', 'Sabina', 'Monica', 'Samantha', 'Google español', 'Female'],
+                rate: 0.78, pitch: 1.14,
+                voiceHints: ['Paulina', 'Sabina', 'Monica', 'Aria', 'Jenny', 'Samantha', 'Google español', 'Female'],
                 greetings: {
                     en: "Hi! I am Zoe. Words grow when we practice. Welcome to the academy!",
                     es: "¡Hola! Soy Zoe. Las palabras crecen cuando practicamos. ¡Bienvenida a la academia!"
@@ -2565,8 +2567,8 @@
                 }
             },
             Cinderella: {
-                rate: 0.8, pitch: 1.16,
-                voiceHints: ['Victoria', 'Samantha', 'Karen', 'Female'],
+                rate: 0.74, pitch: 1.1,
+                voiceHints: ['Aria', 'Jenny', 'Victoria', 'Samantha', 'Karen', 'Google UK English Female', 'Female'],
                 greetings: {
                     en: "Hello! I am Cinderella. One kind step at a time. You may choose any grade.",
                     es: "¡Hola! Soy Cenicienta. Un pasito amable a la vez. Puedes elegir cualquier grado."
@@ -2637,8 +2639,8 @@
                 }
             },
             default: {
-                rate: 0.85, pitch: 1.2,
-                voiceHints: ['Samantha', 'Female', 'Google', 'Paulina'],
+                rate: 0.78, pitch: 1.12,
+                voiceHints: ['Aria', 'Jenny', 'Samantha', 'Female', 'Google UK English Female', 'Paulina'],
                 greetings: {
                     en: "Hello! Let's learn something wonderful together.",
                     es: "¡Hola! Aprendamos algo maravilloso juntas."
@@ -2671,6 +2673,25 @@
             return `${name}|${String(langCode || 'en').split('-')[0].toLowerCase()}`;
         }
 
+        function scorePrincessVoice(voice, profile, langPrefix) {
+            const name = String(voice.name || '').toLowerCase();
+            const lang = String(voice.lang || '').toLowerCase();
+            let score = 0;
+            if (lang.startsWith(langPrefix)) score += 24;
+            if (langPrefix === 'es' && /mx|us|419/.test(lang)) score += 10;
+            if (langPrefix === 'en' && /gb|ie|au|us/.test(lang)) score += 6;
+            if (/neural|online|natural|premium|enhanced|wavenet|studio/.test(name)) score += 28;
+            if (/aria|jenny|sonia|libby|natasha|samantha|victoria|karen|moira|tessa|paulina|sabina|monica|zira|susan|hazel/.test(name)) score += 16;
+            if (/female|woman|girl/.test(name)) score += 12;
+            if (/google uk english female/.test(name)) score += 14;
+            ((profile && profile.voiceHints) || []).forEach((hint) => {
+                if (name.includes(String(hint).toLowerCase())) score += 18;
+            });
+            if (!voice.localService) score += 8;
+            if (/male|david|mark|daniel|fred|tom|george|james|google us english$/.test(name) && !/female/.test(name)) score -= 30;
+            return score;
+        }
+
         function pickPrincessVoice(profile, langCode, princess) {
             if (!availableVoices.length && 'speechSynthesis' in window) {
                 availableVoices = window.speechSynthesis.getVoices();
@@ -2678,23 +2699,15 @@
             const langPrefix = String(langCode || 'en').split('-')[0].toLowerCase();
             const langVoices = availableVoices.filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith(langPrefix));
             const pool = langVoices.length ? langVoices : availableVoices;
+            if (!pool.length) return null;
             const pinKey = princessVoicePinKey(princess, langCode);
             if (pinKey && pinnedPrincessVoices[pinKey]) {
                 const pinned = pool.find((voice) => voice.name === pinnedPrincessVoices[pinKey]);
                 if (pinned) return pinned;
             }
-            const hints = (profile && profile.voiceHints) || [];
-            let chosen = null;
-            for (const hint of hints) {
-                const found = pool.find((voice) => voice.name && voice.name.toLowerCase().includes(String(hint).toLowerCase()));
-                if (found) {
-                    chosen = found;
-                    break;
-                }
-            }
-            if (!chosen) {
-                chosen = pool.find((voice) => /female|samantha|victoria|karen|moira|tessa|paulina|sabina|monica|google/i.test(voice.name || '')) || pool[0] || null;
-            }
+            const chosen = pool.slice().sort((left, right) => {
+                return scorePrincessVoice(right, profile, langPrefix) - scorePrincessVoice(left, profile, langPrefix);
+            })[0] || null;
             if (chosen && pinKey) pinnedPrincessVoices[pinKey] = chosen.name;
             return chosen;
         }
@@ -3112,14 +3125,27 @@
             if (cancelSpeech && 'speechSynthesis' in window) window.speechSynthesis.cancel();
         }
 
+        function fetchVoiceObjectUrl(path) {
+            const cached = voiceObjectUrls.get(path);
+            if (cached) return Promise.resolve(cached);
+            return fetch(path, { cache: 'reload', credentials: 'same-origin' })
+                .then((response) => {
+                    if (!response.ok) throw new Error('voice missing');
+                    return response.blob();
+                })
+                .then((blob) => {
+                    const objectUrl = URL.createObjectURL(blob);
+                    voiceObjectUrls.set(path, objectUrl);
+                    return objectUrl;
+                });
+        }
+
         function playVoice(id, options = {}) {
             const {
                 fallbackText = '',
                 afterText = '',
                 afterVoice = null,
                 interrupt = true,
-                rate = 0.85,
-                pitch = 1.2,
                 lang = currentVoiceLang(),
                 forceFallback = false,
                 princess = null
@@ -3148,13 +3174,23 @@
 
             if (interrupt) stopVoicePlayback();
 
-            return new Promise((resolve) => {
+            return fetchVoiceObjectUrl(path).then((objectUrl) => new Promise((resolve) => {
                 const token = ++currentVoiceToken;
-                const audio = new Audio(path);
+                const audio = new Audio(objectUrl);
                 currentVoiceAudio = audio;
                 audio.preload = 'auto';
                 const talkingPrincess = (speakPrincess && speakPrincess.name) || '';
                 setPrincessTalking(true, talkingPrincess);
+
+                const failToSpeech = () => {
+                    if (token !== currentVoiceToken) return resolve(false);
+                    if (currentVoiceAudio === audio) currentVoiceAudio = null;
+                    voiceObjectUrls.delete(path);
+                    setPrincessTalking(false);
+                    if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
+                    if (typeof afterVoice === 'function') afterVoice(false);
+                    resolve(false);
+                };
 
                 audio.addEventListener('ended', () => {
                     if (token !== currentVoiceToken) return resolve(false);
@@ -3165,23 +3201,12 @@
                     resolve(true);
                 }, { once: true });
 
-                audio.addEventListener('error', () => {
-                    if (token !== currentVoiceToken) return resolve(false);
-                    if (currentVoiceAudio === audio) currentVoiceAudio = null;
-                    setPrincessTalking(false);
-                    if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
-                    if (typeof afterVoice === 'function') afterVoice(false);
-                    resolve(false);
-                }, { once: true });
-
-                audio.play().catch(() => {
-                    if (token !== currentVoiceToken) return resolve(false);
-                    if (currentVoiceAudio === audio) currentVoiceAudio = null;
-                    setPrincessTalking(false);
-                    if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
-                    if (typeof afterVoice === 'function') afterVoice(false);
-                    resolve(false);
-                });
+                audio.addEventListener('error', failToSpeech, { once: true });
+                audio.play().catch(failToSpeech);
+            })).catch(() => {
+                if (fallbackText) speak(fallbackText, undefined, undefined, { princess: speakPrincess });
+                if (typeof afterVoice === 'function') afterVoice(false);
+                return false;
             });
         }
 
@@ -3194,6 +3219,24 @@
             return playVoiceForCurrentLanguage(`${prefix}_${String(pick).padStart(2, '0')}`, { fallbackText });
         }
 
+        function prefetchGuideVoiceClips() {
+            [
+                'PRINCESS_BELLE_GREETING_01',
+                'PRINCESS_ELSA_GREETING_01',
+                'PRINCESS_RAPUNZEL_GREETING_01',
+                'PRINCESS_ZOE_GREETING_01',
+                'PRINCESS_CINDERELLA_GREETING_01',
+                'PRINCESS_BELLE_PRAISE_01',
+                'PRINCESS_ELSA_PRAISE_01',
+                'PRINCESS_RAPUNZEL_PRAISE_01',
+                'PRINCESS_ZOE_PRAISE_01',
+                'PRINCESS_CINDERELLA_PRAISE_01'
+            ].forEach((id) => {
+                const path = resolveVoicePath(id);
+                if (path) fetchVoiceObjectUrl(path).catch(() => {});
+            });
+        }
+
         function loadVoiceMap() {
             voiceMap = createFallbackVoiceMap();
             fetch('voice-file-map.json', { cache: 'no-store' })
@@ -3201,6 +3244,7 @@
                 .then((map) => {
                     voiceMap = { ...voiceMap, ...map };
                     voiceMapSource = 'voice-file-map.json';
+                    prefetchGuideVoiceClips();
                     console.info('[ZoeVoice]', window.zoeVoiceDiagnostics());
                 })
                 .catch(() => {
@@ -3241,9 +3285,9 @@
             document.body.addEventListener('touchstart', unlockAudio, { once: true, capture: true });
 
             if ('speechSynthesis' in window) {
-                availableVoices = window.speechSynthesis.getVoices();
+                refreshAvailableVoices();
                 if (speechSynthesis.onvoiceschanged !== undefined) {
-                    speechSynthesis.onvoiceschanged = () => { availableVoices = window.speechSynthesis.getVoices(); };
+                    speechSynthesis.onvoiceschanged = () => refreshAvailableVoices();
                 }
             }
         }
@@ -3281,6 +3325,7 @@
 
         function unlockAudio() {
             if(!synthEnabled && 'speechSynthesis' in window) {
+                refreshAvailableVoices();
                 const u = new SpeechSynthesisUtterance('');
                 u.volume = 0;
                 window.speechSynthesis.speak(u);
@@ -3288,36 +3333,80 @@
             }
         }
 
+        function refreshAvailableVoices() {
+            if (!('speechSynthesis' in window)) return [];
+            availableVoices = window.speechSynthesis.getVoices() || [];
+            return availableVoices;
+        }
+
+        function splitSpeechChunks(text) {
+            return String(text || '')
+                .replace(/([.!?…]+)(\s+|$)/g, '$1|')
+                .replace(/([,;:])\s+/g, '$1|')
+                .split('|')
+                .map((chunk) => chunk.trim())
+                .filter(Boolean);
+        }
+
+        function speakChunk(text, rate, pitch, options = {}) {
+            const princess = options.princess || subjectGuidePrincess() || getPrincessByName('Zoe');
+            const profile = getPrincessVoiceProfile(princess);
+            const targetLangCode = options.lang || (state.lang === 'es' ? 'es-MX' : 'en-US');
+            refreshAvailableVoices();
+            const utterance = new SpeechSynthesisUtterance(String(text));
+            utterance.rate = Number.isFinite(rate) ? rate : profile.rate;
+            utterance.pitch = Number.isFinite(pitch) ? pitch : profile.pitch;
+            utterance.lang = targetLangCode;
+            const preferredVoice = pickPrincessVoice(profile, targetLangCode, princess);
+            if (preferredVoice) utterance.voice = preferredVoice;
+            window.currentUtterance = utterance;
+            const princessName = princess && princess.name ? princess.name : '';
+            setPrincessTalking(true, princessName);
+            utterance.onend = () => {
+                if (typeof options.onend === 'function') options.onend();
+            };
+            utterance.onerror = () => {
+                if (typeof options.onend === 'function') options.onend();
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
         function speak(text, rate, pitch, options = {}) {
             if (!text || !('speechSynthesis' in window)) return;
             stopVoicePlayback({ cancelSpeech: false });
             window.speechSynthesis.cancel();
             setPrincessTalking(false);
-
-            const princess = options.princess || subjectGuidePrincess() || getPrincessByName('Zoe');
-            const profile = getPrincessVoiceProfile(princess);
-            window.currentUtterance = new SpeechSynthesisUtterance(String(text));
-            window.currentUtterance.rate = Number.isFinite(rate) ? rate : profile.rate;
-            window.currentUtterance.pitch = Number.isFinite(pitch) ? pitch : profile.pitch;
-
-            const targetLangCode = options.lang || (state.lang === 'es' ? 'es-MX' : 'en-US');
-            window.currentUtterance.lang = targetLangCode;
-
-            if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
-            const preferredVoice = pickPrincessVoice(profile, targetLangCode, princess);
-            if (preferredVoice) window.currentUtterance.voice = preferredVoice;
-
-            const princessName = princess && princess.name ? princess.name : '';
-            setPrincessTalking(true, princessName);
-            window.currentUtterance.onend = () => {
+            const token = ++speechChunkToken;
+            const chunks = splitSpeechChunks(text);
+            const finish = () => {
+                if (token !== speechChunkToken) return;
                 setPrincessTalking(false);
                 if (typeof options.onend === 'function') options.onend();
             };
-            window.currentUtterance.onerror = () => {
-                setPrincessTalking(false);
-                if (typeof options.onend === 'function') options.onend();
+            const playNext = (index) => {
+                if (token !== speechChunkToken) return;
+                if (index >= chunks.length) {
+                    finish();
+                    return;
+                }
+                speakChunk(chunks[index], rate, pitch, {
+                    ...options,
+                    onend: () => setTimeout(() => playNext(index + 1), 200)
+                });
             };
-            window.speechSynthesis.speak(window.currentUtterance);
+
+            refreshAvailableVoices();
+            if (!availableVoices.length) {
+                const startWhenReady = () => {
+                    refreshAvailableVoices();
+                    if (token !== speechChunkToken) return;
+                    playNext(0);
+                };
+                window.speechSynthesis.addEventListener('voiceschanged', startWhenReady, { once: true });
+                setTimeout(startWhenReady, 350);
+                return;
+            }
+            playNext(0);
         }
 
         function hearPrincess(name) {
@@ -4034,13 +4123,7 @@
             playCoachVoice(greeting, {
                 princess,
                 kind: 'greeting',
-                keepPrincessName: true,
-                afterVoice: () => {
-                    playCoachVoice(
-                        lang === 'es' ? 'Puedes elegir cualquier grado.' : 'You may choose any grade.',
-                        { princess: getPrincessByName('Cinderella'), interrupt: false }
-                    );
-                }
+                keepPrincessName: true
             });
         }
 
@@ -4455,7 +4538,7 @@
                 const lang = state.lang === 'es' ? 'es' : 'en';
                 playCoachVoice(
                     getPrincessVoiceProfile(cindy).greetings?.[lang] || t.gradeTitle,
-                    { princess: cindy, kind: 'greeting', keepPrincessName: true, afterText: t.gradeTitle }
+                    { princess: cindy, kind: 'greeting', keepPrincessName: true }
                 );
             }
         }

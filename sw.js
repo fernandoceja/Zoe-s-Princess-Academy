@@ -1,5 +1,5 @@
 /* Zoe's Princess Academy — offline shell + local assets. No analytics. */
-const CACHE_NAME = 'zoe-academy-pwa-v2';
+const CACHE_NAME = 'zoe-academy-pwa-v3';
 
 const PRECACHE_URLS = [
   './',
@@ -94,6 +94,29 @@ async function cacheFirst(request) {
   return fresh;
 }
 
+function isAudioRequest(url) {
+  return /\.mp3$/i.test(url.pathname);
+}
+
+async function fullAudioResponse(request) {
+  const fullRequest = new Request(request.url, {
+    method: 'GET',
+    cache: 'reload'
+  });
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const fresh = await fetch(fullRequest);
+    if (fresh && fresh.ok && fresh.status === 200) {
+      await cache.put(fullRequest, fresh.clone());
+    }
+    return fresh;
+  } catch (error) {
+    const cached = await cache.match(fullRequest) || await cache.match(request.url);
+    if (cached) return cached;
+    throw error;
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -101,6 +124,11 @@ self.addEventListener('fetch', (event) => {
   const sameOrigin = url.origin === self.location.origin;
   const allowedCdn = RUNTIME_HOSTS.has(url.hostname);
   if (!sameOrigin && !allowedCdn) return;
+
+  if (sameOrigin && isAudioRequest(url)) {
+    event.respondWith(fullAudioResponse(event.request));
+    return;
+  }
 
   if (sameOrigin && isHtmlRequest(event.request, url)) {
     event.respondWith(networkFirst(event.request));
