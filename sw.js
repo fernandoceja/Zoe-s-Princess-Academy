@@ -1,5 +1,5 @@
 /* Zoe's Princess Academy — offline shell + local assets. No analytics. */
-const CACHE_NAME = 'zoe-academy-pwa-v3';
+const CACHE_NAME = 'zoe-academy-pwa-v4';
 
 const PRECACHE_URLS = [
   './',
