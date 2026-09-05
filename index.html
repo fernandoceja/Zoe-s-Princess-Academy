@@ -2404,20 +2404,20 @@
 
         const personas = {
             en: {
-                belle: { greeting: "Hi! I'm Belle. Books make us brave. Let's explore a story together!" },
-                elsa: { greeting: "Hi! I'm Elsa. Take a calm breath. Numbers love a steady mind!" },
-                rapunzel: { greeting: "Hi! I'm Rapunzel. Every question is a new lantern. Let's discover science!" },
-                moana: { greeting: "Hi! I'm Moana. Let's discover the world!" },
-                elena: { greeting: "Hi! I'm Elena. Let's learn some Spanish!" },
-                zoe: { greeting: "Hi! I'm Zoe. Welcome to the Princess Academy! Tap a princess to hear her voice." }
+                belle: { greeting: "Hello! I'm Belle! I love stories! Let's read together!" },
+                elsa: { greeting: "Hi! I'm Elsa! Numbers sparkle! Let's go!" },
+                rapunzel: { greeting: "Hi! I'm Rapunzel! Adventure time! Let's discover science!" },
+                moana: { greeting: "Hi! I'm Moana! Let's discover the world!" },
+                elena: { greeting: "Hi! I'm Elena! Let's learn some Spanish!" },
+                zoe: { greeting: "Hi! I'm Zoe! Welcome to Princess Academy! Let's learn!" }
             },
             es: {
-                belle: { greeting: "¡Hola! Soy Bella. Los libros nos hacen valientes. ¡Vamos a leer un cuento!" },
-                elsa: { greeting: "¡Hola! Soy Elsa. Respira con calma. ¡A los números les gusta una mente serena!" },
-                rapunzel: { greeting: "¡Hola! Soy Rapunzel. Cada pregunta es una linterna nueva. ¡Vamos a descubrir la ciencia!" },
+                belle: { greeting: "¡Hola! ¡Soy Bella! ¡Me encantan los cuentos! ¡Vamos a leer juntas!" },
+                elsa: { greeting: "¡Hola! ¡Soy Elsa! ¡Los números brillan! ¡Vamos!" },
+                rapunzel: { greeting: "¡Hola! ¡Soy Rapunzel! ¡Hora de aventura! ¡Vamos a descubrir la ciencia!" },
                 moana: { greeting: "¡Hola! Soy Moana. ¡Vamos a descubrir el mundo!" },
                 elena: { greeting: "¡Hola! Soy Elena. ¡Vamos a aprender español!" },
-                zoe: { greeting: "¡Hola! Soy Zoe. ¡Bienvenida a la Academia de Princesas! Toca una princesa para oír su voz." }
+                zoe: { greeting: "¡Hola! ¡Soy Zoe! ¡Bienvenida a la Academia de Princesas! ¡Vamos a aprender!" }
             }
         };
 
@@ -2503,11 +2503,11 @@
 
         const princessVoiceProfiles = {
             Belle: {
-                rate: 1.02, pitch: 1.16, playbackRate: 1.14,
+                rate: 1.14, pitch: 1.18, playbackRate: 1.1, pauseMs: 25,
                 voiceHints: ['Aria', 'Jenny', 'Sonia', 'Samantha', 'Victoria', 'Karen', 'Google UK English Female', 'Female'],
                 greetings: {
-                    en: "Hello! I'm Belle! Books make us brave. Let's read together!",
-                    es: "¡Hola! ¡Soy Bella! Los libros nos hacen valientes. ¡Vamos a leer juntas!"
+                    en: "Hello! I'm Belle! I love stories! Let's read together!",
+                    es: "¡Hola! ¡Soy Bella! ¡Me encantan los cuentos! ¡Vamos a leer juntas!"
                 },
                 praise: {
                     en: ["Yes! What a wonderful reader!", "Your story brain is glowing!", "Belle is so proud of that thinking!"],
@@ -2519,11 +2519,11 @@
                 }
             },
             Elsa: {
-                rate: 1.04, pitch: 1.08, playbackRate: 1.12,
+                rate: 1.14, pitch: 1.12, playbackRate: 1.1, pauseMs: 28,
                 voiceHints: ['Aria', 'Jenny', 'Sonia', 'Tessa', 'Karen', 'Samantha', 'Google UK English Female', 'Female'],
                 greetings: {
-                    en: "Hello! I'm Elsa! Numbers sparkle when we try. Let's go!",
-                    es: "¡Hola! ¡Soy Elsa! Los números brillan cuando lo intentamos. ¡Vamos!"
+                    en: "Hi! I'm Elsa! Numbers sparkle! Let's go!",
+                    es: "¡Hola! ¡Soy Elsa! ¡Los números brillan! ¡Vamos!"
                 },
                 praise: {
                     en: ["Yes! Your number magic sparkled!", "Brilliant thinking!", "That answer was as bright as ice!"],
@@ -2535,11 +2535,11 @@
                 }
             },
             Rapunzel: {
-                rate: 1.12, pitch: 1.28, playbackRate: 1.2,
+                rate: 1.22, pitch: 1.3, playbackRate: 1.16, pauseMs: 14,
                 voiceHints: ['Moira', 'Aria', 'Jenny', 'Tessa', 'Samantha', 'Google UK English Female', 'Female'],
                 greetings: {
-                    en: "Hi! I'm Rapunzel! Every question is a new lantern. Let's explore!",
-                    es: "¡Hola! ¡Soy Rapunzel! Cada pregunta es una linterna nueva. ¡Vamos a explorar!"
+                    en: "Hi! I'm Rapunzel! Adventure time! Let's discover science!",
+                    es: "¡Hola! ¡Soy Rapunzel! ¡Hora de aventura! ¡Vamos a descubrir la ciencia!"
                 },
                 praise: {
                     en: ["Yes! You lit up that answer!", "Explorer eyes, explorer brain!", "What a shining discovery!"],
@@ -2551,11 +2551,11 @@
                 }
             },
             Zoe: {
-                rate: 1.08, pitch: 1.22, playbackRate: 1.16,
+                rate: 1.18, pitch: 1.26, playbackRate: 1.12, pauseMs: 16,
                 voiceHints: ['Paulina', 'Sabina', 'Monica', 'Aria', 'Jenny', 'Samantha', 'Google español', 'Female'],
                 greetings: {
-                    en: "Hi! I'm Zoe! Words grow when we practice. Welcome to the academy!",
-                    es: "¡Hola! ¡Soy Zoe! Las palabras crecen cuando practicamos. ¡Bienvenida a la academia!"
+                    en: "Hi! I'm Zoe! Welcome to Princess Academy! Let's learn!",
+                    es: "¡Hola! ¡Soy Zoe! ¡Bienvenida a la Academia de Princesas! ¡Vamos a aprender!"
                 },
                 praise: {
                     en: ["High five! That was royal work!", "Your practice is making magic!", "Yes! You did it!"],
@@ -2567,11 +2567,11 @@
                 }
             },
             Cinderella: {
-                rate: 1.0, pitch: 1.18, playbackRate: 1.14,
+                rate: 1.12, pitch: 1.2, playbackRate: 1.1, pauseMs: 22,
                 voiceHints: ['Aria', 'Jenny', 'Victoria', 'Samantha', 'Karen', 'Google UK English Female', 'Female'],
                 greetings: {
-                    en: "Hello! I'm Cinderella! You can choose any grade. Let's shine!",
-                    es: "¡Hola! ¡Soy Cenicienta! Puedes elegir cualquier grado. ¡Vamos a brillar!"
+                    en: "Hello! I'm Cinderella! Pick a grade and let's shine!",
+                    es: "¡Hola! ¡Soy Cenicienta! ¡Elige un grado y vamos a brillar!"
                 },
                 praise: {
                     en: ["Yes! Kind and clever!", "You did it! One brave step!", "That was lovely work!"],
@@ -2583,7 +2583,7 @@
                 }
             },
             Anna: {
-                rate: 1.1, pitch: 1.22, playbackRate: 1.16,
+                rate: 1.16, pitch: 1.24, playbackRate: 1.12, pauseMs: 18,
                 voiceHints: ['Tessa', 'Samantha', 'Karen', 'Female'],
                 greetings: {
                     en: "Hi! I am Anna. Ready for a reading adventure?",
@@ -2591,7 +2591,7 @@
                 }
             },
             Ariel: {
-                rate: 1.12, pitch: 1.32, playbackRate: 1.18,
+                rate: 1.2, pitch: 1.32, playbackRate: 1.14, pauseMs: 14,
                 voiceHints: ['Moira', 'Tessa', 'Samantha', 'Female'],
                 greetings: {
                     en: "Hello! I am Ariel. Let's dive into learning!",
@@ -2599,7 +2599,7 @@
                 }
             },
             Aurora: {
-                rate: 0.96, pitch: 1.14, playbackRate: 1.1,
+                rate: 1.08, pitch: 1.16, playbackRate: 1.08, pauseMs: 28,
                 voiceHints: ['Victoria', 'Karen', 'Samantha', 'Female'],
                 greetings: {
                     en: "Hello! I am Aurora. Let's make today magical.",
@@ -2607,7 +2607,7 @@
                 }
             },
             Mulan: {
-                rate: 1.06, pitch: 1.08, playbackRate: 1.12,
+                rate: 1.14, pitch: 1.1, playbackRate: 1.1, pauseMs: 22,
                 voiceHints: ['Karen', 'Samantha', 'Tessa', 'Female'],
                 greetings: {
                     en: "Hello! I am Mulan. You are brave and ready to learn.",
@@ -2615,7 +2615,7 @@
                 }
             },
             Pocahontas: {
-                rate: 1.0, pitch: 1.14, playbackRate: 1.1,
+                rate: 1.1, pitch: 1.16, playbackRate: 1.08, pauseMs: 24,
                 voiceHints: ['Tessa', 'Karen', 'Samantha', 'Female'],
                 greetings: {
                     en: "Hello! I am Pocahontas. Let's listen, read, and discover.",
@@ -2623,7 +2623,7 @@
                 }
             },
             'Snow White': {
-                rate: 1.04, pitch: 1.26, playbackRate: 1.14,
+                rate: 1.12, pitch: 1.26, playbackRate: 1.1, pauseMs: 22,
                 voiceHints: ['Samantha', 'Victoria', 'Karen', 'Female'],
                 greetings: {
                     en: "Hello! I am Snow White. Let's read together, sweet friend.",
@@ -2631,7 +2631,7 @@
                 }
             },
             Tiana: {
-                rate: 1.1, pitch: 1.18, playbackRate: 1.16,
+                rate: 1.16, pitch: 1.2, playbackRate: 1.12, pauseMs: 18,
                 voiceHints: ['Tessa', 'Samantha', 'Moira', 'Female'],
                 greetings: {
                     en: "Hello! I am Tiana. Let's work hard and shine!",
@@ -2639,7 +2639,7 @@
                 }
             },
             default: {
-                rate: 1.06, pitch: 1.16, playbackRate: 1.14,
+                rate: 1.14, pitch: 1.18, playbackRate: 1.1, pauseMs: 22,
                 voiceHints: ['Aria', 'Jenny', 'Samantha', 'Female', 'Google UK English Female', 'Paulina'],
                 greetings: {
                     en: "Hello! Let's learn something wonderful together.",
@@ -2735,7 +2735,7 @@
                 return {
                     name: 'Zoe',
                     image: 'assets/zoe-avatar.png',
-                    greeting: state.lang === 'en' ? "Welcome! Let's learn together!" : "¡Bienvenida! ¡Vamos a aprender juntas!",
+                    greeting: state.lang === 'en' ? "Hi! Welcome to Princess Academy! Let's learn!" : "¡Hola! ¡Bienvenida a la Academia de Princesas! ¡Vamos a aprender!",
                     themeColor: '#ff7ebb'
                 };
             }
@@ -2743,7 +2743,7 @@
                 return {
                     name: 'Cinderella',
                     image: 'assets/cinderella.jpg',
-                    greeting: state.lang === 'en' ? 'Ready to pick a grade?' : '¿Lista para elegir un grado?',
+                    greeting: state.lang === 'en' ? "Pick a grade and let's shine!" : '¡Elige un grado y vamos a brillar!',
                     themeColor: '#4ba3e3'
                 };
             }
@@ -2929,8 +2929,8 @@
 
         function launchGreetingText() {
             return state.lang === 'es'
-                ? 'Bienvenida, Zoe. La academia está lista para aprender.'
-                : 'Welcome, Zoe. The academy is ready to learn.';
+                ? '¡Hola Zoe! ¡La academia está lista! ¡Vamos a aprender!'
+                : 'Hi Zoe! The academy is ready! Let\'s learn!';
         }
 
         function lectureVoiceKey() {
@@ -3180,7 +3180,7 @@
                 currentVoiceAudio = audio;
                 audio.preload = 'auto';
                 const profile = getPrincessVoiceProfile(speakPrincess);
-                audio.playbackRate = Number(profile.playbackRate) || 1.14;
+                audio.playbackRate = Number(profile.playbackRate) || 1.1;
                 if ('preservesPitch' in audio) audio.preservesPitch = true;
                 const talkingPrincess = (speakPrincess && speakPrincess.name) || '';
                 setPrincessTalking(true, talkingPrincess);
@@ -3380,6 +3380,9 @@
             setPrincessTalking(false);
             const token = ++speechChunkToken;
             const chunks = splitSpeechChunks(text);
+            const speakPrincess = options.princess || subjectGuidePrincess() || getPrincessByName('Zoe');
+            const profile = getPrincessVoiceProfile(speakPrincess);
+            const pauseMs = Number.isFinite(profile.pauseMs) ? profile.pauseMs : 22;
             const finish = () => {
                 if (token !== speechChunkToken) return;
                 setPrincessTalking(false);
@@ -3393,7 +3396,8 @@
                 }
                 speakChunk(chunks[index], rate, pitch, {
                     ...options,
-                    onend: () => setTimeout(() => playNext(index + 1), 40)
+                    princess: speakPrincess,
+                    onend: () => setTimeout(() => playNext(index + 1), pauseMs)
                 });
             };
 
@@ -4384,7 +4388,7 @@
             } else {
                 const zoe = getPrincessByName('Zoe');
                 const playHubPrompt = () => playCoachVoice(
-                    state.lang === 'en' ? 'Choose what you want to learn today.' : 'Elige qué quieres aprender hoy.',
+                    state.lang === 'en' ? 'What do you want to learn today? Let\'s go!' : '¿Qué quieres aprender hoy? ¡Vamos!',
                     { princess: zoe, interrupt: false }
                 );
                 if (!bootVoiceAttempted && !getSessionFlag(zoeLaunchGreetingKey)) {
@@ -4555,8 +4559,8 @@
                 ? "¡Bienvenidos al Jardín de Español! Let's practice reading and vocabulary!" 
                 : "Welcome to my Library! Let's practice reading and phonics today!";
             const greetingText = isSpanish 
-                ? "¡Hola! Soy Zoe. Let's learn Spanish letters, sounds, and words together!" 
-                : "Hello, Princess! I'm Belle. Let's explore letters, sounds, stories, and sight words together!";
+                ? "¡Hola! ¡Soy Zoe! Let's learn Spanish letters, sounds, and words together!" 
+                : "Hello! I'm Belle! Let's explore letters, sounds, and stories!";
             
             const extraMode = isSpanish
                 ? `<button onclick="navigate('spanishPractice')" class="btn-kid bg-emerald-400 hover:bg-emerald-500 text-white p-6 rounded-[2rem] border-b-[8px] border-emerald-600 text-2xl font-bold flex items-center justify-between md:col-span-2">
@@ -4641,8 +4645,8 @@
                 ? "Welcome to my Number Palace! Let's explore some math together!" 
                 : "Welcome to my Discovery Tower! Let's explore science and sorting together!";
             const greetingText = isMath 
-                ? (state.lang === 'en' ? "Hi! I'm Elsa. Let's practice with numbers and frames!" : "¡Hola! Soy Elsa. ¡Practiquemos con números y marcos!")
-                : (state.lang === 'en' ? "Hi! I'm Rapunzel. Let's discover science and sorting!" : "¡Hola! Soy Rapunzel. ¡Descubramos la ciencia y la clasificación!");
+                ? (state.lang === 'en' ? "Hi! I'm Elsa! Numbers sparkle! Let's practice!" : "¡Hola! ¡Soy Elsa! ¡Los números brillan! ¡Vamos a practicar!")
+                : (state.lang === 'en' ? "Hi! I'm Rapunzel! Adventure time! Let's discover science!" : "¡Hola! ¡Soy Rapunzel! ¡Hora de aventura! ¡Vamos a descubrir la ciencia!");
 
             const richButton = isMath
                 ? `<button onclick="navigate('visualMath')" class="btn-kid bg-pink-400 hover:bg-pink-500 text-white p-6 rounded-[2rem] border-b-[8px] border-pink-600 text-2xl font-bold flex items-center justify-between">
