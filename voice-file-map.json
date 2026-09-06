@@ -338,5 +338,110 @@
     "en": "assets/audio/EN/session_celebration_01.mp3",
     "es": "assets/audio/ES/session_celebration_01.mp3",
     "trigger": "future milestone / streak or star threshold"
+  },
+  "PRINCESS_ANNA_GREETING_01": {
+    "en": "assets/audio/EN/princess_anna_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_anna_greeting_01.mp3",
+    "trigger": "hearPrincess Anna"
+  },
+  "PRINCESS_ANNA_PRAISE_01": {
+    "en": "assets/audio/EN/princess_anna_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Anna"
+  },
+  "PRINCESS_ANNA_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_anna_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Anna"
+  },
+  "PRINCESS_ARIEL_GREETING_01": {
+    "en": "assets/audio/EN/princess_ariel_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_ariel_greeting_01.mp3",
+    "trigger": "hearPrincess Ariel"
+  },
+  "PRINCESS_ARIEL_PRAISE_01": {
+    "en": "assets/audio/EN/princess_ariel_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Ariel"
+  },
+  "PRINCESS_ARIEL_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_ariel_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Ariel"
+  },
+  "PRINCESS_AURORA_GREETING_01": {
+    "en": "assets/audio/EN/princess_aurora_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_aurora_greeting_01.mp3",
+    "trigger": "hearPrincess Aurora"
+  },
+  "PRINCESS_AURORA_PRAISE_01": {
+    "en": "assets/audio/EN/princess_aurora_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Aurora"
+  },
+  "PRINCESS_AURORA_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_aurora_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Aurora"
+  },
+  "PRINCESS_MULAN_GREETING_01": {
+    "en": "assets/audio/EN/princess_mulan_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_mulan_greeting_01.mp3",
+    "trigger": "hearPrincess Mulan"
+  },
+  "PRINCESS_MULAN_PRAISE_01": {
+    "en": "assets/audio/EN/princess_mulan_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Mulan"
+  },
+  "PRINCESS_MULAN_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_mulan_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Mulan"
+  },
+  "PRINCESS_POCAHONTAS_GREETING_01": {
+    "en": "assets/audio/EN/princess_pocahontas_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_pocahontas_greeting_01.mp3",
+    "trigger": "hearPrincess Pocahontas"
+  },
+  "PRINCESS_POCAHONTAS_PRAISE_01": {
+    "en": "assets/audio/EN/princess_pocahontas_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Pocahontas"
+  },
+  "PRINCESS_POCAHONTAS_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_pocahontas_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Pocahontas"
+  },
+  "PRINCESS_SNOW_WHITE_GREETING_01": {
+    "en": "assets/audio/EN/princess_snow_white_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_snow_white_greeting_01.mp3",
+    "trigger": "hearPrincess Snow White"
+  },
+  "PRINCESS_SNOW_WHITE_PRAISE_01": {
+    "en": "assets/audio/EN/princess_snow_white_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Snow White"
+  },
+  "PRINCESS_SNOW_WHITE_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_snow_white_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Snow White"
+  },
+  "PRINCESS_TIANA_GREETING_01": {
+    "en": "assets/audio/EN/princess_tiana_greeting_01.mp3",
+    "es": "assets/audio/ES/princess_tiana_greeting_01.mp3",
+    "trigger": "hearPrincess Tiana"
+  },
+  "PRINCESS_TIANA_PRAISE_01": {
+    "en": "assets/audio/EN/princess_tiana_praise_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(true) Tiana"
+  },
+  "PRINCESS_TIANA_ENCOURAGE_01": {
+    "en": "assets/audio/EN/princess_tiana_encourage_01.mp3",
+    "es": null,
+    "trigger": "showFeedback(false) Tiana"
   }
 }
