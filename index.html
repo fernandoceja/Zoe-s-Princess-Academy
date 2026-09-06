@@ -2975,10 +2975,6 @@
         function createFallbackVoiceMap() {
             const englishOnlyVoiceIds = new Set([
                 'LANGUAGE_SWITCH_TO_ENGLISH_01',
-                'PRINCESS_BELLE_PRAISE_01',
-                'PRINCESS_ELSA_PRAISE_01',
-                'PRINCESS_RAPUNZEL_PRAISE_01',
-                'PRINCESS_ZOE_PRAISE_01',
                 'PRINCESS_CINDERELLA_PRAISE_01',
             'PRINCESS_ANNA_PRAISE_01',
             'PRINCESS_ARIEL_PRAISE_01',
@@ -2988,10 +2984,6 @@
             'PRINCESS_SNOW_WHITE_PRAISE_01',
             'PRINCESS_TIANA_PRAISE_01',
 
-                'PRINCESS_BELLE_ENCOURAGE_01',
-                'PRINCESS_ELSA_ENCOURAGE_01',
-                'PRINCESS_RAPUNZEL_ENCOURAGE_01',
-                'PRINCESS_ZOE_ENCOURAGE_01',
                 'PRINCESS_CINDERELLA_ENCOURAGE_01',
                 'PRINCESS_ANNA_ENCOURAGE_01',
                 'PRINCESS_ARIEL_ENCOURAGE_01',
@@ -3088,11 +3080,9 @@
             const key = lectureVoiceKey();
             if (state.lastLectureVoiceKey === key) return Promise.resolve(false);
             state.lastLectureVoiceKey = key;
-            return playRoutineVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', {
-                fallbackText: lectureStartText(),
-                forceFallback: true,
-                keepPrincessName: true,
-                princess: subjectGuidePrincess()
+            return playCoachVoice(lectureStartText(), {
+                princess: subjectGuidePrincess(),
+                keepPrincessName: true
             });
         }
 
@@ -3118,7 +3108,7 @@
                 fallbackText,
                 afterText,
                 princess: options.princess || subjectGuidePrincess(),
-                forceFallback: options.forceFallback !== false
+                forceFallback: options.forceFallback === true
             });
         }
 
@@ -4212,10 +4202,12 @@
         }
 
         function playActivityIntro(data = getCurrentActivityData(), options = {}) {
+            const princess = options.princess || subjectGuidePrincess();
             if (!data) {
                 playRoutineVoice('MORE_ACTIVITIES_SOON_01', {
                     fallbackText: state.lang === 'en' ? 'More lessons are coming soon.' : 'Muy pronto habrá más lecciones.',
-                    interrupt: options.interrupt ?? true
+                    interrupt: options.interrupt ?? true,
+                    princess
                 });
                 return;
             }
@@ -4225,14 +4217,16 @@
                 playRoutineVoice(id, {
                     fallbackText: data.audio,
                     afterText: data.audio,
-                    interrupt: options.interrupt ?? true
+                    interrupt: options.interrupt ?? true,
+                    princess
                 });
                 return;
             }
             if (data.type === 'blend') {
                 playRoutineVoice(id, {
                     fallbackText: state.lang === 'en' ? 'Tap the sounds, then read the word!' : 'Toca los sonidos y une la palabra.',
-                    interrupt: options.interrupt ?? true
+                    interrupt: options.interrupt ?? true,
+                    princess
                 });
                 return;
             }
@@ -4241,7 +4235,8 @@
                     fallbackText: data.type === 'listening'
                         ? (data.audio || data.story)
                         : (state.lang === 'en' ? 'Tap a word to hear it.' : 'Toca una palabra para escucharla.'),
-                    interrupt: options.interrupt ?? true
+                    interrupt: options.interrupt ?? true,
+                    princess
                 });
             }
         }
@@ -4257,10 +4252,15 @@
             const greeting = getPrincessVoiceProfile(princess).greetings?.[lang]
                 || personas[state.lang][persona]?.greeting
                 || uiText[state.lang].gradeTitle;
-            playCoachVoice(greeting, {
+            playRoutineVoice(subjectVoiceId(subject, persona), {
                 princess,
-                kind: 'greeting',
-                keepPrincessName: true
+                fallbackText: greeting,
+                afterVoice: () => playCoachVoice(greeting, {
+                    princess,
+                    kind: 'greeting',
+                    keepPrincessName: true,
+                    interrupt: false
+                })
             });
         }
 
@@ -4268,8 +4268,10 @@
             state.suppressNextRouteVoice = true;
             navigate(target, { grade });
             const princess = subjectGuidePrincess() || getPrincessByName('Cinderella');
-            playCoachVoice(uiText[state.lang][grade] || uiText[state.lang].gradeTitle, {
+            const gradeLabelText = uiText[state.lang][grade] || uiText[state.lang].gradeTitle;
+            playRoutineVoice(gradeVoiceId(grade), {
                 princess,
+                fallbackText: gradeLabelText,
                 afterVoice: () => {
                     if (target === 'elaHub') {
                         playCoachVoice(uiText[state.lang].elaHubTitle, {
@@ -4285,8 +4287,10 @@
             state.suppressNextRouteVoice = true;
             state.suppressNextActivityRoutineVoice = true;
             navigate('activity', { elaCategory: category });
-            playCoachVoice(uiText[state.lang].elaHubTitle, {
-                princess: subjectGuidePrincess(),
+            const princess = subjectGuidePrincess();
+            playRoutineVoice(elaCategoryVoiceId(category), {
+                princess,
+                fallbackText: uiText[state.lang].elaHubTitle,
                 afterVoice: () => playLectureStartVoice()
             });
         }
