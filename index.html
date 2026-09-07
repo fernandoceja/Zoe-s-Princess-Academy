@@ -3024,6 +3024,39 @@
             return entry.en || null;
         }
 
+
+        // Curriculum Listen/Slow/WOTD clips (ElevenLabs packs).
+        // Path convention: assets/audio/{EN|ES}/curriculum/{belle|zoe|elsa|rapunzel}/{slug}.mp3
+        // Slow v1: same MP3 at Audio.playbackRate 0.75 (no separate *_slow files yet).
+        function slugFromSpeech(text) {
+            return String(text || '')
+                .toLowerCase()
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '')
+                .slice(0, 80) || 'clip';
+        }
+
+        function curriculumPrincessFolder(princess) {
+            const name = String(princessDisplayName(princess) || '').toLowerCase();
+            if (name.includes('belle')) return 'belle';
+            if (name.includes('elsa')) return 'elsa';
+            if (name.includes('rapunzel')) return 'rapunzel';
+            if (name.includes('zoe') || name.includes('elena')) return 'zoe';
+            return 'zoe';
+        }
+
+        function resolveCurriculumVoicePath(text, princess, lang = currentVoiceLang(), options = {}) {
+            const slug = slugFromSpeech(text);
+            if (!slug || slug === 'clip' && !String(text || '').trim()) return null;
+            const folder = curriculumPrincessFolder(princess);
+            const langFolder = (String(lang || '').toLowerCase() === 'es') ? 'ES' : 'EN';
+            // options.slow ignored for path in v1 — same file, slower playbackRate at play time.
+            return `assets/audio/${langFolder}/curriculum/${folder}/${slug}.mp3`;
+        }
+
+
         function getSessionFlag(key) {
             try {
                 return sessionStorage.getItem(key) === 'true';
@@ -3103,13 +3136,81 @@
             const keepPrincessName = options.keepPrincessName === true;
             const fallbackText = spokenCoachText(options.fallbackText || '', keepPrincessName);
             const afterText = spokenCoachText(options.afterText || '', keepPrincessName);
+            const princess = options.princess || subjectGuidePrincess();
+            const forceFallback = options.forceFallback === true;
+            if (
+                id === 'CURRICULUM_ITEM_AUDIO_DYNAMIC'
+                && fallbackText
+                && !forceFallback
+            ) {
+                const curriculumPath = resolveCurriculumVoicePath(
+                    options.fallbackText || fallbackText,
+                    princess,
+                    options.lang || currentVoiceLang(),
+                    options
+                );
+                if (curriculumPath) {
+                    return playVoice(id, {
+                        ...options,
+                        fallbackText,
+                        afterText,
+                        princess,
+                        forceFallback: false,
+                        voicePath: curriculumPath
+                    });
+                }
+            }
             return playVoice(id, {
                 ...options,
                 fallbackText,
                 afterText,
-                princess: options.princess || subjectGuidePrincess(),
-                forceFallback: options.forceFallback === true
+                princess,
+                forceFallback
             });
+        }
+
+        function playCurriculumSpeech(text, options = {}) {
+            const princess = options.princess || subjectGuidePrincess() || getPrincessByName('Zoe');
+            const keepPrincessName = options.keepPrincessName === true;
+            const raw = String(text || '').trim();
+            const spoken = spokenCoachText(raw, keepPrincessName);
+            if (!spoken && !raw) return Promise.resolve(false);
+            const lang = options.lang || currentVoiceLang();
+            const slow = options.slow === true;
+            const path = options.forceFallback === true
+                ? null
+                : resolveCurriculumVoicePath(raw || spoken, princess, lang, options);
+            const rate = slow ? 0.75 : options.playbackRate;
+            if (path) {
+                // Empty fallbackText so a missing MP3 does not TTS at normal rate;
+                // we apply slow/normal TTS ourselves below.
+                return playVoice('CURRICULUM_ITEM_AUDIO_DYNAMIC', {
+                    ...options,
+                    fallbackText: '',
+                    afterText: '',
+                    princess,
+                    forceFallback: false,
+                    voicePath: path,
+                    playbackRate: rate
+                }).then((played) => {
+                    if (played) return true;
+                    if (slow) speakSlowlyTts(spoken || raw, princess);
+                    else speak(spoken || raw, options.rate, options.pitch, { princess, lang: options.lang });
+                    return false;
+                });
+            }
+            if (slow) {
+                speakSlowlyTts(spoken || raw, princess);
+                return Promise.resolve(false);
+            }
+            speak(spoken || raw, options.rate, options.pitch, { princess, lang: options.lang });
+            return Promise.resolve(false);
+        }
+
+        function speakSlowlyTts(text, princess) {
+            const guide = princess || subjectGuidePrincess() || getPrincessByName('Zoe');
+            const profile = getPrincessVoiceProfile(guide);
+            speak(text, Math.max(0.5, (profile.rate || 0.85) - 0.28), profile.pitch, { princess: guide });
         }
 
         function playCoachVoice(text, options = {}) {
@@ -3259,9 +3360,11 @@
                 interrupt = true,
                 lang = currentVoiceLang(),
                 forceFallback = false,
-                princess = null
+                princess = null,
+                playbackRate = null,
+                voicePath = null
             } = options;
-            const path = forceFallback ? null : resolveVoicePath(id, lang);
+            const path = forceFallback ? null : (voicePath || resolveVoicePath(id, lang));
             const voiceKey = [id, lang, path || 'fallback', fallbackText, afterText].join('|');
             const now = Date.now();
             if (voiceKey === lastVoiceRequest.key && now - lastVoiceRequest.at < 700) {
@@ -3291,7 +3394,10 @@
                 currentVoiceAudio = audio;
                 audio.preload = 'auto';
                 const profile = getPrincessVoiceProfile(speakPrincess);
-                audio.playbackRate = Number(profile.playbackRate) || 1.1;
+                const rateOverride = Number(playbackRate);
+                audio.playbackRate = Number.isFinite(rateOverride) && rateOverride > 0
+                    ? rateOverride
+                    : (Number(profile.playbackRate) || 1.1);
                 if ('preservesPitch' in audio) audio.preservesPitch = true;
                 const talkingPrincess = (speakPrincess && speakPrincess.name) || '';
                 setPrincessTalking(true, talkingPrincess);
@@ -3559,13 +3665,13 @@
         }
 
         function speakAsPrincess(name, text) {
-            speak(text, undefined, undefined, { princess: getPrincessByName(name) || { name } });
+            const princess = getPrincessByName(name) || { name };
+            playCurriculumSpeech(text, { princess, keepPrincessName: true });
         }
 
         function speakSlowly(text) {
             const princess = subjectGuidePrincess() || getPrincessByName('Zoe');
-            const profile = getPrincessVoiceProfile(princess);
-            speak(text, Math.max(0.5, (profile.rate || 0.85) - 0.28), profile.pitch, { princess });
+            playCurriculumSpeech(text, { princess, slow: true });
         }
 
         function speakBlendCoach(phonemeText, word) {
@@ -3612,18 +3718,23 @@
             const voiceId = extra.voiceId || 'CURRICULUM_ITEM_AUDIO_DYNAMIC';
             const wrapClass = extra.wrapClass || 'mb-8';
             const slowLabel = state.lang === 'en' ? 'Slow' : 'Despacio';
+            const princess = extra.princess || subjectGuidePrincess();
+            const princessName = princessDisplayName(princess) || 'Zoe';
+            const listenHandler = voiceId === 'CURRICULUM_ITEM_AUDIO_DYNAMIC'
+                ? `playCurriculumSpeech(${jsString(fallbackText)}, { princess: getPrincessByName(${jsString(princessName)}) })`
+                : `playRoutineVoice(${jsString(voiceId)}, { fallbackText: ${jsString(fallbackText)}, princess: getPrincessByName(${jsString(princessName)}) })`;
             const slowHandler = extra.blendPhonemes
                 ? `speakBlendCoach(${jsString((extra.blendPhonemes || []).join(' '))}, ${jsString(extra.blendWord || fallbackText)})`
                 : `speakSlowly(${jsString(extra.slowText || fallbackText)})`;
             return `
                 <div class="audio-controls justify-center ${wrapClass}">
-                    <button onclick='playRoutineVoice(${jsString(voiceId)}, { fallbackText: ${jsString(fallbackText)} })' class="btn-kid btn-audio-primary">
+                    <button onclick='${listenHandler}' class="btn-kid btn-audio-primary">
                         <span>🔊</span> <span>${t.read}</span>
                     </button>
                     <button onclick='${slowHandler}' class="btn-kid btn-audio-slow">
                         <span>🐢</span> <span>${slowLabel}</span>
                     </button>
-                    <button onclick='playRoutineVoice(${jsString(voiceId)}, { fallbackText: ${jsString(fallbackText)} })' class="btn-kid btn-audio-replay" aria-label="${t.read}">
+                    <button onclick='${listenHandler}' class="btn-kid btn-audio-replay" aria-label="${t.read}">
                         <span>🔁</span>
                     </button>
                 </div>
@@ -3681,6 +3792,8 @@
         window.speakAsPrincess = speakAsPrincess;
         window.speakSlowly = speakSlowly;
         window.speakBlendCoach = speakBlendCoach;
+        window.playCurriculumSpeech = playCurriculumSpeech;
+        window.slugFromSpeech = slugFromSpeech;
 
         function getFeedback(isGood) {
             const princess = subjectGuidePrincess();
