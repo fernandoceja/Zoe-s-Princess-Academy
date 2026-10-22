@@ -6,10 +6,11 @@
  */
 
 import { Narrator, SoundFX } from './audio.js';
+import { PORTRAIT_ZOE } from './portrait-zoe.js';
 import { PARENT_CORNER_HTML } from './quests.js';
 
 const GOLD = '#ebd373';
-const ZOE_PORTRAIT = 'portraits/princess-zoe.jpg';
+const ZOE_PORTRAIT = PORTRAIT_ZOE;
 
 let _root = null;
 let _els = {};
