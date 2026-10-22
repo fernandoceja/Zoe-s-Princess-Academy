@@ -8,6 +8,7 @@
 import { Narrator, SoundFX } from './audio.js';
 import { PORTRAIT_ZOE } from './portrait-zoe.js';
 import { PARENT_CORNER_HTML } from './quests.js';
+import { Input } from './input.js';
 
 const GOLD = '#ebd373';
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -16,6 +17,7 @@ let _root = null;
 let _els = {};
 let _hooks = {};
 let _joyHandlers = null;
+let _roamUI = false; // true while freely roaming (joystick visible on touch)
 
 const PARENT_HTML = (typeof PARENT_CORNER_HTML === 'string' && PARENT_CORNER_HTML)
   ? PARENT_CORNER_HTML
@@ -43,7 +45,8 @@ function injectCSS() {
   /* ---------- top bar ---------- */
   .zsq-topbar { position: absolute; top: 0; left: 0; right: 0;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; pointer-events: none; }
+    padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    pointer-events: none; }
   .zsq-pill { pointer-events: auto; background: rgba(255,255,255,.92);
     border: 3px solid ${GOLD}; border-radius: 999px; padding: 10px 20px;
     font-weight: 800; font-size: 20px; color: #475569;
@@ -66,6 +69,7 @@ function injectCSS() {
     pointer-events: auto; background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 60%, #e6f7ff 100%);
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 20px;
     box-shadow: 0 14px 40px rgba(31,41,55,.22); display: flex; gap: 16px; align-items: flex-start;
+    max-height: 70vh; overflow-y: auto;
     animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .zsq-portrait { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex: none;
     border: 4px solid rgba(255,255,255,.9); outline: 3px solid ${GOLD};
@@ -184,6 +188,83 @@ function injectCSS() {
     transform: translate(-50%, -50%); box-shadow: 0 4px 12px rgba(31,41,55,.25); }
   @media (pointer: fine) { .zsq-joy { display: none; } }
 
+  /* ---------- tutorial ---------- */
+  .zsq-tutorial { position: absolute; inset: 0; pointer-events: auto;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: linear-gradient(160deg, #fdf4ff 0%, #fef3c7 45%, #e0f2fe 100%);
+    animation: zsq-pop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .zsq-tut-card { background: rgba(255,255,255,.97); border: 4px solid ${GOLD};
+    border-radius: 28px; padding: 36px 32px; max-width: 620px; width: 100%;
+    text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.25);
+    max-height: 92vh; overflow-y: auto; }
+  .zsq-tut-emoji { font-size: 76px; margin-bottom: 10px; animation: zsq-bob 1.8s ease-in-out infinite; }
+  .zsq-tut-title { font-size: 36px; font-weight: 900; color: #92400e; margin-bottom: 12px; line-height: 1.15; }
+  .zsq-tut-text { font-size: 24px; font-weight: 700; color: #475569; line-height: 1.5; margin-bottom: 8px; }
+  .zsq-tut-row { display: flex; gap: 14px; justify-content: center; align-items: center;
+    margin-top: 22px; flex-wrap: wrap; }
+  .zsq-skip { min-height: 72px; padding: 14px 34px; border-radius: 24px; cursor: pointer;
+    font-size: 22px; font-weight: 800; color: #475569; background: #fff;
+    border: 3px solid rgba(148,163,184,.55); box-shadow: 0 6px 0 rgba(0,0,0,.08);
+    transition: transform .12s ease; }
+  .zsq-skip:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+
+  /* ---------- pause menu ---------- */
+  .zsq-pause-wrap { position: absolute; inset: 0; pointer-events: auto;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(31,41,55,.45); animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .zsq-pause-card { background: rgba(255,255,255,.98); border: 4px solid ${GOLD};
+    border-radius: 28px; padding: 36px 32px; max-width: 560px; width: 100%;
+    text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.4);
+    max-height: 92vh; overflow-y: auto; }
+  .zsq-howto { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+
+  /* ---------- responsive: phones ---------- */
+  @media (max-width: 480px) {
+    .zsq-topbar { padding: 8px 10px; }
+    .zsq-pill { font-size: 15px; padding: 8px 14px; min-height: 48px;
+      max-width: 44vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .zsq-stars { font-size: 17px; padding: 8px 12px; min-height: 48px; }
+    .zsq-iconbtn { width: 48px; height: 48px; font-size: 22px; }
+    .zsq-toasts { top: 70px; }
+    .zsq-toast { font-size: 17px; padding: 10px 20px; }
+    .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 44%; max-width: 92vw; white-space: normal; text-align: center; }
+    .zsq-sheet { left: 10px; right: 10px; bottom: 10px; padding: 14px; gap: 12px;
+      max-height: 64vh; overflow-y: auto; }
+    .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
+    .zsq-portrait-fallback { font-size: 34px; }
+    .zsq-dname { font-size: 20px; }
+    .zsq-dtext { font-size: 18px; }
+    .zsq-next { min-height: 60px; font-size: 19px; padding: 10px 26px; }
+    .zsq-replay { width: 56px; height: 56px; font-size: 24px; }
+    .zsq-modal { padding: 18px; }
+    .zsq-prompt { font-size: 23px; }
+    .zsq-choice { min-height: 64px; font-size: 23px; padding: 12px 14px; }
+    .zsq-answer-msg { font-size: 19px; }
+    .zsq-joy { width: 124px; height: 124px; left: 16px; bottom: 16px; }
+    .zsq-cel-title { font-size: 32px; }
+    .zsq-cel-sub { font-size: 20px; }
+    .zsq-bigstars { font-size: 64px; }
+    .zsq-bigbtn { font-size: 23px; padding: 14px 40px; }
+    .zsq-tut-card, .zsq-pause-card { padding: 24px 20px; }
+    .zsq-tut-emoji { font-size: 60px; }
+    .zsq-tut-title { font-size: 28px; }
+    .zsq-tut-text { font-size: 20px; }
+    .zsq-skip { min-height: 64px; font-size: 19px; padding: 12px 28px; }
+    .zsq-finale-card { padding: 24px 20px; }
+    .zsq-finale h2 { font-size: 30px; }
+    .zsq-finale-line { font-size: 20px; }
+  }
+
+  /* ---------- responsive: short screens (landscape phones) ---------- */
+  @media (max-height: 500px) {
+    .zsq-title { gap: 10px; padding: 16px; overflow-y: auto; justify-content: flex-start; }
+    .zsq-zoe-hero { width: 96px; height: 96px; }
+    .zsq-sheet { max-height: 72vh; }
+    .zsq-modal { max-height: 94vh; padding: 16px; }
+    .zsq-tut-card, .zsq-pause-card { max-height: 94vh; padding: 20px; }
+    .zsq-tut-emoji { font-size: 52px; margin-bottom: 4px; }
+  }
+
   button:focus-visible { outline: 4px solid rgba(14, 165, 233, 0.55); outline-offset: 3px; }
 
   @keyframes zsq-pop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -229,6 +310,33 @@ function _makePortrait(src) {
     holder.appendChild(el('div', 'zsq-portrait-fallback', '👑'));
   }
   return holder.firstChild;
+}
+
+/* Tutorial steps, rebuilt on every render so the wording adapts live to the
+ * currently connected controls (keyboard / touch / Bluetooth controller). */
+function _tutorialSteps() {
+  const c = Input.describeControls();
+  let moveText, talkText;
+  if (c.gamepad) {
+    moveText = 'Push the LEFT STICK to walk Princess Zoe around the kingdom!';
+    talkText = 'Walk up to a princess, then press ✕ (the Cross button) to say hello!';
+  } else if (c.touch) {
+    moveText = 'Drag the JOYSTICK to walk Princess Zoe around the kingdom!';
+    talkText = 'Walk up to a princess and TAP her to say hello!';
+  } else {
+    moveText = 'Use WASD or the ARROW KEYS to walk Princess Zoe around the kingdom!';
+    talkText = 'Walk up to a princess and CLICK her — or press E — to say hello!';
+  }
+  return [
+    { emoji: '👑', title: 'Hi Princess Zoe!',
+      text: 'Welcome to Starlight Quest! Let us take a quick tour first!' },
+    { emoji: '🚶‍♀️', title: 'Walking', text: moveText },
+    { emoji: '💬', title: 'Say hello', text: talkText },
+    { emoji: '⭐', title: 'Win star shards',
+      text: 'Answer the princesses\u2019 questions to win STAR SHARDS! Every right answer earns a star!' },
+    { emoji: '💖', title: 'No wrong answers',
+      text: 'There are no wrong answers here. If you miss one, just try again!' },
+  ];
 }
 
 export const UI = {
@@ -291,8 +399,12 @@ export const UI = {
     _root.appendChild(parentWrap);
     const title = el('div', 'zsq-title zsq-hidden');
     _root.appendChild(title);
+    const tutorial = el('div', 'zsq-tutorial zsq-hidden');
+    _root.appendChild(tutorial);
+    const pauseWrap = el('div', 'zsq-pause-wrap zsq-hidden');
+    _root.appendChild(pauseWrap);
 
-    _els = { topbar, pill, stars, muteBtn, sheet, challengeWrap, interact, toasts, celebrate, finale, parentWrap, title };
+    _els = { topbar, pill, stars, muteBtn, sheet, challengeWrap, interact, toasts, celebrate, finale, parentWrap, title, tutorial, pauseWrap };
     this.setMuteUI(Narrator.muted, null);
   },
 
@@ -320,6 +432,112 @@ export const UI = {
   },
 
   hideTitle() { hide(_els.title); },
+
+  /**
+   * 5-step intro tutorial. Shown on first launch and replayable from the
+   * pause menu. Wording adapts to keyboard / touch / connected controller,
+   * and swaps live if a gamepad connects mid-tutorial. Every step is also
+   * read aloud (slow, kid-friendly). Big touch targets throughout.
+   */
+  showTutorial({ onDone } = {}) {
+    const wrap = _els.tutorial;
+    wrap.innerHTML = '';
+    const card = el('div', 'zsq-tut-card');
+    wrap.appendChild(card);
+    let i = 0;
+
+    // Temporarily watch for controller changes so the wording swaps live;
+    // the integrator's own handler is restored afterwards.
+    const prevHandler = Input.onGamepadChange;
+    Input.onGamepadChange = (connected, id) => {
+      render(i);
+      if (typeof prevHandler === 'function') prevHandler(connected, id);
+    };
+    const cleanup = () => {
+      Input.onGamepadChange = prevHandler;
+      Narrator.stop();
+      hide(wrap);
+    };
+
+    const render = (idx) => {
+      const steps = _tutorialSteps();
+      const s = steps[Math.min(idx, steps.length - 1)];
+      card.innerHTML = '';
+      card.append(
+        el('div', 'zsq-tut-emoji', s.emoji),
+        el('div', 'zsq-tut-title', s.title),
+        el('div', 'zsq-tut-text', s.text),
+      );
+      const row = el('div', 'zsq-tut-row');
+      const last = idx >= steps.length - 1;
+      const next = el('button', 'zsq-bigbtn', last ? 'Have fun! 💫' : 'Next ➜');
+      next.onclick = () => {
+        SoundFX.pop();
+        if (last) {
+          cleanup();
+          if (typeof onDone === 'function') onDone();
+        } else {
+          i++;
+          render(i);
+        }
+      };
+      row.appendChild(next);
+      if (!last) {
+        const skip = el('button', 'zsq-skip', 'Skip ⏭');
+        skip.onclick = () => {
+          SoundFX.pop();
+          cleanup();
+          if (typeof onDone === 'function') onDone();
+        };
+        row.appendChild(skip);
+      }
+      card.appendChild(row);
+      show(wrap);
+      Narrator.speakText(s.title + '. ' + s.text, { pitch: 1.2, rate: 0.85 });
+    };
+
+    render(0);
+  },
+
+  /** Pause menu: resume or replay the how-to-play tutorial. */
+  showPauseMenu({ onResume, onHowTo } = {}) {
+    const wrap = _els.pauseWrap;
+    wrap.innerHTML = '';
+    const card = el('div', 'zsq-pause-card');
+    card.append(
+      el('div', 'zsq-tut-emoji', '⏸️'),
+      el('div', 'zsq-tut-title', 'Paused'),
+      el('div', 'zsq-tut-text', 'Take a breather, superstar! ⭐'),
+    );
+    const row = el('div', 'zsq-tut-row');
+    const resume = el('button', 'zsq-bigbtn', '▶️ Keep Playing');
+    resume.onclick = () => {
+      SoundFX.pop();
+      if (typeof onResume === 'function') onResume();
+    };
+    const howto = el('button', 'zsq-bigbtn zsq-howto', '📖 How to Play');
+    howto.onclick = () => {
+      SoundFX.pop();
+      hide(wrap);
+      if (typeof onHowTo === 'function') onHowTo();
+    };
+    row.append(resume, howto);
+    card.appendChild(row);
+    wrap.appendChild(card);
+    show(wrap);
+  },
+
+  hidePauseMenu() { hide(_els.pauseWrap); },
+
+  /**
+   * Show/hide roam-only touch UI (the joystick). Called by the game flow:
+   * visible while freely roaming, hidden on title / dialogue / challenges /
+   * celebrations / pause. CSS still hides it on fine-pointer (mouse) devices.
+   */
+  setRoamUI(roaming) {
+    _roamUI = !!roaming;
+    if (_els.joy) _els.joy.style.display = _roamUI ? '' : 'none';
+  },
 
   /**
    * Bottom dialogue sheet. lines: array of strings or
@@ -546,6 +764,8 @@ export const UI = {
     joy.appendChild(knob);
     _root.appendChild(joy);
     _els.joy = joy;
+    // Only visible while roaming; hidden on title / dialogue / overlays.
+    if (!_roamUI) joy.style.display = 'none';
 
     let active = false;
     const R = 46; // max knob travel in px

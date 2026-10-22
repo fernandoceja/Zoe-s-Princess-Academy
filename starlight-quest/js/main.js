@@ -10,6 +10,7 @@ import { PRINCESSES, QUESTS, FINALE_LINES } from './quests.js';
 import { SoundFX, Narrator, setLang } from './audio.js';
 import { UI } from './ui.js';
 import { Save } from './save.js';
+import { Input } from './input.js';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -44,11 +45,25 @@ export async function main(container) {
   });
   UI.setMuteUI(Narrator.muted, null);
 
+  // Unified input: keyboard + touch joystick + Bluetooth controllers.
+  Input.init();
+  Input.onGamepadChange = (connected) => {
+    UI.toast(connected
+      ? '🎮 Controller connected! Left stick walks, ✕ talks.'
+      : '🎮 Controller disconnected.');
+  };
+
   const world = createWorld(container, {
     onNearNPC(npcId) {
       if (state !== 'roam' || paused) { UI.promptInteract(null); return; }
       if (npcId && !Save.data.done.includes(npcId)) {
-        UI.promptInteract(`💬 Tap ${PRINCESSES[npcId].name} to talk ✨`);
+        const c = Input.describeControls();
+        const label = c.gamepad
+          ? `💬 Press ✕ to talk to ${PRINCESSES[npcId].name} ✨`
+          : c.touch
+            ? `💬 Tap ${PRINCESSES[npcId].name} to talk ✨`
+            : `💬 Click ${PRINCESSES[npcId].name} (or press E) ✨`;
+        UI.promptInteract(label);
       } else {
         UI.promptInteract(null);
       }
@@ -58,10 +73,13 @@ export async function main(container) {
       if (!npcId || !QUESTS[npcId]) return;
       startQuest(npcId);
     },
+    onPauseRequest() { togglePause(); },
   });
+  // Title screen is up: no roaming input until the adventure starts.
+  world.setInputEnabled(false);
 
-  // Touch joystick -> world movement (screen-up = -z, matching keyboard)
-  UI.joystick((x, z) => world.setMoveInput(x, z));
+  // Touch joystick -> unified input (screen-up = -z, matching keyboard)
+  UI.joystick((x, z) => Input.setJoystick(x, z));
 
   // Restore saved progress
   for (const id of Save.data.done) {
@@ -73,12 +91,28 @@ export async function main(container) {
   UI.showTitle(() => {
     Save.data.started = true;
     Save.save();
-    state = 'roam';
-    UI.toast('Walk to a princess and say hello! 👑');
-    Narrator.speakText(
-      'Welcome to Starlight Quest! Walk to a princess and tap her to say hello.',
-      { pitch: 1.15, rate: 0.95 }
-    );
+    const enterWorld = () => {
+      state = 'roam';
+      world.setInputEnabled(true);
+      UI.setRoamUI(true);
+      UI.toast('Walk to a princess and say hello! 👑');
+      const c = Input.describeControls();
+      const how = c.gamepad ? 'press ✕' : c.touch ? 'tap her' : 'click her or press E';
+      Narrator.speakText(
+        `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
+        { pitch: 1.15, rate: 0.95 }
+      );
+    };
+    let seen = false;
+    try { seen = !!window.localStorage.getItem('zsq_tutorial_seen_v1'); } catch (e) { /* private mode */ }
+    if (seen) { enterWorld(); return; }
+    // First launch: 5-step how-to-play before entering the world.
+    UI.showTutorial({
+      onDone: () => {
+        try { window.localStorage.setItem('zsq_tutorial_seen_v1', '1'); } catch (e) { /* private mode */ }
+        enterWorld();
+      },
+    });
   });
 
   // ---------- helpers ----------
@@ -93,6 +127,13 @@ export async function main(container) {
     }
   }
 
+  function showPauseMenu() {
+    UI.showPauseMenu({
+      onResume: () => togglePause(),
+      onHowTo: () => UI.showTutorial({ onDone: () => showPauseMenu() }),
+    });
+  }
+
   function togglePause() {
     if (state !== 'roam') {
       UI.toast('Finish talking first, then you can pause! ⏸️');
@@ -100,10 +141,12 @@ export async function main(container) {
     }
     paused = !paused;
     world.setInputEnabled(!paused);
+    UI.setRoamUI(!paused);
     if (paused) {
       Narrator.stop();
-      UI.toast('⏸️ Paused — tap ⏸️ again to keep playing!');
+      showPauseMenu();
     } else {
+      UI.hidePauseMenu();
       UI.toast('▶️ Let\'s keep going!');
     }
   }
@@ -122,6 +165,7 @@ export async function main(container) {
     roundIdx = 0;
     state = 'dialogue';
     world.setInputEnabled(false);
+    UI.setRoamUI(false);
     UI.promptInteract(null);
     const P = PRINCESSES[npcId];
     const quest = QUESTS[npcId];
@@ -230,6 +274,7 @@ export async function main(container) {
 
   function completeQuest(npcId) {
     state = 'celebrate';
+    UI.setRoamUI(false);
     const P = PRINCESSES[npcId];
     const quest = QUESTS[npcId];
     if (!Save.data.done.includes(npcId)) Save.data.done.push(npcId);
@@ -254,6 +299,7 @@ export async function main(container) {
 
   function runFinale() {
     state = 'finale';
+    UI.setRoamUI(false);
     NPC_IDS.forEach((id, i) => setTimeout(() => world.celebrate(NPC_TO_LAND[id]), i * 650));
     SoundFX.fanfare();
     UI.showFinale(
@@ -266,6 +312,7 @@ export async function main(container) {
     activeNPC = null;
     state = 'roam';
     world.setInputEnabled(true);
+    UI.setRoamUI(true);
     refreshPill();
   }
 }

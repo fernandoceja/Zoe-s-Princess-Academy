@@ -6,6 +6,7 @@
 // ============================================================================
 
 import * as THREE from 'three';
+import { Input } from './input.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -156,6 +157,7 @@ export function createWorld(container, hooks) {
   hooks = hooks || {};
   const onNearNPC = typeof hooks.onNearNPC === 'function' ? hooks.onNearNPC : () => {};
   const onInteractRequest = typeof hooks.onInteractRequest === 'function' ? hooks.onInteractRequest : () => {};
+  const onPauseRequest = typeof hooks.onPauseRequest === 'function' ? hooks.onPauseRequest : () => {};
 
   // --- Renderer / scene / camera -------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -556,27 +558,9 @@ export function createWorld(container, hooks) {
   let walkPhase = 0;
 
   // --- Input -----------------------------------------------------------------
+  // All movement + button input flows through js/input.js (keyboard, touch
+  // joystick fed in from ui.js, and Bluetooth controllers via Gamepad API).
   let inputEnabled = true;
-  const joy = new THREE.Vector2(0, 0);   // from setMoveInput
-  const keys = {};
-  const onKeyDown = (e) => {
-    keys[e.code] = true;
-    if (e.code === 'KeyE' && inputEnabled && nearNPC) onInteractRequest(nearNPC);
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
-  };
-  const onKeyUp = (e) => { keys[e.code] = false; };
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-
-  const readKeyboard = (out) => {
-    let x = 0, z = 0;
-    if (keys.KeyW || keys.ArrowUp) z -= 1;
-    if (keys.KeyS || keys.ArrowDown) z += 1;
-    if (keys.KeyA || keys.ArrowLeft) x -= 1;
-    if (keys.KeyD || keys.ArrowRight) x += 1;
-    out.set(x, z);
-    return out;
-  };
 
   // --- Tap-to-interact (raycast against NPC meshes) --------------------------
   const raycaster = new THREE.Raycaster();
@@ -673,14 +657,14 @@ export function createWorld(container, hooks) {
   // --- Main loop ----------------------------------------------------------------
   const clock = new THREE.Clock();
   const tmpMove = new THREE.Vector2();
-  const tmpKb = new THREE.Vector2();
   let rafId = 0;
   let disposed = false;
 
   function update(dt, t) {
-    // ---- Player movement ----
-    readKeyboard(tmpKb);
-    tmpMove.set(joy.x + tmpKb.x, joy.y + tmpKb.y);
+    // ---- Unified input (polled once per frame) ----
+    Input.poll();
+    const iv = Input.vector;
+    tmpMove.set(iv.x, iv.z);
     if (tmpMove.lengthSq() > 1) tmpMove.normalize();
     const moving = inputEnabled && tmpMove.lengthSq() > 0.0004;
     const targetVel = moving
@@ -796,6 +780,12 @@ export function createWorld(container, hooks) {
       nearNPC = nearest;
       onNearNPC(nearNPC);
     }
+
+    // ---- Button edges (always consumed so nothing goes stale) ----
+    const didInteract = Input.consumeInteract();
+    const didPause = Input.consumePause();
+    if (inputEnabled && didInteract && nearNPC) onInteractRequest(nearNPC);
+    if (didPause) onPauseRequest();
   }
 
   function loop() {
@@ -811,8 +801,7 @@ export function createWorld(container, hooks) {
   function dispose() {
     disposed = true;
     cancelAnimationFrame(rafId);
-    window.removeEventListener('keydown', onKeyDown);
-    window.removeEventListener('keyup', onKeyUp);
+    Input.dispose();
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
     scene.traverse((o) => {
@@ -833,7 +822,6 @@ export function createWorld(container, hooks) {
   // --- Public API ---------------------------------------------------------------
   return {
     setInputEnabled(bool) { inputEnabled = !!bool; },
-    setMoveInput(x, z) { joy.set(x || 0, z || 0); },
     celebrate,
     setNPCState,
     dispose,
