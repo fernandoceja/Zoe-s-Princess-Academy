@@ -5,12 +5,12 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js';
-import { PRINCESSES, QUESTS, FINALE_LINES } from './quests.js';
-import { SoundFX, Narrator, setLang } from './audio.js';
-import { UI } from './ui.js';
-import { Save } from './save.js';
-import { Input } from './input.js';
+import { createWorld } from './world.js?v=20261022c';
+import { PRINCESSES, QUESTS, FINALE_LINES } from './quests.js?v=20261022c';
+import { SoundFX, Narrator, setLang } from './audio.js?v=20261022c';
+import { UI } from './ui.js?v=20261022c';
+import { Save } from './save.js?v=20261022c';
+import { Input } from './input.js?v=20261022c';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
