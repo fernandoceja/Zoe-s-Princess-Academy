@@ -1,0 +1,282 @@
+/* Zoe's Starlight Quest — audio systems
+ * SoundFX: gentle WebAudio oscillator chimes (never harsh, no buzzers).
+ * Narrator: tries ElevenLabs MP3s first, gracefully falls back to
+ * speechSynthesis with per-princess pitch/rate when files are absent.
+ * ES module, zero network requests on its own.
+ */
+
+import { PRINCESSES } from './quests.js';
+
+export let LANG = 'EN';
+export function setLang(l) {
+  LANG = (l === 'ES') ? 'ES' : 'EN';
+}
+
+/* ------------------------------ SoundFX ------------------------------ */
+
+let _ctx = null;
+
+function _master(ctx) {
+  const g = ctx.createGain();
+  g.gain.value = 0.22; // keep everything soft for little ears
+  g.connect(ctx.destination);
+  return g;
+}
+
+/** Soft plink of a single note. freq in Hz, delay in seconds. */
+function _plink(ctx, master, freq, delay = 0, dur = 0.45) {
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  // Gentle bell-ish envelope: quick soft attack, long warm decay.
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.9, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(g);
+  g.connect(master);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.05);
+  // Add a whisper of a harmonic shimmer on top.
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.value = freq * 2;
+  g2.gain.setValueAtTime(0.0001, t0);
+  g2.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t0 + dur * 0.7);
+  osc2.connect(g2);
+  g2.connect(master);
+  osc2.start(t0);
+  osc2.stop(t0 + dur);
+}
+
+// C-major pentatonic neighborhood — always sweet, never dissonant.
+const NOTES = {
+  C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880.0,
+  C6: 1046.5, D6: 1174.66, E6: 1318.51, G6: 1567.98
+};
+
+export const SoundFX = {
+  /** Create/resume the AudioContext. Call on first user gesture (Start button). */
+  ensure() {
+    try {
+      if (!_ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        _ctx = new AC();
+      }
+      if (_ctx.state === 'suspended') {
+        _ctx.resume().catch(() => {});
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  _ready() {
+    return this.ensure() && !!_ctx;
+  },
+
+  /** One soft chime. */
+  chime() {
+    if (!this._ready()) return;
+    _plink(_ctx, _master(_ctx), NOTES.E5);
+  },
+
+  /** Little rising major arpeggio for big wins. */
+  fanfare() {
+    if (!this._ready()) return;
+    const m = _master(_ctx);
+    [NOTES.C5, NOTES.E5, NOTES.G5, NOTES.C6].forEach((f, i) =>
+      _plink(_ctx, m, f, i * 0.11, 0.6)
+    );
+  },
+
+  /** Short friendly blip for taps / button presses. */
+  pop() {
+    if (!this._ready()) return;
+    _plink(_ctx, _master(_ctx), NOTES.G5, 0, 0.22);
+  },
+
+  /** Twinkly sparkle sweep for star rewards. */
+  sparkle() {
+    if (!this._ready()) return;
+    const m = _master(_ctx);
+    [NOTES.E5, NOTES.G5, NOTES.A5, NOTES.C6, NOTES.E6].forEach((f, i) =>
+      _plink(_ctx, m, f, i * 0.06, 0.5)
+    );
+  }
+};
+
+/* ------------------------------ Narrator ----------------------------- */
+
+let _muted = false;
+let _currentAudio = null;   // in-flight MP3 element
+let _speaking = false;      // true while an MP3 or TTS utterance is playing
+
+function _stopTTS() {
+  try {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  } catch (e) {}
+}
+
+function _stopMP3() {
+  try {
+    if (_currentAudio) {
+      _currentAudio.onended = _currentAudio.onerror = null;
+      _currentAudio.pause();
+      _currentAudio = null;
+    }
+  } catch (e) {}
+}
+
+/** Pick a warm young-female-ish voice for the given language, if one exists. */
+function _pickVoice(langPrefix) {
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || !voices.length) return null;
+    const inLang = voices.filter(v => (v.lang || '').toLowerCase().startsWith(langPrefix));
+    const pool = inLang.length ? inLang : voices;
+    // Prefer commonly-available warm female voices; else the first in-language voice.
+    const preferred = [
+      /samantha/i, /zira/i, /karen/i, /moira/i, /tessa/i, /veena/i,
+      /google us english/i, /google español/i, /female/i, /mujer/i, /niña/i
+    ];
+    for (const rx of preferred) {
+      const hit = pool.find(v => rx.test(v.name || ''));
+      if (hit) return hit;
+    }
+    return pool[0];
+  } catch (e) {
+    return null;
+  }
+}
+
+function _voiceParams(princessId) {
+  const p = (typeof PRINCESSES !== 'undefined' && PRINCESSES && PRINCESSES[princessId]) || null;
+  const v = (p && p.voice) || {};
+  return {
+    pitch: (typeof v.pitch === 'number') ? v.pitch : 1.15,
+    rate: (typeof v.rate === 'number') ? v.rate : 0.95
+  };
+}
+
+function _speakTTS(text, { pitch = 1.15, rate = 0.95 } = {}) {
+  if (_muted || !text) return;
+  try {
+    if (!('speechSynthesis' in window)) return;
+    _stopTTS();
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = LANG === 'ES' ? 'es-US' : 'en-US';
+    u.pitch = pitch;
+    u.rate = rate;
+    u.volume = 1;
+    const voice = _pickVoice(LANG === 'ES' ? 'es' : 'en');
+    if (voice) u.voice = voice;
+    _speaking = true;
+    u.onend = u.onerror = () => { _speaking = false; };
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/**
+ * Speak one princess line. Tries the ElevenLabs MP3 first; on any load
+ * error (missing file, 404, decode failure) falls back to speechSynthesis
+ * with that princess's pitch/rate. Cancels anything in flight first.
+ */
+function _speakPrincess(princessId, kind, text) {
+  _stopTTS();
+  _stopMP3();
+  _speaking = false;
+  if (_muted) return;
+  const textStr = String(text || '');
+
+  // NOTE: when deployed as starlight-quest/ inside Zoe's Princess Academy repo,
+  // the voice MP3s live in the repo-root assets/audio/ folder (shared with the Academy).
+  const url = '../assets/audio/' + LANG + '/princess_' + princessId + '_' + kind + '_01.mp3';
+  let mp3Ok = false;
+
+  try {
+    if (typeof Audio === 'undefined') {
+      const vp = _voiceParams(princessId);
+      _speakTTS(textStr, vp);
+      return;
+    }
+    const a = new Audio();
+    _currentAudio = a;
+    let fellBack = false;
+
+    const fallback = () => {
+      if (fellBack) return;
+      fellBack = true;
+      _stopMP3();
+      const vp = _voiceParams(princessId);
+      _speakTTS(textStr, vp);
+    };
+
+    a.onerror = fallback;
+    a.onstalled = () => setTimeout(() => { if (!mp3Ok) fallback(); }, 2500);
+    a.onended = () => { if (!fellBack) { _speaking = false; _currentAudio = null; } };
+    a.oncanplaythrough = () => {
+      mp3Ok = true;
+      _speaking = true;
+      a.play().catch(fallback);
+    };
+    // If canplaythrough never fires (file missing → error), the timeout
+    // below is our last-resort net so the child never waits in silence.
+    setTimeout(() => { if (!mp3Ok && !fellBack) fallback(); }, 3000);
+    a.src = url;
+    a.load();
+  } catch (e) {
+    const vp = _voiceParams(princessId);
+    _speakTTS(textStr, vp);
+  }
+}
+
+export const Narrator = {
+  get muted() { return _muted; },
+
+  /** Mute or unmute narration. Muting also stops anything playing. */
+  setMuted(m) {
+    _muted = !!m;
+    if (_muted) this.stop();
+  },
+
+  /** Stop any in-flight MP3 or TTS. */
+  stop() {
+    _stopTTS();
+    _stopMP3();
+    _speaking = false;
+  },
+
+  /**
+   * Speak a princess line: speak(princessId, kind, text).
+   * kind is 'greeting' | 'praise' | 'encourage'.
+   */
+  speak(princessId, kind, text) {
+    _speakPrincess(princessId, kind, text);
+  },
+
+  /**
+   * Speak a princess line as exact text via TTS with her voice shaping,
+   * skipping the MP3. Use for quest-specific lines (story, questions,
+   * hints) where the spoken words must match the on-screen text.
+   */
+  speakExact(princessId, text) {
+    _stopTTS();
+    _stopMP3();
+    _speaking = false;
+    _speakTTS(text, _voiceParams(princessId));
+  },
+
+  /** Speak a non-princess line with explicit voice shaping. */
+  speakText(text, { pitch = 1.1, rate = 0.95 } = {}) {
+    _stopTTS();
+    _stopMP3();
+    _speaking = false;
+    _speakTTS(text, { pitch, rate });
+  }
+};
