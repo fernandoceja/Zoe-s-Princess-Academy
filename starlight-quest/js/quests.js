@@ -14,12 +14,18 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
+import { PORTRAIT_BELLE } from './portrait-belle.js';
+import { PORTRAIT_ELSA } from './portrait-elsa.js';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js';
+import { PORTRAIT_ZOE } from './portrait-zoe.js';
+
 export const PRINCESSES = {
   belle: {
     name: 'Belle',
     landId: 'whispering-library',
     landName: 'Whispering Library',
-    portrait: 'portraits/princess-belle.jpg',
+    portrait: PORTRAIT_BELLE,
     color: '#3b82f6',
     voice: { pitch: 1.1, rate: 0.95 },
   },
@@ -27,7 +33,7 @@ export const PRINCESSES = {
     name: 'Elsa',
     landId: 'frostfall-peaks',
     landName: 'Frostfall Peaks',
-    portrait: 'portraits/princess-elsa.jpg',
+    portrait: PORTRAIT_ELSA,
     color: '#f472b6',
     voice: { pitch: 1.15, rate: 0.9 },
   },
@@ -35,7 +41,7 @@ export const PRINCESSES = {
     name: 'Rapunzel',
     landId: 'sunflower-meadows',
     landName: 'Sunflower Meadows',
-    portrait: 'portraits/princess-rapunzel.jpg',
+    portrait: PORTRAIT_RAPUNZEL,
     color: '#34c779',
     voice: { pitch: 1.25, rate: 1.0 },
   },
@@ -43,7 +49,7 @@ export const PRINCESSES = {
     name: 'Cinderella',
     landId: 'glass-slipper-village',
     landName: 'Glass Slipper Village',
-    portrait: 'portraits/princess-cinderella.jpg',
+    portrait: PORTRAIT_CINDERELLA,
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
@@ -51,7 +57,7 @@ export const PRINCESSES = {
     name: 'Zoe',
     landId: 'starlight-hub',
     landName: 'Starlight Hub',
-    portrait: 'portraits/princess-zoe.jpg',
+    portrait: PORTRAIT_ZOE,
     color: '#fbbf24',
     voice: { pitch: 1.3, rate: 1.0 },
   },
