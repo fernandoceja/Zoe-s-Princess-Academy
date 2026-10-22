@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES } from './quests.js';
+import { PRINCESSES } from './quests.js?v=20261022c';
 
 export let LANG = 'EN';
 export function setLang(l) {
