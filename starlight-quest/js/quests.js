@@ -140,7 +140,7 @@ export const QUESTS = {
     ],
     rounds: [
       {
-        prompt: 'The bridge The bridge needs 7 + 5 snowflakes. How many?',
+        prompt: 'The bridge needs 7 + 5 snowflakes. How many?',
         choices: ['12', '11', '13'],
         answer: '12',
         hint: 'Good try! Count with me: 7 snowflakes, then 5 more. How many?',
