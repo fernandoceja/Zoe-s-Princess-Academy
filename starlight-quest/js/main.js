@@ -291,9 +291,9 @@ export async function main(container) {
           // Gentle retry: never reveal the answer, never penalize.
           SoundFX.pop();
           misses++;
-          // Encourage clip first, then the actual hint text.
-          const hintSpoken = round.hint.replace(/^Good try!\s*/, '');
-          Narrator.speak(npcId, 'encourage', 'Good try!', () => Narrator.speakExact(npcId, hintSpoken));
+          // Speak exactly the on-screen text ('Good try!' + hint) in her voice,
+          // so the words heard always match the words shown.
+          Narrator.speakExact(npcId, round.hint);
           UI.revealAnswer({ correctId: null, pickedId, message: round.hint }, () => startRound());
         }
       }

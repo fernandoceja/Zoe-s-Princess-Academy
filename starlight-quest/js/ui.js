@@ -265,6 +265,62 @@ function injectCSS() {
     .zsq-tut-emoji { font-size: 52px; margin-bottom: 4px; }
   }
 
+  /* ---------- PR 3: readability, contrast, small screens ---------- */
+  /* Button text contrast >= 4.5:1 (WCAG AA). */
+  .zsq-bigbtn { color: #3b1f04; background: linear-gradient(135deg, #fcd34d, #fbbf24); }
+  .zsq-next { color: #fff; background: linear-gradient(135deg, #be185d, #9d174d); }
+  .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+  .zsq-choice { color: #334155; }
+  .zsq-kicker { color: #92400e; }
+  .zsq-stars { color: #92400e; }
+  .zsq-interact { color: #92400e; }
+  #zsq-ui button { touch-action: manipulation; }
+  /* Skip is a quiet text link, clearly smaller than Next. */
+  .zsq-skip { min-height: 44px; padding: 8px 16px; font-size: 18px; font-weight: 700;
+    color: #475569; background: transparent; border: none; box-shadow: none;
+    text-decoration: underline; text-underline-offset: 4px; }
+  /* Body and prompt text at 24px or more. */
+  .zsq-dtext, .zsq-answer-msg, .zsq-tut-text, .zsq-cel-sub, .zsq-finale-line, .zsq-toast { font-size: 24px; }
+  .zsq-toast { white-space: normal; text-align: center; border-radius: 24px; }
+  .zsq-modal-replay { position: absolute; top: 12px; right: 12px; width: 56px; height: 56px; }
+  .zsq-modal { position: relative; }
+  .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 52px; }
+  .zsq-stars { white-space: nowrap; }
+  @media (max-width: 480px) {
+    .zsq-dtext, .zsq-answer-msg, .zsq-tut-text, .zsq-cel-sub, .zsq-finale-line { font-size: 24px; }
+    .zsq-prompt { font-size: 26px; }
+    .zsq-choice { font-size: 26px; }
+    .zsq-toast { font-size: 20px; }
+    .zsq-skip { min-height: 44px; font-size: 17px; padding: 8px 12px; }
+    /* Quest label wraps to two lines instead of being cut off. */
+    .zsq-pill { max-width: calc(100vw - 222px); white-space: normal; overflow: visible;
+      text-overflow: clip; line-height: 1.15; font-size: 14px; padding: 6px 10px; }
+    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; top: 8px; right: 8px; }
+    .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 44px; }
+    .zsq-kicker { font-size: 14px; letter-spacing: 1px; }
+    .zsq-topright { gap: 6px; }
+    .zsq-stars { padding: 6px 10px; }
+  }
+  /* Short screens: phones in landscape, small laptop windows. */
+  @media (max-height: 560px) {
+    .zsq-sheet { max-height: 78vh; padding: 12px 16px; }
+    .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
+    .zsq-modal { max-height: 96vh; padding: 12px 16px; }
+    .zsq-kicker { font-size: 15px; margin-bottom: 2px; }
+    .zsq-prompt { font-size: 24px; margin-bottom: 2px; }
+    .zsq-visual { margin: 4px 0; }
+    .zsq-choices { flex-direction: row; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .zsq-choice { flex: 1 1 0; min-width: 120px; min-height: 60px; font-size: 24px; padding: 8px 10px; }
+    .zsq-answer-msg { margin: 8px 0 2px; }
+    .zsq-finale { align-items: flex-start; overflow-y: auto; padding: 10px; }
+    .zsq-finale-card { max-height: none; padding: 14px 20px; }
+    .zsq-finale h2 { font-size: 26px; margin-bottom: 4px; }
+    .zsq-finale-line { margin: 4px 0; line-height: 1.3; }
+    .zsq-celebrate { gap: 8px; padding: 12px; overflow-y: auto; justify-content: flex-start; }
+    .zsq-bigstars { font-size: 48px; }
+    .zsq-cel-title { font-size: 30px; }
+    .zsq-bigbtn { min-height: 60px; padding: 10px 36px; font-size: 24px; }
+  }
   button:focus-visible { outline: 4px solid rgba(14, 165, 233, 0.55); outline-offset: 3px; }
 
   @keyframes zsq-pop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -598,6 +654,15 @@ export const UI = {
     const kicker = el('div', 'zsq-kicker', data.kicker || '✨ Challenge ✨');
     const prompt = el('div', 'zsq-prompt', data.prompt || '');
     modal.append(kicker, prompt);
+    _els._lastLine = { princessId: data.princessId || null, text: data.voiceText || data.prompt || '' };
+    const replay = el('button', 'zsq-replay zsq-modal-replay', '🔊');
+    replay.setAttribute('aria-label', 'Hear that again');
+    replay.onclick = () => {
+      const L = _els._lastLine || {};
+      if (L.princessId) Narrator.speakExact(L.princessId, L.text);
+      else Narrator.speakText(L.text);
+    };
+    modal.appendChild(replay);
     if (data.visualHtml) {
       const vis = el('div', 'zsq-visual');
       vis.innerHTML = data.visualHtml;
@@ -644,6 +709,7 @@ export const UI = {
       else b.style.opacity = '0.55';
     });
     if (message) modal.appendChild(el('div', 'zsq-answer-msg', message));
+    if (message && _els._lastLine) _els._lastLine = { princessId: _els._lastLine.princessId, text: message };
     const next = el('button', 'zsq-next', 'Next ➜');
     next.style.marginTop = '16px';
     next.onclick = () => {
