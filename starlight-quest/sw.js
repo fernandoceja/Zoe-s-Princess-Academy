@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v1-20261023';
+const CACHE_VERSION = 'v2-20261023';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -111,9 +111,12 @@ async function cacheFirst(request) {
   const url = new URL(request.url);
   const isAudio = /\.mp3$/i.test(url.pathname);
   const range = request.headers.get('range');
-  // Exact match first (keeps ?v= versions distinct), then ignore the query string.
-  let cached = await cache.match(request.url) || await cache.match(request.url, { ignoreSearch: true });
-  if (!cached && request.mode === 'navigate') cached = await cache.match('./index.html');
+  // Exact URL match only, so a new ?v= stamp always fetches the new file.
+  // Only the main page ignores its query string (e.g. a ?source= link).
+  let cached = await cache.match(request.url);
+  if (!cached && request.mode === 'navigate') {
+    cached = await cache.match(request.url, { ignoreSearch: true }) || await cache.match('./index.html');
+  }
   if (cached) return (isAudio && range) ? rangeResponse(cached, range) : cached;
 
   try {
