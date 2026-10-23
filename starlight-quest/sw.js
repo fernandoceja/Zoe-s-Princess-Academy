@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v3-20261023';
+const CACHE_VERSION = 'v4-20261023';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -16,19 +16,19 @@ const PRECACHE_URLS = [
   './icons/icon-512.png',
   './icons/icon-192-maskable.png',
   './icons/icon-512-maskable.png',
-  './js/audio.js?v=20261023s1',
-  './js/input.js?v=20261023s1',
-  './js/main.js?v=20261023s1',
-  './js/padnav.js?v=20261023s1',
-  './js/portrait-belle.js?v=20261023s1',
-  './js/portrait-cinderella.js?v=20261023s1',
-  './js/portrait-elsa.js?v=20261023s1',
-  './js/portrait-rapunzel.js?v=20261023s1',
-  './js/portrait-zoe.js?v=20261023s1',
-  './js/quests.js?v=20261023s1',
-  './js/save.js?v=20261023s1',
-  './js/ui.js?v=20261023s1',
-  './js/world.js?v=20261023s1',
+  './js/audio.js?v=20261023s2',
+  './js/input.js?v=20261023s2',
+  './js/main.js?v=20261023s2',
+  './js/padnav.js?v=20261023s2',
+  './js/portrait-belle.js?v=20261023s2',
+  './js/portrait-cinderella.js?v=20261023s2',
+  './js/portrait-elsa.js?v=20261023s2',
+  './js/portrait-rapunzel.js?v=20261023s2',
+  './js/portrait-zoe.js?v=20261023s2',
+  './js/quests.js?v=20261023s2',
+  './js/save.js?v=20261023s2',
+  './js/ui.js?v=20261023s2',
+  './js/world.js?v=20261023s2',
   // Princess voice clips (shared with the Academy in the repo-root assets/).
   '../assets/audio/EN/princess_belle_greeting_01.mp3',
   '../assets/audio/EN/princess_belle_praise_01.mp3',

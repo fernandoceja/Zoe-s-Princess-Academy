@@ -5,10 +5,10 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261023s1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s1';
-import { PARENT_CORNER_HTML } from './quests.js?v=20261023s1';
-import { Input } from './input.js?v=20261023s1';
+import { Narrator, SoundFX } from './audio.js?v=20261023s2';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s2';
+import { PARENT_CORNER_HTML } from './quests.js?v=20261023s2';
+import { Input } from './input.js?v=20261023s2';
 
 const GOLD = '#ebd373';
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -123,7 +123,7 @@ function injectCSS() {
   .zsq-toasts { position: absolute; top: 84px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: max-content; max-width: 92vw; }
   .zsq-toast { background: #0f172a; color: #fff; border-radius: 999px; padding: 12px 26px;
-    font-size: 20px; font-weight: 700; box-shadow: 0 8px 24px rgba(15,23,42,.3);
+    font-size: 24px; font-weight: 700; box-shadow: 0 8px 24px rgba(15,23,42,.3);
     animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
   /* ---------- celebration ---------- */
@@ -226,7 +226,7 @@ function injectCSS() {
     .zsq-stars { font-size: 17px; padding: 8px 12px; min-height: 48px; }
     .zsq-iconbtn { width: 48px; height: 48px; font-size: 22px; }
     .zsq-toasts { top: 70px; }
-    .zsq-toast { font-size: 17px; padding: 10px 20px; }
+    .zsq-toast { font-size: 24px; padding: 10px 20px; }
     .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 44%; max-width: 92vw; white-space: normal; text-align: center; }
     .zsq-sheet { left: 10px; right: 10px; bottom: 10px; padding: 14px; gap: 12px;
       max-height: 64vh; overflow-y: auto; }
@@ -290,7 +290,7 @@ function injectCSS() {
     .zsq-dtext, .zsq-answer-msg, .zsq-tut-text, .zsq-cel-sub, .zsq-finale-line { font-size: 24px; }
     .zsq-prompt { font-size: 26px; }
     .zsq-choice { font-size: 26px; }
-    .zsq-toast { font-size: 20px; }
+    .zsq-toast { font-size: 24px; }
     .zsq-skip { min-height: 44px; font-size: 17px; padding: 8px 12px; }
     /* Quest label wraps to two lines instead of being cut off. */
     .zsq-pill { max-width: calc(100vw - 222px); white-space: normal; overflow: visible;
