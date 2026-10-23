@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261022c';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261022c';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261022c';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261022c';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261022c';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261022d';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261022d';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261022d';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261022d';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261022d';
 
 export const PRINCESSES = {
   belle: {
@@ -140,7 +140,7 @@ export const QUESTS = {
     ],
     rounds: [
       {
-        prompt: 'The bridge needs 7 + 5 snowflakes. How many?',
+        prompt: 'The bridge The bridge needs 7 + 5 snowflakes. How many?',
         choices: ['12', '11', '13'],
         answer: '12',
         hint: 'Good try! Count with me: 7 snowflakes, then 5 more. How many?',
@@ -326,3 +326,171 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 </div>
 <p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">No scores, no penalties &mdash; wrong answers get a gentle hint and a retry.</p>
 </div>`;
+
+// ============================================================================
+// ROUND POOLS — fresh rounds every play. buildRounds(npcId) returns 5 rounds
+// in the same shape as QUESTS[npcId].rounds (which stay as the fallback).
+// Pass a custom rng for deterministic tests.
+// ============================================================================
+export const DOLCH_PREPRIMER = [
+  'and', 'away', 'big', 'blue', 'can', 'come', 'down', 'find', 'for', 'funny',
+  'go', 'help', 'here', 'jump', 'little', 'look', 'make', 'play', 'red', 'run',
+  'said', 'see', 'the', 'three', 'two', 'up', 'we', 'where', 'yellow', 'you',
+];
+export const DOLCH_PRIMER = [
+  'all', 'am', 'are', 'at', 'ate', 'be', 'black', 'brown', 'but', 'came', 'did',
+  'do', 'eat', 'four', 'get', 'good', 'have', 'he', 'into', 'like', 'must', 'new',
+  'no', 'now', 'on', 'our', 'out', 'please', 'pretty', 'ran', 'ride', 'saw', 'say',
+  'she', 'so', 'soon', 'that', 'there', 'they', 'this', 'too', 'under', 'want',
+  'was', 'well', 'went', 'what', 'white', 'who', 'will', 'with', 'yes',
+];
+
+// Short-vowel CVC words grouped so distractors differ by one sound.
+const CVC_SETS = [
+  ['cat', 'cap', 'cup'], ['pig', 'pin', 'pen'], ['dog', 'dig', 'dot'],
+  ['sun', 'sit', 'sap'], ['hat', 'hot', 'hit'], ['bed', 'bad', 'bud'],
+  ['map', 'mop', 'mat'], ['bug', 'bag', 'big'], ['fox', 'fix', 'fax'],
+  ['red', 'rod', 'rid'], ['net', 'nut', 'not'], ['ten', 'tan', 'tin'],
+];
+
+const PLANT_POOL = [
+  ...QUESTS.rapunzel.rounds,
+  {
+    prompt: 'What does a flower need from the sky to grow?',
+    choices: ['Sunlight', 'Shoes', 'Toys'],
+    answer: 'Sunlight',
+    hint: 'Good try! It is warm and bright and comes from the sun.',
+  },
+  {
+    prompt: 'Which one is NOT a living thing?',
+    choices: ['A tree', 'A bird', 'A spoon'],
+    answer: 'A spoon',
+    hint: 'Good try! Living things grow and eat. Which one never grows?',
+  },
+  {
+    prompt: 'What grows on a stem and can be pretty colors?',
+    choices: ['A flower', 'A rock', 'A cup'],
+    answer: 'A flower',
+    hint: 'Good try! Bees love to visit it. What is it?',
+  },
+  {
+    prompt: 'A seed grows into a...',
+    choices: ['Plant', 'Car', 'Cloud'],
+    answer: 'Plant',
+    hint: 'Good try! Seeds go in the soil. What pops up?',
+  },
+];
+
+function _pick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
+function _shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function _sample(arr, n, rng) { return _shuffle(arr, rng).slice(0, n); }
+
+function _belleRounds(rng) {
+  const all = [...DOLCH_PREPRIMER, ...DOLCH_PRIMER, ...DOLCH_1ST];
+  const rounds = [];
+  const words = _sample(all, 3, rng);
+  for (const w of words) {
+    // distractors: prefer words sharing first letter or length, else random
+    const others = all.filter((x) => x !== w);
+    const close = _shuffle(others.filter((x) => x[0] === w[0] || x.length === w.length), rng);
+    const pool = [...close, ..._shuffle(others, rng)];
+    const d = [...new Set(pool)].slice(0, 2);
+    rounds.push({
+      prompt: `Which word says '${w}'?`,
+      choices: [w, ...d],
+      answer: w,
+      hint: `Good try! Let's look again. '${w}' starts with the letter ${w[0]}.`,
+    });
+  }
+  for (const set of _sample(CVC_SETS, 2, rng)) {
+    const w = set[0];
+    const sounds = w.split('').join(' - ');
+    rounds.push({
+      prompt: `Sound it out: ${sounds}. Which word is it?`,
+      choices: set.slice(),
+      answer: w,
+      hint: `Good try! Say it slow with me: ${sounds}. Which one is it?`,
+    });
+  }
+  return _shuffle(rounds, rng);
+}
+
+function _numChoices(ans, rng, max = 20) {
+  const opts = new Set([ans]);
+  const near = _shuffle([ans - 1, ans + 1, ans - 2, ans + 2], rng);
+  for (const n of near) { if (opts.size >= 3) break; if (n >= 0 && n <= max) opts.add(n); }
+  return [...opts].map(String);
+}
+
+function _elsaRounds(rng) {
+  const rounds = [];
+  for (let i = 0; i < 5; i++) {
+    const big = rng() < 0.2; // mostly within 10, sometimes up to 20 (1.OA.C.6)
+    const max = big ? 20 : 10;
+    const add = rng() < 0.5;
+    let a, b, ans;
+    if (add) {
+      a = 1 + Math.floor(rng() * (max - 1));
+      b = 1 + Math.floor(rng() * (max - a));
+      ans = a + b;
+      rounds.push({
+        prompt: `You have ${a} snowflakes. ${b} more fall. How many now?`,
+        choices: _numChoices(ans, rng, max),
+        answer: String(ans),
+        hint: `Good try! Count with me: ${a} snowflakes, then ${b} more. How many?`,
+        visual: { a, b, op: '+' },
+      });
+    } else {
+      a = 2 + Math.floor(rng() * (max - 1));
+      b = 1 + Math.floor(rng() * (a - 1));
+      ans = a - b;
+      rounds.push({
+        prompt: `You have ${a} snowflakes. ${b} melt. How many are left?`,
+        choices: _numChoices(ans, rng, max),
+        answer: String(ans),
+        hint: `Good try! Start with ${a} snowflakes. Cover ${b}. Count the rest.`,
+        visual: { a, b, op: '-' },
+      });
+    }
+  }
+  return rounds;
+}
+
+function _timeLabel(h, m) { return m === 0 ? `${h} o'clock` : `half past ${h}`; }
+
+function _cinderellaRounds(rng) {
+  const all = [];
+  for (let h = 1; h <= 12; h++) { all.push([h, 0]); all.push([h, 30]); }
+  return _sample(all, 5, rng).map(([h, m]) => {
+    const ans = _timeLabel(h, m);
+    const other = m === 0 ? _timeLabel(h, 30) : _timeLabel(h, 0);
+    const h2 = (h % 12) + 1;
+    const opts = [ans, other, _timeLabel(h2, m)];
+    return {
+      prompt: 'What time is the clock showing?',
+      choices: opts,
+      answer: ans,
+      hint: m === 0
+        ? "Good try! The long hand is on the 12. That means o'clock. Where is the short hand?"
+        : 'Good try! The long hand is on the 6. That means half past. Half past what?',
+      clock: { hour: h, minute: m },
+    };
+  });
+}
+
+export function buildRounds(npcId, rng = Math.random) {
+  try {
+    if (npcId === 'belle') return _belleRounds(rng);
+    if (npcId === 'elsa') return _elsaRounds(rng);
+    if (npcId === 'cinderella') return _cinderellaRounds(rng);
+    if (npcId === 'rapunzel') return _sample(PLANT_POOL, 5, rng);
+  } catch (e) {}
+  return (QUESTS[npcId] && QUESTS[npcId].rounds) || [];
+}

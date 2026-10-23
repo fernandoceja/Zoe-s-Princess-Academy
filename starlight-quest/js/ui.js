@@ -5,10 +5,10 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261022c';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261022c';
-import { PARENT_CORNER_HTML } from './quests.js?v=20261022c';
-import { Input } from './input.js?v=20261022c';
+import { Narrator, SoundFX } from './audio.js?v=20261022d';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261022d';
+import { PARENT_CORNER_HTML } from './quests.js?v=20261022d';
+import { Input } from './input.js?v=20261022d';
 
 const GOLD = '#ebd373';
 const ZOE_PORTRAIT = PORTRAIT_ZOE;

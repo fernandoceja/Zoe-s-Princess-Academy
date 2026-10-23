@@ -5,12 +5,12 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261022c';
-import { PRINCESSES, QUESTS, FINALE_LINES } from './quests.js?v=20261022c';
-import { SoundFX, Narrator, setLang } from './audio.js?v=20261022c';
-import { UI } from './ui.js?v=20261022c';
-import { Save } from './save.js?v=20261022c';
-import { Input } from './input.js?v=20261022c';
+import { createWorld } from './world.js?v=20261022d';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261022d';
+import { SoundFX, Narrator, setLang } from './audio.js?v=20261022d';
+import { UI } from './ui.js?v=20261022d';
+import { Save } from './save.js?v=20261022d';
+import { Input } from './input.js?v=20261022d';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -32,6 +32,8 @@ export async function main(container) {
   let paused = false;
   let activeNPC = null;
   let roundIdx = 0;
+  let rounds = [];   // this play's rounds, built fresh from pools
+  let misses = 0;    // wrong picks on the current round
 
   UI.init({
     onMuteToggle() {
@@ -163,6 +165,8 @@ export async function main(container) {
   function startQuest(npcId) {
     activeNPC = npcId;
     roundIdx = 0;
+    misses = 0;
+    rounds = buildRounds(npcId);
     state = 'dialogue';
     world.setInputEnabled(false);
     UI.setRoamUI(false);
@@ -193,7 +197,8 @@ export async function main(container) {
   function visualHtml(npcId, round) {
     if (npcId === 'elsa' && round.visual) {
       const { a, b } = round.visual;
-      const isMinus = /−|-/.test(round.prompt) && !/\+/.test(round.prompt);
+      const isMinus = round.visual.op ? round.visual.op === '-'
+        : (/−|-/.test(round.prompt) && !/\+/.test(round.prompt));
       const fl = (n) => '❄️'.repeat(Math.max(0, Math.min(n, 20)));
       return `<div style="font-size:24px;line-height:1.6;text-align:center">${fl(a)}` +
         `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${fl(b)}</div>`;
@@ -231,8 +236,20 @@ export async function main(container) {
     const npcId = activeNPC;
     const quest = QUESTS[npcId];
     const P = PRINCESSES[npcId];
-    const round = quest.rounds[roundIdx];
-    const { arr, correctId } = shuffledChoices(round.choices, round.answer);
+    const round = rounds[roundIdx];
+    // After 2 misses, narrow to the answer plus one other choice.
+    let choices = round.choices;
+    if (misses >= 2) {
+      const other = round.choices.find((c) => c !== round.answer);
+      choices = other ? [round.answer, other] : [round.answer];
+    }
+    const { arr, correctId } = shuffledChoices(choices, round.answer);
+    // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
+    let voiceText = round.prompt;
+    if (npcId === 'cinderella' || npcId === 'rapunzel') {
+      const labels = arr.map((c) => c.label);
+      voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';
+    }
     refreshPill();
 
     UI.showChallenge(
@@ -242,7 +259,7 @@ export async function main(container) {
         choices: arr,
         visualHtml: visualHtml(npcId, round),
         princessId: npcId,
-        voiceText: round.prompt,
+        voiceText,
         exactVoice: true, // read the actual question aloud, not a generic MP3
       },
       (pickedId) => {
@@ -253,19 +270,24 @@ export async function main(container) {
           UI.updateStars(Save.data.stars);
           SoundFX.chime();
           const praise = PRAISES[Math.floor(Math.random() * PRAISES.length)];
-          Narrator.speak(npcId, 'praise', praise);
+          // Speak the exact praise shown on screen (not a mismatched clip).
+          Narrator.speakExact(npcId, praise);
           UI.revealAnswer(
             { correctId, pickedId, message: `⭐ +1 star! ${praise}` },
             () => {
               roundIdx++;
-              if (roundIdx >= quest.rounds.length) completeQuest(npcId);
+              misses = 0;
+              if (roundIdx >= rounds.length) completeQuest(npcId);
               else startRound();
             }
           );
         } else {
           // Gentle retry: never reveal the answer, never penalize.
           SoundFX.pop();
-          Narrator.speak(npcId, 'encourage', round.hint);
+          misses++;
+          // Encourage clip first, then the actual hint text.
+          const hintSpoken = round.hint.replace(/^Good try!\s*/, '');
+          Narrator.speak(npcId, 'encourage', 'Good try!', () => Narrator.speakExact(npcId, hintSpoken));
           UI.revealAnswer({ correctId: null, pickedId, message: round.hint }, () => startRound());
         }
       }
