@@ -100,3 +100,9 @@ STANDARDS.md          quest → CA 1st-grade standard mapping
 - Pause anytime with ⏸️; mute with 🔊; parent corner with 📊.
 - The princesses are original characters in familiar archetypes — not Disney copies.
 - Zoe's portrait is the exact avatar Fernando provided (`portraits/princess-zoe.jpg`).
+
+## Offline / Home Screen (PWA)
+
+- `manifest.webmanifest` + `sw.js` make the game installable and playable offline after one visit.
+- `vendor/three.module.js` is three.js r160 (MIT) and `vendor/fonts/` is Nunito (OFL), served locally so nothing loads from a CDN.
+- When you change any game file, bump `CACHE_VERSION` in `sw.js` (and the `?v=` stamps) so devices pick up the update.

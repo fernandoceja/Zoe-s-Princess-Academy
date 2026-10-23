@@ -4,9 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Zoe's Starlight Quest</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#1a1033">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Starlight">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link href="./vendor/fonts/nunito.css" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1033; font-family: 'Nunito', system-ui, sans-serif; }
@@ -26,7 +32,7 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    "three": "./vendor/three.module.js"
   }
 }
 </script>
@@ -50,8 +56,25 @@
     console.error(e);
     errBox.style.display = 'block';
     errBox.textContent = 'Oh no! The quest could not start. ' +
-      'Please check your internet connection (the 3D magic needs it once) and reload. ' +
+      'Please check your internet connection and reload. ' +
       'Grown-ups: open the browser console for details.';
+  }
+</script>
+<script>
+  // Offline play: cache the game after the first visit, and ask the browser
+  // to keep saved progress (localStorage) from being cleared under storage pressure.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
+        // Check for a newer game version on open and whenever she comes back to it.
+        const check = () => { if (navigator.onLine !== false) reg.update().catch(() => {}); };
+        check();
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+      }).catch((e) => console.warn('SW register failed', e));
+    });
+  }
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
   }
 </script>
 </body>
