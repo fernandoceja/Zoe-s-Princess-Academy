@@ -5,12 +5,13 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261022d';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261022d';
-import { SoundFX, Narrator, setLang } from './audio.js?v=20261022d';
-import { UI } from './ui.js?v=20261022d';
-import { Save } from './save.js?v=20261022d';
-import { Input } from './input.js?v=20261022d';
+import { createWorld } from './world.js?v=20261023p2';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023p2';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023p2';
+import { UI } from './ui.js?v=20261023p2';
+import { Save } from './save.js?v=20261023p2';
+import { Input } from './input.js?v=20261023p2';
+import { startPadNav } from './padnav.js?v=20261023p2';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -49,6 +50,8 @@ export async function main(container) {
 
   // Unified input: keyboard + touch joystick + Bluetooth controllers.
   Input.init();
+  startPadNav();
+  installAudioCare();
   Input.onGamepadChange = (connected) => {
     UI.toast(connected
       ? '🎮 Controller connected! Left stick walks, ✕ talks.'
@@ -98,6 +101,9 @@ export async function main(container) {
       world.setInputEnabled(true);
       UI.setRoamUI(true);
       UI.toast('Walk to a princess and say hello! 👑');
+      if (isIOS() && !canBypassSilentSwitch()) {
+        setTimeout(() => UI.toast('🔔 No sound? Flip the silent switch off and turn the volume up.'), 2500);
+      }
       const c = Input.describeControls();
       const how = c.gamepad ? 'press ✕' : c.touch ? 'tap her' : 'click her or press E';
       Narrator.speakText(
