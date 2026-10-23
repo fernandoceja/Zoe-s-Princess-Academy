@@ -3,8 +3,10 @@
  * arrow keys) moves a visible focus ring between its buttons, and A / Cross
  * (or Enter) presses the focused one. In the 3D world this does nothing, so
  * walking and talking stay exactly as before (input.js).
- * ES module, no dependencies.
+ * ES module.
  */
+
+import { Input } from './input.js?v=20261023p2';
 
 // Topmost first: the first visible root wins.
 const ROOTS = ['.zsq-tutorial', '.zsq-pause-wrap', '.zsq-parent-wrap', '.zsq-finale',
@@ -89,14 +91,23 @@ function press() {
   const list = buttons(root);
   if (!list.length) return false;
   const b = (_focused && list.includes(_focused)) ? _focused : primary(list);
+  Input.clearInteract();
   b.click();
+  Input.clearInteract();
   return true;
 }
 
 /** Keep focus valid when menus open, close or change buttons. */
+let _hadRoot = false;
 function syncFocus() {
   const root = activeRoot();
-  if (!root) { if (_focused) setFocus(null); _prevBtns = []; return; }
+  if (!root) {
+    // A menu/dialogue just closed: swallow the press that closed it.
+    if (_hadRoot) Input.clearInteract();
+    _hadRoot = false;
+    if (_focused) setFocus(null); _prevBtns = []; return;
+  }
+  _hadRoot = true;
   const list = buttons(root);
   const changed = list.length !== _prevBtns.length || list.some((b, i) => b !== _prevBtns[i]);
   _prevBtns = list;
@@ -160,7 +171,16 @@ export function startPadNav() {
   // Keyboard: arrows move between buttons only while a menu is open.
   window.addEventListener('keydown', (e) => {
     const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
-    if (!map[e.code] || !activeRoot()) return;
+    if (!activeRoot()) return;
+    // Space / Enter press the focused (or main) button while a menu is open.
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') {
+      if (e.repeat) return;
+      e.preventDefault();
+      _usingPad = true;
+      press();
+      return;
+    }
+    if (!map[e.code]) return;
     _usingPad = true;
     move(map[e.code]);
   });

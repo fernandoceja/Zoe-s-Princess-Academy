@@ -37,6 +37,7 @@ export const Input = {
   _pad: { x: 0, z: 0 },
   _padButtons: [],
   _interactEdge: false,
+  _blockUntil: 0,
   _pauseEdge: false,
   _inited: false,
   _onKeyDown: null,
@@ -153,7 +154,18 @@ export const Input = {
   consumeInteract() {
     const v = this._interactEdge;
     this._interactEdge = false;
+    if (this._blockUntil && Date.now() < this._blockUntil) return false;
     return v;
+  },
+
+  /**
+   * Drop any pending talk press and ignore new ones for a moment. Called when a
+   * menu or dialogue closes, so the A / Space / Enter that pressed the last
+   * Continue can't instantly re-open the princess's quest.
+   */
+  clearInteract(ms = 400) {
+    this._interactEdge = false;
+    this._blockUntil = Date.now() + ms;
   },
 
   /** True once per press. Always consumes the edge so nothing goes stale. */
