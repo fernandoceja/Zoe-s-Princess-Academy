@@ -5,13 +5,13 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261023s4';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s4';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s4';
-import { UI } from './ui.js?v=20261023s4';
-import { Save } from './save.js?v=20261023s4';
-import { Input } from './input.js?v=20261023s4';
-import { startPadNav } from './padnav.js?v=20261023s4';
+import { createWorld } from './world.js?v=20261023s5';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s5';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s5';
+import { UI } from './ui.js?v=20261023s5';
+import { Save } from './save.js?v=20261023s5';
+import { Input } from './input.js?v=20261023s5';
+import { startPadNav } from './padnav.js?v=20261023s5';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -201,13 +201,24 @@ export async function main(container) {
   }
 
   function visualHtml(npcId, round) {
+    if (npcId === 'elsa' && round.visual && round.visual.tens != null) {
+      // Tens and ones: each bundle of 10 snowflakes sits in its own box.
+      const { tens, ones } = round.visual;
+      const bundle = `<span style="display:inline-block;border:3px solid #7dd3fc;border-radius:12px;padding:2px 6px;margin:3px;font-size:16px">${'❄️'.repeat(10)}</span>`;
+      return `<div style="text-align:center;line-height:1.5">${bundle.repeat(tens)}` +
+        `<div style="font-size:24px">${'❄️'.repeat(ones)}</div></div>`;
+    }
+    if (npcId === 'elsa' && round.visual && round.visual.parts) {
+      return `<div style="font-size:22px;line-height:1.6;text-align:center">` +
+        round.visual.parts.map((n) => '❄️'.repeat(n)).join('<div style="font-size:26px">➕</div>') + '</div>';
+    }
     if (npcId === 'elsa' && round.visual) {
       const { a, b } = round.visual;
       const isMinus = round.visual.op ? round.visual.op === '-'
         : (/−|-/.test(round.prompt) && !/\+/.test(round.prompt));
       const fl = (n) => '❄️'.repeat(Math.max(0, Math.min(n, 20)));
       return `<div style="font-size:24px;line-height:1.6;text-align:center">${fl(a)}` +
-        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${fl(b)}</div>`;
+        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${b > 0 ? fl(b) : '<span style="font-size:34px">❓</span>'}</div>`;
     }
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);
@@ -251,9 +262,10 @@ export async function main(container) {
     }
     const { arr, correctId } = shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
-    let voiceText = round.prompt;
+    let voiceText = round.say || round.prompt;
     if (npcId === 'cinderella' || npcId === 'rapunzel') {
-      const labels = arr.map((c) => c.label);
+      // Read the words only, not the picture emoji in front of them.
+      const labels = arr.map((c) => c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';
     }
     refreshPill();
