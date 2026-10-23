@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES } from './quests.js?v=20261022d';
+import { PRINCESSES } from './quests.js?v=20261023p2';
 
 export let LANG = 'EN';
 export function setLang(l) {
@@ -297,3 +297,50 @@ export const Narrator = {
     _speakTTS(text, { pitch, rate });
   }
 };
+
+/* --------------------------- iOS audio care --------------------------- */
+// 1) Ask iOS (Safari 16.4+/17) to treat this as media playback, so voice clips
+//    and chimes keep playing when the ring/silent switch is on silent.
+// 2) After the app is hidden (lock screen, app switch) iOS suspends audio:
+//    resume the AudioContext, paused clips and speech on return, and again on
+//    the very next touch/click/key (iOS only allows resume inside a gesture).
+
+/** True when the browser lets us opt out of the silent switch. */
+export function canBypassSilentSwitch() {
+  try { return !!(navigator.audioSession && 'type' in navigator.audioSession); } catch (e) { return false; }
+}
+
+export function isIOS() {
+  try {
+    const ua = navigator.userAgent || '';
+    return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  } catch (e) { return false; }
+}
+
+function _setPlaybackSession() {
+  try { if (canBypassSilentSwitch()) navigator.audioSession.type = 'playback'; } catch (e) {}
+}
+
+function _resumeAll() {
+  _setPlaybackSession();
+  try { if (_ctx && _ctx.state !== 'running') _ctx.resume().catch(() => {}); } catch (e) {}
+  try {
+    if (_currentAudio && _currentAudio.paused && !_currentAudio.ended && _currentAudio.currentTime > 0) {
+      _currentAudio.play().catch(() => {});
+    }
+  } catch (e) {}
+  try { if ('speechSynthesis' in window && window.speechSynthesis.paused) window.speechSynthesis.resume(); } catch (e) {}
+}
+
+let _audioCareOn = false;
+export function installAudioCare() {
+  if (_audioCareOn || typeof window === 'undefined') return;
+  _audioCareOn = true;
+  _setPlaybackSession();
+  const onGesture = () => _resumeAll();
+  // Every gesture is cheap to handle and keeps audio unlocked after a lock/unlock.
+  ['touchend', 'pointerdown', 'keydown'].forEach((t) => window.addEventListener(t, onGesture, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) _resumeAll(); });
+  window.addEventListener('pageshow', _resumeAll);
+  window.addEventListener('focus', _resumeAll);
+}
