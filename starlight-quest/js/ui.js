@@ -5,10 +5,10 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261023s2';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s2';
-import { PARENT_CORNER_HTML } from './quests.js?v=20261023s2';
-import { Input } from './input.js?v=20261023s2';
+import { Narrator, SoundFX } from './audio.js?v=20261023s4';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s4';
+import { PARENT_CORNER_HTML } from './quests.js?v=20261023s4';
+import { Input } from './input.js?v=20261023s4';
 
 const GOLD = '#ebd373';
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -395,6 +395,11 @@ function _tutorialSteps() {
   ];
 }
 
+const NAME_COLORS = {
+  '#3b82f6': '#1d4ed8', '#f472b6': '#9d174d', '#34c779': '#166534',
+  '#f59e0b': '#92400e', '#fbbf24': '#7c2d12',
+};
+
 export const UI = {
   /**
    * Build all DOM + CSS once.
@@ -609,7 +614,8 @@ export const UI = {
     const img = _makePortrait(portrait && portrait.src);
     const body = el('div', 'zsq-dbody');
     const dname = el('div', 'zsq-dname', name || '');
-    if (color) dname.style.color = color;
+    // Darker shade of each princess color so her name reads at 4.5:1 or more.
+    if (color) dname.style.color = NAME_COLORS[String(color).toLowerCase()] || '#3b1f04';
     const dtext = el('div', 'zsq-dtext');
     const row = el('div', 'zsq-drow');
     const replay = el('button', 'zsq-replay', '🔊');
