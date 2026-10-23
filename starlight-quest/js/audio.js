@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES } from './quests.js?v=20261022c';
+import { PRINCESSES } from './quests.js?v=20261022d';
 
 export let LANG = 'EN';
 export function setLang(l) {
@@ -164,8 +164,21 @@ function _voiceParams(princessId) {
   };
 }
 
-function _speakTTS(text, { pitch = 1.15, rate = 0.95 } = {}) {
-  if (_muted || !text) return;
+// Each new speak bumps _seq; an onDone callback only fires if nothing newer
+// has started (so a cancelled line never triggers its follow-up).
+let _seq = 0;
+function _once(onDone) {
+  const my = _seq;
+  let fired = false;
+  return () => {
+    if (fired || my !== _seq || typeof onDone !== 'function') return;
+    fired = true;
+    onDone();
+  };
+}
+
+function _speakTTS(text, { pitch = 1.15, rate = 0.95 } = {}, onDone) {
+  if (_muted || !text) { if (onDone) onDone(); return; }
   try {
     if (!('speechSynthesis' in window)) return;
     _stopTTS();
@@ -177,9 +190,9 @@ function _speakTTS(text, { pitch = 1.15, rate = 0.95 } = {}) {
     const voice = _pickVoice(LANG === 'ES' ? 'es' : 'en');
     if (voice) u.voice = voice;
     _speaking = true;
-    u.onend = u.onerror = () => { _speaking = false; };
+    u.onend = u.onerror = () => { _speaking = false; if (onDone) onDone(); };
     window.speechSynthesis.speak(u);
-  } catch (e) {}
+  } catch (e) { if (onDone) onDone(); }
 }
 
 /**
@@ -187,10 +200,12 @@ function _speakTTS(text, { pitch = 1.15, rate = 0.95 } = {}) {
  * error (missing file, 404, decode failure) falls back to speechSynthesis
  * with that princess's pitch/rate. Cancels anything in flight first.
  */
-function _speakPrincess(princessId, kind, text) {
+function _speakPrincess(princessId, kind, text, onDone) {
   _stopTTS();
   _stopMP3();
   _speaking = false;
+  _seq++;
+  const done = _once(onDone);
   if (_muted) return;
   const textStr = String(text || '');
 
@@ -202,7 +217,7 @@ function _speakPrincess(princessId, kind, text) {
   try {
     if (typeof Audio === 'undefined') {
       const vp = _voiceParams(princessId);
-      _speakTTS(textStr, vp);
+      _speakTTS(textStr, vp, done);
       return;
     }
     const a = new Audio();
@@ -214,12 +229,12 @@ function _speakPrincess(princessId, kind, text) {
       fellBack = true;
       _stopMP3();
       const vp = _voiceParams(princessId);
-      _speakTTS(textStr, vp);
+      _speakTTS(textStr, vp, done);
     };
 
     a.onerror = fallback;
     a.onstalled = () => setTimeout(() => { if (!mp3Ok) fallback(); }, 2500);
-    a.onended = () => { if (!fellBack) { _speaking = false; _currentAudio = null; } };
+    a.onended = () => { if (!fellBack) { _speaking = false; _currentAudio = null; done(); } };
     a.oncanplaythrough = () => {
       mp3Ok = true;
       _speaking = true;
@@ -232,7 +247,7 @@ function _speakPrincess(princessId, kind, text) {
     a.load();
   } catch (e) {
     const vp = _voiceParams(princessId);
-    _speakTTS(textStr, vp);
+    _speakTTS(textStr, vp, done);
   }
 }
 
@@ -256,8 +271,8 @@ export const Narrator = {
    * Speak a princess line: speak(princessId, kind, text).
    * kind is 'greeting' | 'praise' | 'encourage'.
    */
-  speak(princessId, kind, text) {
-    _speakPrincess(princessId, kind, text);
+  speak(princessId, kind, text, onDone) {
+    _speakPrincess(princessId, kind, text, onDone);
   },
 
   /**
@@ -269,6 +284,7 @@ export const Narrator = {
     _stopTTS();
     _stopMP3();
     _speaking = false;
+    _seq++;
     _speakTTS(text, _voiceParams(princessId));
   },
 
@@ -277,6 +293,7 @@ export const Narrator = {
     _stopTTS();
     _stopMP3();
     _speaking = false;
+    _seq++;
     _speakTTS(text, { pitch, rate });
   }
 };
