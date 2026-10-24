@@ -5,10 +5,10 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261023s6';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s6';
-import { PARENT_CORNER_HTML } from './quests.js?v=20261023s6';
-import { Input } from './input.js?v=20261023s6';
+import { Narrator, SoundFX } from './audio.js?v=20261023s8';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s8';
+import { PARENT_CORNER_HTML } from './quests.js?v=20261023s8';
+import { Input } from './input.js?v=20261023s8';
 
 const GOLD = '#ebd373';
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -660,7 +660,7 @@ export const UI = {
     const kicker = el('div', 'zsq-kicker', data.kicker || '✨ Challenge ✨');
     const prompt = el('div', 'zsq-prompt', data.prompt || '');
     modal.append(kicker, prompt);
-    _els._lastLine = { princessId: data.princessId || null, text: data.voiceText || data.prompt || '' };
+    _els._lastLine = { princessId: data.princessId || null, text: data.replayText || data.voiceText || data.prompt || '' };
     const replay = el('button', 'zsq-replay zsq-modal-replay', '🔊');
     replay.setAttribute('aria-label', 'Hear that again');
     replay.onclick = () => {
@@ -796,6 +796,20 @@ export const UI = {
     c.appendChild(btn);
     show(c);
     SoundFX.fanfare();
+  },
+
+  /** Soft stop card: Rest (default) or One more. */
+  showRest({ title, sub }, onRest, onMore) {
+    const c = _els.celebrate;
+    c.innerHTML = '';
+    c.append(el('div', 'zsq-bigstars', '🌙✨'), el('div', 'zsq-cel-title', title || ''), el('div', 'zsq-cel-sub', sub || ''));
+    const rest = el('button', 'zsq-bigbtn', 'Rest 💤');
+    rest.onclick = () => { SoundFX.pop(); hide(c); if (typeof onRest === 'function') onRest(); };
+    const more = el('button', 'zsq-bigbtn zsq-more', 'One more? ✨');
+    more.style.marginTop = '12px';
+    more.onclick = () => { SoundFX.pop(); hide(c); if (typeof onMore === 'function') onMore(); };
+    c.append(rest, more);
+    show(c);
   },
 
   /** Finale overlay. lines: array of strings (or dialogue entries). */

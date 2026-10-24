@@ -5,13 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261023s6';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s6';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s6';
-import { UI } from './ui.js?v=20261023s6';
-import { Save } from './save.js?v=20261023s6';
-import { Input } from './input.js?v=20261023s6';
-import { startPadNav } from './padnav.js?v=20261023s6';
+import { createWorld } from './world.js?v=20261023s8';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines } from './quests.js?v=20261023s8';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s8';
+import { UI } from './ui.js?v=20261023s8';
+import { Save } from './save.js?v=20261023s8';
+import { Input } from './input.js?v=20261023s8';
+import { startPadNav } from './padnav.js?v=20261023s8';
+import { landState, recordQuest, today } from './ladder.js?v=20261023s8';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -35,6 +36,8 @@ export async function main(container) {
   let roundIdx = 0;
   let rounds = [];   // this play's rounds, built fresh from pools
   let misses = 0;    // wrong picks on the current round
+  let results = [];  // ladder results for this quest's first 5 rounds
+  let requeued = 0;  // missed rounds asked again later in this quest
 
   UI.init({
     onMuteToggle() {
@@ -61,7 +64,7 @@ export async function main(container) {
   const world = createWorld(container, {
     onNearNPC(npcId) {
       if (state !== 'roam' || paused) { UI.promptInteract(null); return; }
-      if (npcId && !Save.data.done.includes(npcId)) {
+      if (npcId) {
         const c = Input.describeControls();
         const label = c.gamepad
           ? `💬 Press ✕ to talk to ${PRINCESSES[npcId].name} ✨`
@@ -129,7 +132,7 @@ export async function main(container) {
     const done = Save.data.done.length;
     if (activeNPC && (state === 'dialogue' || state === 'challenge')) {
       const q = QUESTS[activeNPC];
-      UI.setQuestPill(`✨ ${PRINCESSES[activeNPC].name} · ${q.title} · ${Math.min(roundIdx + 1, 5)}/5`);
+      UI.setQuestPill(`✨ ${PRINCESSES[activeNPC].name} · ${q.title} · ${Math.min(roundIdx + 1, rounds.length)}/${rounds.length}`);
     } else {
       UI.setQuestPill(`🌟 ${done}/4 lands · ⭐ ${Save.data.stars} stars`);
     }
@@ -168,11 +171,23 @@ export async function main(container) {
     );
   }
 
-  function startQuest(npcId) {
+  function startQuest(npcId, opts = {}) {
+    // One quest per land per day, then a soft stop (no timers anywhere).
+    if (!opts.again && Save.data.lastPlay[npcId] === today()) {
+      activeNPC = npcId;
+      state = 'dialogue';
+      world.setInputEnabled(false);
+      UI.setRoamUI(false);
+      UI.promptInteract(null);
+      showRest(npcId);
+      return;
+    }
     activeNPC = npcId;
     roundIdx = 0;
     misses = 0;
-    rounds = buildRounds(npcId);
+    results = [];
+    requeued = 0;
+    rounds = buildRounds(npcId, Math.random, landState(Save.data.ladder[npcId]));
     state = 'dialogue';
     world.setInputEnabled(false);
     UI.setRoamUI(false);
@@ -182,9 +197,10 @@ export async function main(container) {
     refreshPill();
 
     if (Save.data.done.includes(npcId)) {
+      // Her land already glows: a practice quest at her current tier.
       dlg(npcId, P.name, P.color, P.portrait,
-        [`You already helped me, Zoe! My land is glowing because of you! 💖`],
-        'praise', endToRoam);
+        [opts.again ? 'Yay, one more! Here we go! ✨' : `Welcome back, Zoe! My land is glowing because of you! 💖 Want to play again?`],
+        'praise', () => startRound());
       return;
     }
     dlg(npcId, P.name, P.color, P.portrait, quest.intro, 'greeting', () => startRound());
@@ -272,18 +288,20 @@ export async function main(container) {
 
     UI.showChallenge(
       {
-        kicker: `✨ ${quest.title} · ${roundIdx + 1} of 5`,
+        kicker: `✨ ${quest.title} · ${roundIdx + 1} of ${rounds.length}`,
         prompt: round.prompt,
         choices: arr,
         visualHtml: visualHtml(npcId, round),
         princessId: npcId,
         voiceText,
+        replayText: round.replay || null, // Belle sentences: 🔊 reads the sentence
         exactVoice: true, // read the actual question aloud, not a generic MP3
       },
       (pickedId) => {
         if (pickedId === correctId) {
+          noteResult(round);
           Save.data.stars += 1;
-          Save.data.shards[npcId] += 1;
+          if (!Save.data.done.includes(npcId)) Save.data.shards[npcId] += 1;
           Save.save();
           UI.updateStars(Save.data.stars);
           SoundFX.chime();
@@ -292,13 +310,16 @@ export async function main(container) {
           Narrator.speakExact(npcId, praise);
           UI.revealAnswer(
             { correctId, pickedId, message: `⭐ +1 star! ${praise}` },
-            () => {
-              roundIdx++;
-              misses = 0;
-              if (roundIdx >= rounds.length) completeQuest(npcId);
-              else startRound();
-            }
+            () => nextRound(npcId)
           );
+        } else if (misses >= 2) {
+          // Third miss: show the answer gently, read it, and count it as done.
+          SoundFX.pop();
+          misses++;
+          noteResult(round);
+          const { shown: msg, say } = revealLines(round);
+          Narrator.speakExact(npcId, say);
+          UI.revealAnswer({ correctId, pickedId, message: msg }, () => nextRound(npcId));
         } else {
           // Gentle retry: never reveal the answer, never penalize.
           SoundFX.pop();
@@ -312,7 +333,46 @@ export async function main(container) {
     );
   }
 
+  // Ladder bookkeeping for a finished round (re-asks don't count twice).
+  function noteResult(round) {
+    if (round.requeued || results.length >= 5) return;
+    results.push({ round, firstTry: misses === 0, hinted: misses > 0 });
+    // Missed it? Ask it again 2 rounds later in this quest (at most twice).
+    if (misses > 0 && requeued < 2) {
+      requeued++;
+      rounds.splice(Math.min(rounds.length, roundIdx + 3), 0, { ...round, requeued: true });
+    }
+  }
+
+  function nextRound(npcId) {
+    roundIdx++;
+    misses = 0;
+    if (roundIdx >= rounds.length) completeQuest(npcId);
+    else startRound();
+  }
+
+  // Soft stop after one quest: rest, or one more right away.
+  function showRest(npcId) {
+    state = 'dialogue';
+    UI.setRoamUI(false);
+    refreshPill();
+    const text = 'The kingdom is resting. Come back tomorrow!';
+    Narrator.speakExact(npcId, text);
+    UI.showRest({ title: '🌙 The kingdom is resting.', sub: 'Come back tomorrow! 💤' },
+      () => { Narrator.stop(); endToRoam(); },
+      () => { Narrator.stop(); startQuest(npcId, { again: true }); });
+  }
+
   function completeQuest(npcId) {
+    Save.data.ladder[npcId] = recordQuest(landState(Save.data.ladder[npcId]), results);
+    Save.data.lastPlay[npcId] = today();
+    if (Save.data.done.includes(npcId)) {
+      // Practice replay: no new shard, straight to the soft stop.
+      Save.save();
+      SoundFX.chime();
+      showRest(npcId);
+      return;
+    }
     state = 'celebrate';
     UI.setRoamUI(false);
     const P = PRINCESSES[npcId];
@@ -331,7 +391,7 @@ export async function main(container) {
       () => {
         dlg(npcId, P.name, P.color, P.portrait, quest.complete, 'praise', () => {
           if (Save.data.done.length >= NPC_IDS.length) runFinale();
-          else endToRoam();
+          else showRest(npcId);
         });
       }
     );

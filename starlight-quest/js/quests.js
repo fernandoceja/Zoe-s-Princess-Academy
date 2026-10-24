@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s6';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s6';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s6';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s6';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s6';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s8';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s8';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s8';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s8';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s8';
 
 export const PRINCESSES = {
   belle: {
@@ -381,9 +381,8 @@ export function _belleHint(w, distractors) {
 }
 
 // ============================================================================
-// FIRST-GRADE CONTENT (Step 4). Each 5-round quest goes easiest first:
-// round 1 from T1 (easy), rounds 2-3 from T2 (core), rounds 4-5 from T3
-// (stretch). The adaptive ladder (Step 5) can later choose tiers per land.
+// FIRST-GRADE CONTENT (Step 4). Three tiers per land: T1 easy, T2 core,
+// T3 stretch. The ladder (js/ladder.js) picks the tier for each play.
 // Optional round extras: `say` (what is read aloud, when it must differ from
 // the prompt, e.g. Belle sentences she reads herself), `visual` (Elsa),
 // `clock` (Cinderella), `pic` (emoji picture shown above the choices).
@@ -415,14 +414,14 @@ const BLEND_SETS = [
   ['snap', 'sap', 'snip'], ['stop', 'top', 'step'], ['grin', 'grab', 'pin'],
 ];
 const SENTENCES = [
-  ['The frog can hop.', '🐸', '🐟', '🐶'],
-  ['A fish is in the dish.', '🐟', '🐸', '🐔'],
-  ['The ship is big.', '🚢', '🚗', '🐛'],
-  ['I can see the duck.', '🦆', '🐱', '🐷'],
-  ['She has a red hat.', '🎩', '👟', '🍎'],
-  ['The cat is on the bed.', '🐱', '🐶', '🐸'],
-  ['The crab is on the sand.', '🦀', '🐢', '🐌'],
-  ['Then he will swim.', '🏊', '🚲', '🛌'],
+  ['The frog can hop.', '🐸', '🐟', '🐶', 'the frog'],
+  ['A fish is in the dish.', '🐟', '🐸', '🐔', 'the fish'],
+  ['The ship is big.', '🚢', '🚗', '🐛', 'the ship'],
+  ['I can see the duck.', '🦆', '🐱', '🐷', 'the duck'],
+  ['She has a red hat.', '🎩', '👟', '🍎', 'the red hat'],
+  ['The cat is on the bed.', '🐱', '🐶', '🐸', 'the cat on the bed'],
+  ['The crab is on the sand.', '🦀', '🐢', '🐌', 'the crab'],
+  ['Then he will swim.', '🏊', '🚲', '🛌', 'the swimmer'],
 ];
 
 function _wordRound(w, d) {
@@ -443,25 +442,18 @@ function _cvcRound(set) {
     hint: `Good try! Say it slow with me: ${sounds}. Which one is it?`,
   };
 }
-function _sentenceRound([text, ans, d1, d2]) {
+function _sentenceRound([text, ans, d1, d2, answerSay]) {
   return {
+    answerSay,
     prompt: `${text} Which picture matches?`,
     say: 'Read the words. Which picture matches?',
+    // 🔊 replay reads the sentence too (the opening voice does not).
+    replay: `${text} Which picture matches?`,
     choices: [ans, d1, d2], answer: ans,
     hint: `Good try! Read it with me: ${text} Which picture shows that?`,
   };
 }
 
-function _belleRounds(rng) {
-  const easy = [...DOLCH_PREPRIMER, ...DOLCH_PRIMER];
-  const sight = SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS.slice() : SIGHT_1ST;
-  const t1 = rng() < 0.5 ? _cvcRound(_pick(CVC_SETS, rng)) : _sightRound(_pick(easy, rng), easy, rng);
-  const dg = _pick(DIGRAPH_SETS, rng);
-  const t2 = [_wordRound(dg[0], dg.slice(1)), _sightRound(_pick(sight, rng), [...sight, ...DOLCH_1ST], rng)];
-  const bl = _pick(BLEND_SETS, rng);
-  const t3 = _shuffle([_wordRound(bl[0], bl.slice(1)), _sentenceRound(_pick(SENTENCES, rng))], rng);
-  return [t1, ..._shuffle(t2, rng), ...t3];
-}
 
 // Number choices: the answer plus specific mistakes first, then near misses.
 function _numChoices(ans, rng, max = 20, mistakes = []) {
@@ -500,6 +492,7 @@ function _missingRound([a, op, total, first], rng) {
     const ans = a - total;
     return {
       prompt: `${a} - ? = ${total}. What number is missing?`,
+      say: `${a} take away what number makes ${total}?`,
       choices: _numChoices(ans, rng, 20, [a + total]), answer: String(ans),
       hint: `Good try! Start at ${a}. Count back to ${total}. How many did you count?`,
       visual: { a, b: 0, op: '-' },
@@ -508,6 +501,7 @@ function _missingRound([a, op, total, first], rng) {
   const ans = total - a;
   return {
     prompt: first ? `? + ${a} = ${total}. What number is missing?` : `${a} + ? = ${total}. What number is missing?`,
+    say: first ? `What number plus ${a} makes ${total}?` : `${a} plus what number makes ${total}?`,
     choices: _numChoices(ans, rng, 20, [a + total]), answer: String(ans),
     hint: `Good try! Start at ${a}. Count up to ${total}. How many did you count?`,
     visual: { a, b: 0, op: '+' },
@@ -542,18 +536,11 @@ function _addendsRound(parts, rng) {
   const [a, b, c] = parts;
   return {
     prompt: `${a} + ${b} + ${c} = ?`,
+    say: `What is ${a} plus ${b} plus ${c}?`,
     choices: _numChoices(ans, rng, 20, [a + b, b + c]), answer: String(ans),
     hint: `Good try! Add two first: ${a} + ${b}. Then add ${c}.`,
     visual: { parts },
   };
-}
-function _elsaRounds(rng) {
-  const t1 = _elsaWithin(rng, 10);
-  const t2 = _shuffle([_elsaWithin(rng, 20), _missingRound(_pick(MISSING, rng), rng)], rng);
-  const t3pool = [() => _tensRound(_pick(TENS, rng), rng), () => _moreRound(_pick(MORE, rng), rng),
-    () => _addendsRound(_pick(ADDENDS, rng), rng)];
-  const t3 = _sample(t3pool, 2, rng).map((f) => f());
-  return [t1, ...t2, ...t3];
 }
 
 function _timeLabel(h, m) { return m === 0 ? `${h} o'clock` : `half past ${h}`; }
@@ -573,16 +560,6 @@ function _cinderellaRound(h, m, digital) {
     clock: { hour: h, minute: m },
   };
 }
-function _cinderellaRounds(rng) {
-  const hours = _shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], rng);
-  const halfHours = hours.filter((h) => h !== 6); // 6:30: hands overlap, held back for now
-  const half = hours.slice(3).filter((h) => h !== 6); // 6:30 held back: the hands overlap
-  return [
-    _cinderellaRound(hours[0], 0, false),
-    ..._shuffle([_cinderellaRound(hours[1], 0, true), _cinderellaRound(hours[2], 0, false)], rng),
-    ..._shuffle([_cinderellaRound(half[0], 30, false), _cinderellaRound(half[1], 30, true)], rng),
-  ];
-}
 
 
 const _sci = (prompt, choices, hint) => ({ prompt, choices, answer: choices[0], hint });
@@ -591,6 +568,15 @@ const SCI_T1 = [
     'Good try! This part hides under the ground. What drinks the water?'),
   _sci('Little leaves reach up to catch the warm...', ['☀️ Sunlight', '❄️ Snow', '💨 Wind'],
     'Good try! It is warm and bright and comes from the sky.'),
+  // More kindergarten plant warm-ups, so a T1 quest has 5 different rounds.
+  _sci('A sleepy seed wants to grow. What does it drink?', ['💧 Water', '🧃 Juice', '🥛 Milk'],
+    'Good try! It falls from the clouds as rain.'),
+  _sci('Which one is a living thing?', ['🌸 A flower', '🪨 A rock', '👟 A shoe'],
+    'Good try! Living things grow. Which one grows?'),
+  _sci('A seed grows into a...', ['🌱 Plant', '🚗 Car', '☁️ Cloud'],
+    'Good try! Seeds go in the soil. What pops up?'),
+  _sci('The seed is tucked into soft, brown dirt. What is that called?', ['🟫 Soil', '🍲 Soup', '🏖️ Sand'],
+    'Good try! Plants grow in it, and worms live in it too.'),
 ];
 const SCI_T2 = [
   _sci('When can we see the sun?', ['☀️ Day', '🌙 Night', '🚫 Never'], 'Good try! The sun is up when it is bright outside.'),
@@ -610,18 +596,95 @@ const SCI_T3 = [
     'Good try! Babies grow up to look like their parents.'),
   _sci('Which part helps a plant drink?', ['🌱 Roots', '🌸 Petals', '🌰 Seeds'], 'Good try! This part is under the ground.'),
 ];
-function _rapunzelRounds(rng) {
-  const t1 = _pick(SCI_T1, rng);
-  const t3pool = t1 === SCI_T1[0] ? SCI_T3.slice(0, 4) : SCI_T3;
-  return [t1, ..._sample(SCI_T2, 2, rng), ..._sample(t3pool, 2, rng)];
+
+// One round generator per tier, per land.
+const TIERS = {
+  belle: {
+    1: (rng) => {
+      const easy = [...DOLCH_PREPRIMER, ...DOLCH_PRIMER];
+      return rng() < 0.5 ? _cvcRound(_pick(CVC_SETS, rng)) : _sightRound(_pick(easy, rng), easy, rng);
+    },
+    2: (rng) => {
+      if (rng() < 0.5) { const dg = _pick(DIGRAPH_SETS, rng); return _wordRound(dg[0], dg.slice(1)); }
+      const sight = SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS.slice() : SIGHT_1ST;
+      return _sightRound(_pick(sight, rng), [...new Set([...sight, ...DOLCH_1ST])], rng);
+    },
+    3: (rng) => {
+      if (rng() < 0.5) { const bl = _pick(BLEND_SETS, rng); return _wordRound(bl[0], bl.slice(1)); }
+      return _sentenceRound(_pick(SENTENCES, rng));
+    },
+  },
+  elsa: {
+    1: (rng) => _elsaWithin(rng, 10),
+    2: (rng) => (rng() < 0.5 ? _elsaWithin(rng, 20) : _missingRound(_pick(MISSING, rng), rng)),
+    3: (rng) => {
+      const k = Math.floor(rng() * 3);
+      if (k === 0) return _tensRound(_pick(TENS, rng), rng);
+      if (k === 1) return _moreRound(_pick(MORE, rng), rng);
+      return _addendsRound(_pick(ADDENDS, rng), rng);
+    },
+  },
+  cinderella: {
+    1: (rng) => _cinderellaRound(1 + Math.floor(rng() * 12), 0, false),
+    2: (rng) => _cinderellaRound(1 + Math.floor(rng() * 12), 0, true),
+    3: (rng) => {
+      const hours = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12]; // 6:30 held back: the hands overlap
+      return _cinderellaRound(_pick(hours, rng), 30, rng() < 0.5);
+    },
+  },
+  rapunzel: {
+    1: (rng) => _pick(SCI_T1, rng),
+    2: (rng) => _pick(SCI_T2, rng),
+    3: (rng) => _pick(SCI_T3, rng),
+  },
+};
+
+/** Stable id for a round, used by the review queue. */
+export function roundKey(r) { return `${r.prompt}|${r.answer}`; }
+
+function _tagged(npcId, tier, rng) {
+  const r = { ...TIERS[npcId][tier](rng), tier };
+  r.key = roundKey(r);
+  return r;
 }
 
-export function buildRounds(npcId, rng = Math.random) {
+/**
+ * Build one quest for a land.
+ * ladder: { tier: 1-3, review: [{ round, wins }] } (from js/ladder.js).
+ * 5 rounds: round 1 is one tier below (a confidence win; T1 at T1), then
+ * 3 at the current tier and 1 review item (a missed round from an earlier
+ * play) in the middle. No review waiting -> 4 at the current tier.
+ * Pass a custom rng for deterministic tests.
+ */
+export function buildRounds(npcId, rng = Math.random, ladder = null) {
   try {
-    if (npcId === 'belle') return _belleRounds(rng);
-    if (npcId === 'elsa') return _elsaRounds(rng);
-    if (npcId === 'cinderella') return _cinderellaRounds(rng);
-    if (npcId === 'rapunzel') return _rapunzelRounds(rng);
+    if (!TIERS[npcId]) throw new Error('no tiers');
+    const tier = Math.min(3, Math.max(1, (ladder && ladder.tier) | 0 || 1));
+    const below = Math.max(1, tier - 1);
+    const out = [];
+    const seen = new Set();
+    const add = (r) => { if (r && !seen.has(r.key)) { seen.add(r.key); out.push(r); return true; } return false; };
+    const fresh = (t) => { for (let k = 0; k < 40; k++) { if (add(_tagged(npcId, t, rng))) return; } add({ ..._tagged(npcId, t, rng), key: `x${out.length}` }); };
+    fresh(below);
+    const review = ((ladder && ladder.review) || []).filter((x) => x && x.round && x.round.prompt);
+    const rv = review.length ? _pick(review, rng).round : null;
+    fresh(tier);
+    if (!(rv && add({ ...rv, key: roundKey(rv), review: true }))) fresh(tier);
+    fresh(tier);
+    fresh(tier);
+    return out;
   } catch (e) {}
   return (QUESTS[npcId] && QUESTS[npcId].rounds) || [];
+}
+
+const _EMOJI = /[\p{Extended_Pictographic}\uFE0F\u200D\u20E3]/gu;
+export function hasEmoji(t) { _EMOJI.lastIndex = 0; return _EMOJI.test(String(t)); }
+// Words for the third-miss reveal: a spoken answer word, else the answer text
+// with pictures stripped, else a gentle "It's this picture."
+export function revealLines(round) {
+  const shown = `That's okay! The answer is ${round.answer}. Let's keep going!`;
+  let word = round.answerSay || String(round.answer).replace(_EMOJI, '').replace(/\s+/g, ' ').trim();
+  const say = word ? `That's okay! The answer is ${word}. Let's keep going!`
+                   : "That's okay! It's this picture. Let's keep going!";
+  return { shown, say };
 }
