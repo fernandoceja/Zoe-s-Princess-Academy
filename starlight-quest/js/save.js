@@ -15,7 +15,9 @@ function defaults() {
     done: [],
     lang: 'EN',
     muted: false,
-    started: false
+    started: false,
+    ladder: {},   // per land: { tier, review } (see ladder.js)
+    lastPlay: {}  // per land: local day of the last finished quest
   };
 }
 
@@ -44,6 +46,13 @@ function merge(raw) {
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
   if (typeof raw.muted === 'boolean') out.muted = raw.muted;
   if (typeof raw.started === 'boolean') out.started = raw.started;
+
+  out.ladder = {};
+  out.lastPlay = {};
+  for (const id of NPC_IDS) {
+    if (raw.ladder && raw.ladder[id] && typeof raw.ladder[id] === 'object') out.ladder[id] = raw.ladder[id];
+    if (raw.lastPlay && typeof raw.lastPlay[id] === 'string') out.lastPlay[id] = raw.lastPlay[id];
+  }
 
   return out;
 }
