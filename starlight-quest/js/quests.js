@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s5';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s5';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s5';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s5';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s5';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s6';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s6';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s6';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s6';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s6';
 
 export const PRINCESSES = {
   belle: {
@@ -488,9 +488,9 @@ function _elsaWithin(rng, max) {
   const a = 2 + Math.floor(rng() * (max - 1));
   const b = 1 + Math.floor(rng() * (a - 1));
   return {
-    prompt: `You have ${_flakes(a)}. ${b} melt. How many are left?`,
+    prompt: `You have ${_flakes(a)}. ${b} ${b === 1 ? 'melts' : 'melt'}. How many are left?`,
     choices: _numChoices(a - b, rng, max, a + b <= 20 ? [a + b] : []), answer: String(a - b),
-    hint: `Good try! Start with ${a} snowflakes. Cover ${b}. Count the rest.`,
+    hint: `Good try! Start with ${_flakes(a)}. Cover ${b}. Count the rest.`,
     visual: { a, b, op: '-' },
   };
 }
@@ -518,9 +518,11 @@ function _tensRound([t, o], rng) {
   const ans = t * 10 + o;
   const swapped = o * 10 + t;
   return {
-    prompt: `${t} ten${t > 1 ? 's' : ''} and ${o} ones. What number is that?`,
+    prompt: `${t} ten${t === 1 ? '' : 's'} and ${o} one${o === 1 ? '' : 's'}. What number is that?`,
     choices: _numChoices(ans, rng, 50, [swapped, t + o]), answer: String(ans),
-    hint: `Good try! Each bundle is 10. Count the bundles by tens, then add the ${o} loose ones.`,
+    hint: o === 0
+      ? 'Good try! Each bundle is 10. Count the bundles by tens. There are no loose ones.'
+      : `Good try! Each bundle is 10. Count the bundles by tens, then add the ${o} loose one${o === 1 ? '' : 's'}.`,
     visual: { tens: t, ones: o },
   };
 }
