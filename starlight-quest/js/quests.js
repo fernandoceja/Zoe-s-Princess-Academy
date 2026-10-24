@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s7';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s7';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s7';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s7';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s7';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s8';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s8';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s8';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s8';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s8';
 
 export const PRINCESSES = {
   belle: {
@@ -414,14 +414,14 @@ const BLEND_SETS = [
   ['snap', 'sap', 'snip'], ['stop', 'top', 'step'], ['grin', 'grab', 'pin'],
 ];
 const SENTENCES = [
-  ['The frog can hop.', '🐸', '🐟', '🐶'],
-  ['A fish is in the dish.', '🐟', '🐸', '🐔'],
-  ['The ship is big.', '🚢', '🚗', '🐛'],
-  ['I can see the duck.', '🦆', '🐱', '🐷'],
-  ['She has a red hat.', '🎩', '👟', '🍎'],
-  ['The cat is on the bed.', '🐱', '🐶', '🐸'],
-  ['The crab is on the sand.', '🦀', '🐢', '🐌'],
-  ['Then he will swim.', '🏊', '🚲', '🛌'],
+  ['The frog can hop.', '🐸', '🐟', '🐶', 'the frog'],
+  ['A fish is in the dish.', '🐟', '🐸', '🐔', 'the fish'],
+  ['The ship is big.', '🚢', '🚗', '🐛', 'the ship'],
+  ['I can see the duck.', '🦆', '🐱', '🐷', 'the duck'],
+  ['She has a red hat.', '🎩', '👟', '🍎', 'the red hat'],
+  ['The cat is on the bed.', '🐱', '🐶', '🐸', 'the cat on the bed'],
+  ['The crab is on the sand.', '🦀', '🐢', '🐌', 'the crab'],
+  ['Then he will swim.', '🏊', '🚲', '🛌', 'the swimmer'],
 ];
 
 function _wordRound(w, d) {
@@ -442,8 +442,9 @@ function _cvcRound(set) {
     hint: `Good try! Say it slow with me: ${sounds}. Which one is it?`,
   };
 }
-function _sentenceRound([text, ans, d1, d2]) {
+function _sentenceRound([text, ans, d1, d2, answerSay]) {
   return {
+    answerSay,
     prompt: `${text} Which picture matches?`,
     say: 'Read the words. Which picture matches?',
     // 🔊 replay reads the sentence too (the opening voice does not).
@@ -491,6 +492,7 @@ function _missingRound([a, op, total, first], rng) {
     const ans = a - total;
     return {
       prompt: `${a} - ? = ${total}. What number is missing?`,
+      say: `${a} take away what number makes ${total}?`,
       choices: _numChoices(ans, rng, 20, [a + total]), answer: String(ans),
       hint: `Good try! Start at ${a}. Count back to ${total}. How many did you count?`,
       visual: { a, b: 0, op: '-' },
@@ -499,6 +501,7 @@ function _missingRound([a, op, total, first], rng) {
   const ans = total - a;
   return {
     prompt: first ? `? + ${a} = ${total}. What number is missing?` : `${a} + ? = ${total}. What number is missing?`,
+    say: first ? `What number plus ${a} makes ${total}?` : `${a} plus what number makes ${total}?`,
     choices: _numChoices(ans, rng, 20, [a + total]), answer: String(ans),
     hint: `Good try! Start at ${a}. Count up to ${total}. How many did you count?`,
     visual: { a, b: 0, op: '+' },
@@ -533,6 +536,7 @@ function _addendsRound(parts, rng) {
   const [a, b, c] = parts;
   return {
     prompt: `${a} + ${b} + ${c} = ?`,
+    say: `What is ${a} plus ${b} plus ${c}?`,
     choices: _numChoices(ans, rng, 20, [a + b, b + c]), answer: String(ans),
     hint: `Good try! Add two first: ${a} + ${b}. Then add ${c}.`,
     visual: { parts },
@@ -671,4 +675,16 @@ export function buildRounds(npcId, rng = Math.random, ladder = null) {
     return out;
   } catch (e) {}
   return (QUESTS[npcId] && QUESTS[npcId].rounds) || [];
+}
+
+const _EMOJI = /[\p{Extended_Pictographic}\uFE0F\u200D\u20E3]/gu;
+export function hasEmoji(t) { _EMOJI.lastIndex = 0; return _EMOJI.test(String(t)); }
+// Words for the third-miss reveal: a spoken answer word, else the answer text
+// with pictures stripped, else a gentle "It's this picture."
+export function revealLines(round) {
+  const shown = `That's okay! The answer is ${round.answer}. Let's keep going!`;
+  let word = round.answerSay || String(round.answer).replace(_EMOJI, '').replace(/\s+/g, ' ').trim();
+  const say = word ? `That's okay! The answer is ${word}. Let's keep going!`
+                   : "That's okay! It's this picture. Let's keep going!";
+  return { shown, say };
 }

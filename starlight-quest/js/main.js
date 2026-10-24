@@ -5,14 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261023s7';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s7';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s7';
-import { UI } from './ui.js?v=20261023s7';
-import { Save } from './save.js?v=20261023s7';
-import { Input } from './input.js?v=20261023s7';
-import { startPadNav } from './padnav.js?v=20261023s7';
-import { landState, recordQuest, today } from './ladder.js?v=20261023s7';
+import { createWorld } from './world.js?v=20261023s8';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines } from './quests.js?v=20261023s8';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s8';
+import { UI } from './ui.js?v=20261023s8';
+import { Save } from './save.js?v=20261023s8';
+import { Input } from './input.js?v=20261023s8';
+import { startPadNav } from './padnav.js?v=20261023s8';
+import { landState, recordQuest, today } from './ladder.js?v=20261023s8';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -317,8 +317,8 @@ export async function main(container) {
           SoundFX.pop();
           misses++;
           noteResult(round);
-          const msg = `That's okay! The answer is ${round.answer}. Let's keep going!`;
-          Narrator.speakExact(npcId, msg.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, ''));
+          const { shown: msg, say } = revealLines(round);
+          Narrator.speakExact(npcId, say);
           UI.revealAnswer({ correctId, pickedId, message: msg }, () => nextRound(npcId));
         } else {
           // Gentle retry: never reveal the answer, never penalize.
