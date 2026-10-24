@@ -5,13 +5,13 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261023s1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s1';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s1';
-import { UI } from './ui.js?v=20261023s1';
-import { Save } from './save.js?v=20261023s1';
-import { Input } from './input.js?v=20261023s1';
-import { startPadNav } from './padnav.js?v=20261023s1';
+import { createWorld } from './world.js?v=20261023s4';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds } from './quests.js?v=20261023s4';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261023s4';
+import { UI } from './ui.js?v=20261023s4';
+import { Save } from './save.js?v=20261023s4';
+import { Input } from './input.js?v=20261023s4';
+import { startPadNav } from './padnav.js?v=20261023s4';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -291,9 +291,9 @@ export async function main(container) {
           // Gentle retry: never reveal the answer, never penalize.
           SoundFX.pop();
           misses++;
-          // Encourage clip first, then the actual hint text.
-          const hintSpoken = round.hint.replace(/^Good try!\s*/, '');
-          Narrator.speak(npcId, 'encourage', 'Good try!', () => Narrator.speakExact(npcId, hintSpoken));
+          // Speak exactly the on-screen text ('Good try!' + hint) in her voice,
+          // so the words heard always match the words shown.
+          Narrator.speakExact(npcId, round.hint);
           UI.revealAnswer({ correctId: null, pickedId, message: round.hint }, () => startRound());
         }
       }

@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s1';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s1';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s1';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s1';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261023s4';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261023s4';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261023s4';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261023s4';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261023s4';
 
 export const PRINCESSES = {
   belle: {
@@ -108,7 +108,7 @@ export const QUESTS = {
         prompt: "Which word says 'some'?",
         choices: ['same', 'some', 'stop'],
         answer: 'some',
-        hint: 'Good try! These look close. Which one has an o in the middle?',
+        hint: 'Good try! These look close. Which word has an o right after the s?',
       },
       {
         prompt: 'Sound it out: p - i - g. Which word is it?',
@@ -392,6 +392,22 @@ function _shuffle(arr, rng) {
 }
 function _sample(arr, n, rng) { return _shuffle(arr, rng).slice(0, n); }
 
+// Belle hint: point at a letter the right word has that NO wrong choice shares
+// in the same spot (first letter, then last letter, then any position).
+export function _belleHint(w, distractors) {
+  const differs = (i, ch) => distractors.every((d) => d[i] !== ch);
+  if (differs(0, w[0])) return `Good try! Let's look again. '${w}' starts with the letter ${w[0]}.`;
+  const last = w[w.length - 1];
+  if (distractors.every((d) => d[d.length - 1] !== last)) return `Good try! Let's look again. '${w}' ends with the letter ${last}.`;
+  const ord = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+  for (let i = 1; i < w.length; i++) {
+    if (differs(i, w[i])) return `Good try! Let's look again. The ${ord[i] || 'next'} letter in '${w}' is ${w[i]}.`;
+  }
+  const lens = distractors.every((d) => d.length !== w.length);
+  if (lens) return `Good try! Let's look again. '${w}' has ${w.length} letters.`;
+  return `Good try! Let's look again. Spell it with me: ${w.split('').join(' - ')}.`;
+}
+
 function _belleRounds(rng) {
   const all = [...DOLCH_PREPRIMER, ...DOLCH_PRIMER, ...DOLCH_1ST];
   const rounds = [];
@@ -406,7 +422,7 @@ function _belleRounds(rng) {
       prompt: `Which word says '${w}'?`,
       choices: [w, ...d],
       answer: w,
-      hint: `Good try! Let's look again. '${w}' starts with the letter ${w[0]}.`,
+      hint: _belleHint(w, d),
     });
   }
   for (const set of _sample(CVC_SETS, 2, rng)) {
