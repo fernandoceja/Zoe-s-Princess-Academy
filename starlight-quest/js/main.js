@@ -258,10 +258,18 @@ export async function main(container) {
       ticks += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#8a6d3b" stroke-width="${i % 3 === 0 ? 4 : 2}"/>`;
     }
     const hr = (ha * Math.PI) / 180, mr = (ma * Math.PI) / 180;
-    const hx = 50 + 22 * Math.sin(hr), hy = 50 - 22 * Math.cos(hr);
-    const mx = 50 + 32 * Math.sin(mr), my = 50 - 32 * Math.cos(mr);
-    return `<svg viewBox="0 0 100 100" width="132" height="132" style="display:block;margin:0 auto" role="img" aria-label="Clock">` +
-      `<circle cx="50" cy="50" r="46" fill="#fffbe8" stroke="#ebd373" stroke-width="5"/>${ticks}` +
+    const hx = 50 + 15 * Math.sin(hr), hy = 50 - 15 * Math.cos(hr);
+    const mx = 50 + 24 * Math.sin(mr), my = 50 - 24 * Math.cos(mr); // stops short of the numerals so 12 and 6 stay readable
+    // Numerals 1-12 sit just inside the ticks. The hands stop short of them, so no number is ever covered.
+    let numerals = '';
+    for (let i = 1; i <= 12; i++) {
+      const a = (i * 30 * Math.PI) / 180;
+      const nx = 50 + 30.5 * Math.sin(a), ny = 50 - 30.5 * Math.cos(a);
+      numerals += `<text x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-family="Nunito, system-ui, sans-serif" font-weight="900" font-size="11" fill="#3b1f04">${i}</text>`;
+    }
+    const hh = h % 12 || 12, mm = String(m).padStart(2, '0');
+    return `<svg viewBox="0 0 100 100" style="width:min(52vw,210px,38vh);height:auto;display:block;margin:0 auto" role="img" aria-label="Clock showing ${hh}:${mm}">` +
+      `<circle cx="50" cy="50" r="46" fill="#fffbe8" stroke="#ebd373" stroke-width="5"/>${ticks}${numerals}` +
       `<line x1="50" y1="50" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="#5b4a8a" stroke-width="6" stroke-linecap="round"/>` +
       `<line x1="50" y1="50" x2="${mx.toFixed(1)}" y2="${my.toFixed(1)}" stroke="#e2703a" stroke-width="4" stroke-linecap="round"/>` +
       `<circle cx="50" cy="50" r="5" fill="#ebd373"/></svg>`;
