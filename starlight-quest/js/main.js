@@ -315,7 +315,10 @@ export async function main(container) {
 
     UI.showChallenge(
       {
-        kicker: `✨ ${quest.title} · ${roundIdx + 1} of ${rounds.length}`,
+        kicker: quest.title,
+        // A quest is five questions; a missed one may come back, so cap the dots at five.
+        progress: { current: Math.min(roundIdx + 1, 5), total: 5 },
+        portrait: { src: P.portrait },
         prompt: round.prompt,
         choices: arr,
         visualHtml: visualHtml(npcId, round),

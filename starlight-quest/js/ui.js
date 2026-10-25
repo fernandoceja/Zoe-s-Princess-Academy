@@ -126,8 +126,13 @@ function injectCSS() {
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 28px;
     max-width: 640px; width: 100%; box-shadow: 0 18px 50px rgba(31,41,55,.3);
     text-align: center; max-height: 92vh; max-height: 92dvh; overflow-y: auto; position: relative; }
-  .zsq-kicker { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    color: #92400e; margin-bottom: 8px; }
+  .zsq-chead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .zsq-chead .zsq-portrait, .zsq-chead .zsq-portrait-fallback { width: 60px; height: 60px; font-size: 30px; border-width: 3px; }
+  .zsq-kicker { flex: 1; min-width: 0; font-size: 18px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    color: #92400e; }
+  .zsq-dots { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+  .zsq-dots span { width: 10px; height: 10px; border-radius: 50%; border: 2px solid ${GOLD}; background: #fff; }
+  .zsq-dots span.zsq-on { background: ${GOLD}; }
   .zsq-prompt { font-size: 30px; font-weight: 900; color: #334155; margin-bottom: 8px; line-height: 1.3; }
   .zsq-visual { margin: 12px 0; display: flex; justify-content: center; }
   .zsq-choices { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
@@ -140,8 +145,7 @@ function injectCSS() {
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
     animation: zsq-soft-miss .3s ease-out forwards; }
   .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
-  .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 52px; }
-  .zsq-modal-replay { position: absolute; top: 12px; right: 12px; width: 56px; height: 56px; }
+  .zsq-modal-replay { width: 56px; height: 56px; flex: none; }
 
   /* ---------- interact prompt ---------- */
   /* Docked bottom-centre. Centred with auto margins, not transform, so the bob keyframes don't cancel it. */
@@ -294,8 +298,9 @@ function injectCSS() {
     .zsq-skip { font-size: 17px; padding: 8px 12px; }
     .zsq-finale-card { padding: 24px 20px; }
     .zsq-finale h2 { font-size: 30px; }
-    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; top: 8px; right: 8px; }
-    .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 44px; }
+    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; }
+    .zsq-chead { gap: 8px; }
+    .zsq-chead .zsq-portrait, .zsq-chead .zsq-portrait-fallback { width: 56px; height: 56px; font-size: 28px; }
     .zsq-kicker { font-size: 14px; letter-spacing: 1px; }
     .zsq-topright { gap: 6px; }
   }
@@ -323,7 +328,11 @@ function injectCSS() {
     .zsq-sheet { max-height: 78vh; max-height: 78dvh; padding: 12px 16px; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
     .zsq-modal { max-height: 96vh; max-height: 96dvh; padding: 12px 16px; }
-    .zsq-kicker { font-size: 15px; margin-bottom: 2px; }
+    .zsq-chead { margin-bottom: 2px; }
+    .zsq-chead .zsq-portrait, .zsq-chead .zsq-portrait-fallback { width: 48px; height: 48px; font-size: 24px; }
+    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; }
+    .zsq-kicker { font-size: 15px; }
+    .zsq-dots { margin-top: 2px; }
     .zsq-prompt { font-size: 24px; margin-bottom: 2px; }
     .zsq-visual { margin: 4px 0; }
     .zsq-choices { flex-direction: row; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
@@ -675,7 +684,8 @@ export const UI = {
   },
 
   /**
-   * Challenge modal. data: {kicker, prompt, choices:[{id,label}], visualHtml, princessId, voiceText}
+   * Challenge modal. data: {kicker, prompt, choices:[{id,label}], visualHtml, princessId, voiceText,
+   * portrait: {src}, progress: {current, total}}
    * onChoose(choiceId)
    */
   showChallenge(data, onChoose) {
@@ -683,9 +693,20 @@ export const UI = {
     const wrap = _els.challengeWrap;
     wrap.innerHTML = '';
     const modal = el('div', 'zsq-modal');
+    // Header row: princess portrait (top-left), quest title with progress dots, 🔊 (top-right).
+    const head = el('div', 'zsq-chead');
+    const port = _makePortrait(data.portrait && data.portrait.src);
     const kicker = el('div', 'zsq-kicker', data.kicker || '✨ Challenge ✨');
+    if (data.progress) {
+      const dots = el('div', 'zsq-dots');
+      dots.setAttribute('role', 'img');
+      dots.setAttribute('aria-label', `Question ${data.progress.current} of ${data.progress.total}`);
+      for (let k = 1; k <= data.progress.total; k++) {
+        dots.appendChild(el('span', k <= data.progress.current ? 'zsq-on' : ''));
+      }
+      kicker.appendChild(dots);
+    }
     const prompt = el('div', 'zsq-prompt', data.prompt || '');
-    modal.append(kicker, prompt);
     _els._lastLine = { princessId: data.princessId || null, text: data.replayText || data.voiceText || data.prompt || '' };
     const replay = el('button', 'zsq-replay zsq-modal-replay', '🔊');
     replay.setAttribute('aria-label', 'Hear that again');
@@ -694,7 +715,8 @@ export const UI = {
       if (L.princessId) Narrator.speakExact(L.princessId, L.text);
       else Narrator.speakText(L.text);
     };
-    modal.appendChild(replay);
+    head.append(port, kicker, replay);
+    modal.append(head, prompt);
     if (data.visualHtml) {
       const vis = el('div', 'zsq-visual');
       vis.innerHTML = data.visualHtml;
