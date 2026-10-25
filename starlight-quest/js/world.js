@@ -687,6 +687,14 @@ export function createWorld(container, hooks) {
   const camTarget = new THREE.Vector3().copy(playerPos).add(camOffset);
   const lookTarget = new THREE.Vector3().copy(playerPos);
   const lookAhead = new THREE.Vector3();
+  // Conversation framing: eased weight toward a closer, lower view of Zoe + the princess.
+  let focusNpc = null;
+  let focusW = 0;
+  let camSnap = false;
+  const FOCUS_DROP = 3.3; // ground units south of the pair, so they sit high on screen
+  const FOCUS_ZOOM = 0.72; // fraction of the normal camera distance
+  const lastFocusMid = new THREE.Vector3();
+  const focusMid = new THREE.Vector3();
   camera.position.copy(camTarget);
   camera.lookAt(lookTarget);
 
@@ -808,6 +816,9 @@ export function createWorld(container, hooks) {
       walkPhase += dt * 11;
     }
     // Ease the turn (frame-rate independent), always the short way round
+    if (focusNpc) {
+      playerAngle = Math.atan2(focusNpc.group.position.x - playerPos.x, focusNpc.group.position.z - playerPos.z);
+    }
     player.rotation.y += angleDelta(player.rotation.y, playerAngle) * (1 - Math.exp(-12 * dt));
     player.position.y = speed > 0.6 ? Math.abs(Math.sin(walkPhase)) * 0.09 : 0;
     playerShadow.position.set(playerPos.x, 0.05, playerPos.z);
@@ -817,10 +828,32 @@ export function createWorld(container, hooks) {
     const desiredCam = new THREE.Vector3(
       playerPos.x + camOffset.x, camOffset.y, playerPos.z + camOffset.z
     );
-    camTarget.lerp(desiredCam, 1 - Math.pow(0.001, dt));
     const desiredLook = new THREE.Vector3(
       playerPos.x + lookAhead.x, 1, playerPos.z + lookAhead.z
     );
+    // Talking: blend toward a nearer view that keeps both of them in the upper
+    // screen, above the dialogue sheet (aim a little south of their midpoint).
+    const focusGoal = focusNpc ? 1 : 0;
+    focusW = calmMotion ? focusGoal : focusW + (focusGoal - focusW) * (1 - Math.exp(-(focusNpc ? 4.5 : 8) * dt));
+    if (focusNpc) {
+      focusMid.set(
+        (playerPos.x + focusNpc.group.position.x) / 2, 1,
+        (playerPos.z + focusNpc.group.position.z) / 2 + FOCUS_DROP
+      );
+    }
+    if (focusW > 0.001) {
+      const e = focusW * focusW * (3 - 2 * focusW);
+      const m = focusNpc ? focusMid : lastFocusMid;
+      if (focusNpc) lastFocusMid.copy(focusMid);
+      desiredLook.lerp(m, e);
+      desiredCam.lerp(new THREE.Vector3(m.x + camOffset.x * FOCUS_ZOOM, camOffset.y * FOCUS_ZOOM, m.z + camOffset.z * FOCUS_ZOOM), e);
+    }
+    if (camSnap) {
+      camSnap = false;
+      camTarget.copy(desiredCam);
+      lookTarget.copy(desiredLook);
+    }
+    camTarget.lerp(desiredCam, 1 - Math.pow(0.001, dt));
     lookTarget.lerp(desiredLook, 1 - Math.pow(0.0005, dt));
     camera.position.copy(camTarget);
     camera.lookAt(lookTarget);
@@ -836,7 +869,7 @@ export function createWorld(container, hooks) {
       }
       // Idle sway; turn toward Zoe when she is in talk range, brighten the pad
       const near = Math.hypot(playerPos.x - npc.group.position.x, playerPos.z - npc.group.position.z) < NPC_INTERACT_DIST;
-      const yaw = near
+      const yaw = near || npc === focusNpc
         ? Math.atan2(playerPos.x - npc.group.position.x, playerPos.z - npc.group.position.z)
         : npc.baseYaw;
       npc.group.rotation.y += angleDelta(npc.group.rotation.y, yaw) * (calmMotion ? 1 : 1 - Math.exp(-5 * dt));
@@ -962,6 +995,9 @@ export function createWorld(container, hooks) {
   // --- Public API ---------------------------------------------------------------
   return {
     setInputEnabled(bool) { inputEnabled = !!bool; },
+    // Frame Zoe + one princess for a conversation; unfocus returns to the normal follow.
+    focus(npcId) { if (npcs[npcId]) { focusNpc = npcs[npcId]; camSnap = calmMotion; } },
+    unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
     celebrate,
     setNPCState,
     dispose,
