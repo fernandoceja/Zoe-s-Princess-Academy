@@ -582,7 +582,18 @@ export function createWorld(container, hooks) {
   renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
   // --- Camera ----------------------------------------------------------------
-  const camOffset = new THREE.Vector3(0, 13.5, 10.5); // ~52-55 deg pitch
+  const camBase = new THREE.Vector3(0, 13.5, 10.5); // ~52-55 deg pitch
+  const camOffset = camBase.clone();
+
+  // Portrait phones are narrow, so pull back and widen the lens as aspect drops
+  // below 1. Same pitch, eased in, clamped at a ~390x844 phone; aspect >= 1
+  // keeps the original framing exactly.
+  function frameForAspect(aspect) {
+    const k = Math.min(1, Math.max(0, (1 - aspect) / 0.54));
+    const ease = k * k * (3 - 2 * k);
+    camera.fov = 50 + 12 * ease;
+    camOffset.copy(camBase).multiplyScalar(1 + 0.85 * ease);
+  }
   const camTarget = new THREE.Vector3().copy(playerPos).add(camOffset);
   const lookTarget = new THREE.Vector3().copy(playerPos);
   const lookAhead = new THREE.Vector3();
@@ -649,10 +660,14 @@ export function createWorld(container, hooks) {
     const h = container.clientHeight || window.innerHeight;
     renderer.setSize(w, h);
     camera.aspect = w / h;
+    frameForAspect(camera.aspect);
     camera.updateProjectionMatrix();
   };
   window.addEventListener('resize', onResize);
   onResize();
+  camTarget.copy(playerPos).add(camOffset); // start at the framed distance
+  camera.position.copy(camTarget);
+  camera.lookAt(lookTarget);
 
   // --- Main loop ----------------------------------------------------------------
   const clock = new THREE.Clock();
