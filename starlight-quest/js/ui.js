@@ -103,6 +103,9 @@ function injectCSS() {
     border: 4px solid rgba(255,255,255,.9); outline: 3px solid ${GOLD};
     background: linear-gradient(135deg, #fde68a, #f9a8d4); font-size: 52px;
     display: flex; align-items: center; justify-content: center; }
+  /* Zoe, on the right edge of the sheet: same portrait styling, smaller and dimmed so the princess keeps the focus. */
+  .zsq-sheet .zsq-portrait-zoe { width: 52px; height: 52px; opacity: .75; box-shadow: none; }
+  .zsq-sheet .zsq-portrait-zoe.zsq-portrait-fallback { font-size: 26px; }
   .zsq-dbody { flex: 1; min-width: 0; }
   .zsq-dname { font-weight: 900; font-size: 24px; margin-bottom: 6px; }
   .zsq-dtext { font-size: 24px; line-height: 1.5; color: #334155; font-weight: 600; }
@@ -278,10 +281,12 @@ function injectCSS() {
     /* Sits just above the 124px joystick (top at 140px). */
     .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: calc(148px + env(safe-area-inset-bottom, 0px)); max-width: 92vw; white-space: normal; text-align: center; }
     .zsq-sheet { left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px));
-      bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 14px; gap: 12px;
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 12px; gap: 10px;
       max-height: 64vh; max-height: 64dvh; overflow-y: auto; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
     .zsq-portrait-fallback { font-size: 34px; }
+    .zsq-sheet .zsq-portrait-zoe { width: 48px; height: 48px; }
+    .zsq-sheet .zsq-portrait-zoe.zsq-portrait-fallback { font-size: 25px; }
     .zsq-dname { font-size: 20px; }
     .zsq-next { min-height: 60px; font-size: 19px; padding: 10px 26px; }
     .zsq-replay { width: 56px; height: 56px; font-size: 24px; }
@@ -303,6 +308,17 @@ function injectCSS() {
     .zsq-chead .zsq-portrait, .zsq-chead .zsq-portrait-fallback { width: 56px; height: 56px; font-size: 28px; }
     .zsq-kicker { font-size: 14px; letter-spacing: 1px; }
     .zsq-topright { gap: 6px; }
+  }
+
+  /* Narrowest phones (320px): both portraits still leave the text column at 60% of the sheet or more. */
+  @media (max-width: 360px) {
+    .zsq-sheet { padding: 10px; gap: 8px; }
+    .zsq-sheet > :first-child { width: 52px; height: 52px; }
+    .zsq-sheet > :first-child.zsq-portrait-fallback { font-size: 28px; }
+    .zsq-sheet .zsq-portrait-zoe { width: 40px; height: 40px; }
+    .zsq-sheet .zsq-portrait-zoe.zsq-portrait-fallback { font-size: 21px; }
+    .zsq-drow { gap: 8px; }
+    .zsq-next { padding: 10px 14px; white-space: nowrap; }
   }
 
   /* Taller touch screens wider than phones: the 148px joystick reaches 172px up, so lift the bubble above it. */
@@ -327,6 +343,8 @@ function injectCSS() {
   @media (max-height: 560px) {
     .zsq-sheet { max-height: 78vh; max-height: 78dvh; padding: 12px 16px; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
+    .zsq-sheet .zsq-portrait-zoe { width: 40px; height: 40px; }
+    .zsq-sheet .zsq-portrait-zoe.zsq-portrait-fallback { font-size: 21px; }
     .zsq-modal { max-height: 96vh; max-height: 96dvh; padding: 12px 16px; }
     .zsq-chead { margin-bottom: 2px; }
     .zsq-chead .zsq-portrait, .zsq-chead .zsq-portrait-fallback { width: 48px; height: 48px; font-size: 24px; }
@@ -658,7 +676,11 @@ export const UI = {
     const next = el('button', 'zsq-next', i === arr.length - 1 ? 'Done ✓' : 'Next ➜');
     row.append(replay, next);
     body.append(dname, dtext, row);
-    sheet.append(img, body);
+    // Zoe on the right edge, dimmed: the princess is the one speaking on this sheet.
+    const zoe = _makePortrait(ZOE_PORTRAIT);
+    zoe.classList.add('zsq-portrait-zoe');
+    zoe.alt = 'Zoe';
+    sheet.append(img, body, zoe);
 
     const render = () => {
       const entry = arr[i];
