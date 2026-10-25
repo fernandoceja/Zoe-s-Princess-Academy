@@ -643,7 +643,7 @@ export function createWorld(container, hooks) {
 
   // --- NPC state --------------------------------------------------------------
   // Done stars breathe gently unless the player asked for reduced motion.
-  const calmMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const stillStars = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const PULSE_WHITE = new THREE.Color(0xffffff);
   function setNPCState(npcId, state) {
     const npc = npcs[npcId];
@@ -743,7 +743,7 @@ export function createWorld(container, hooks) {
     for (const npc of Object.values(npcs)) {
       npc.star.position.y = 3.1 + Math.sin(t * 2 + npc.hue * 6) * 0.22;
       npc.star.rotation.y = t * 1.2;
-      if (npc.state === 'done' && !calmMotion) {
+      if (npc.state === 'done' && !stillStars) {
         // Slow 4 s warm-gold breath: GOLD lightened by up to 18%
         const breath = 0.5 + 0.5 * Math.sin(t * Math.PI / 2);
         npc.starMat.color.set(GOLD).lerp(PULSE_WHITE, breath * 0.18);
