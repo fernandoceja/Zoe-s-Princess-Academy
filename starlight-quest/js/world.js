@@ -642,12 +642,16 @@ export function createWorld(container, hooks) {
   }
 
   // --- NPC state --------------------------------------------------------------
+  // Done stars breathe gently unless the player asked for reduced motion.
+  const calmMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const PULSE_WHITE = new THREE.Color(0xffffff);
   function setNPCState(npcId, state) {
     const npc = npcs[npcId];
     if (!npc) return;
     npc.state = state === 'done' ? 'done' : 'available';
     if (npc.state === 'done') {
-      // Completed look: rainbow-cycling star + bright pad
+      // Completed look: calm warm-gold star (breathes slowly) + steady white pad
+      npc.starMat.color.set(GOLD);
       npc.pad.material.color.set(0xffffff);
       npc.pad.material.opacity = 0.75;
     } else {
@@ -735,13 +739,14 @@ export function createWorld(container, hooks) {
     camera.position.copy(camTarget);
     camera.lookAt(lookTarget);
 
-    // ---- NPC stars: bob + spin; rainbow cycle when done ----
+    // ---- NPC stars: bob + spin; gold breath when done ----
     for (const npc of Object.values(npcs)) {
       npc.star.position.y = 3.1 + Math.sin(t * 2 + npc.hue * 6) * 0.22;
       npc.star.rotation.y = t * 1.2;
-      if (npc.state === 'done') {
-        npc.starMat.color.setHSL((t * 0.25 + npc.hue) % 1, 0.85, 0.6);
-        npc.pad.material.opacity = 0.6 + Math.sin(t * 3) * 0.15;
+      if (npc.state === 'done' && !calmMotion) {
+        // Slow 4 s warm-gold breath: GOLD lightened by up to 18%
+        const breath = 0.5 + 0.5 * Math.sin(t * Math.PI / 2);
+        npc.starMat.color.set(GOLD).lerp(PULSE_WHITE, breath * 0.18);
       }
       // Happy hop after celebrate()
       if (npc.hopT >= 0) {
