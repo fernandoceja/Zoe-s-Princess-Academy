@@ -34,7 +34,7 @@ export const PRINCESSES = {
     landId: 'frostfall-peaks',
     landName: 'Frostfall Peaks',
     portrait: PORTRAIT_ELSA,
-    color: '#f472b6',
+    color: '#38bdf8',
     voice: { pitch: 1.15, rate: 0.9 },
   },
   rapunzel: {
