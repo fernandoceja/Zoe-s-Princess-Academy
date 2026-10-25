@@ -111,7 +111,7 @@ function injectCSS() {
   .zsq-choice.zsq-correct { background: linear-gradient(135deg, #d1fae5, #a7f3d0);
     border-color: #34c779; color: #065f46; animation: zsq-pop .35s cubic-bezier(0.175,0.885,0.32,1.275); }
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
-    animation: zsq-wiggle .4s ease; }
+    animation: zsq-soft-miss .3s ease-out forwards; }
   .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
   .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 52px; }
   .zsq-modal-replay { position: absolute; top: 12px; right: 12px; width: 56px; height: 56px; }
@@ -291,7 +291,9 @@ function injectCSS() {
 
   @keyframes zsq-pop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   @keyframes zsq-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes zsq-wiggle { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  /* A wrong pick settles down a little with a soft pink glow instead of shaking. */
+  @keyframes zsq-soft-miss { from { transform: translateY(0); box-shadow: 0 6px 0 rgba(0,0,0,.08), 0 0 0 0 rgba(244,114,182,0); }
+    to { transform: translateY(2px); box-shadow: 0 4px 0 rgba(0,0,0,.08), 0 0 0 4px rgba(244,114,182,.35); } }
   @keyframes zsq-twinkle { 0%,100% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(1.35) rotate(18deg); opacity: .75; } }
   `;
   document.head.appendChild(s);
@@ -677,7 +679,8 @@ export const UI = {
       b.style.cursor = 'default';
       if (id === correctId) b.classList.add('zsq-correct');
       else if (id === pickedId) b.classList.add('zsq-wrong-pick');
-      else b.style.opacity = '0.55';
+      // Only a real reveal (correctId known) dims the rest; a gentle retry keeps them bright.
+      else if (correctId) b.style.opacity = '0.55';
     });
     if (message) modal.appendChild(el('div', 'zsq-answer-msg', message));
     if (message && _els._lastLine) _els._lastLine = { princessId: _els._lastLine.princessId, text: message };
