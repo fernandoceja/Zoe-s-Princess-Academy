@@ -304,6 +304,11 @@ function injectCSS() {
   @media (pointer: coarse) and (min-width: 481px) and (min-height: 501px) {
     .zsq-interact { bottom: calc(196px + env(safe-area-inset-bottom, 0px)); }
   }
+  /* Landscape phones: too short to lift the bubble, so centre it in the space right of the joystick. */
+  @media (pointer: coarse) and (min-width: 481px) and (max-height: 500px) {
+    .zsq-interact { left: calc(max(24px, env(safe-area-inset-left, 0px)) + 160px); right: max(16px, env(safe-area-inset-right, 0px));
+      width: fit-content; font-size: 20px; padding: 10px 22px; white-space: normal; text-align: center; }
+  }
 
   /* ---------- responsive: short screens (landscape phones) ---------- */
   @media (max-height: 500px) {
