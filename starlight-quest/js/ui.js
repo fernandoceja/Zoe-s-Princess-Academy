@@ -145,7 +145,7 @@ function injectCSS() {
 
   /* ---------- interact prompt ---------- */
   /* Docked bottom-centre. Centred with auto margins, not transform, so the bob keyframes don't cancel it. */
-  .zsq-interact { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: 24px;
+  .zsq-interact { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     pointer-events: none; background: rgba(255,255,255,.96); border: 3px solid ${GOLD};
     border-radius: 999px; padding: 14px 28px; font-size: 22px; font-weight: 900; color: #92400e;
     box-shadow: 0 8px 24px rgba(31,41,55,.2); animation: zsq-bob 3s ease-in-out 3; white-space: nowrap; }
@@ -272,7 +272,7 @@ function injectCSS() {
     .zsq-toasts { top: 70px; }
     .zsq-toast { padding: 10px 20px; }
     /* Sits just above the 124px joystick (top at 140px). */
-    .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 148px; max-width: 92vw; white-space: normal; text-align: center; }
+    .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: calc(148px + env(safe-area-inset-bottom, 0px)); max-width: 92vw; white-space: normal; text-align: center; }
     .zsq-sheet { left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px));
       bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 14px; gap: 12px;
       max-height: 64vh; max-height: 64dvh; overflow-y: auto; }
@@ -302,7 +302,7 @@ function injectCSS() {
 
   /* Taller touch screens wider than phones: the 148px joystick reaches 172px up, so lift the bubble above it. */
   @media (pointer: coarse) and (min-width: 481px) and (min-height: 501px) {
-    .zsq-interact { bottom: 196px; }
+    .zsq-interact { bottom: calc(196px + env(safe-area-inset-bottom, 0px)); }
   }
 
   /* ---------- responsive: short screens (landscape phones) ---------- */
