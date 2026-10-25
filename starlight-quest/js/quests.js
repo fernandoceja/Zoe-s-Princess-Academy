@@ -79,6 +79,7 @@ export const DOLCH_1ST = [
 // Round shape: { prompt, choices: [3 strings], answer, hint }
 // answer ALWAYS exactly equals one of its choices.
 // Optional extras: `visual: {a, b}` (Elsa: countable snowflakes),
+// `pic: '🌿'` (Rapunzel/Belle: a picture that must not match any choice),
 // `clock: {hour, minute}` (Cinderella: analog clock reading).
 // ----------------------------------------------------------------------------
 export const QUESTS = {
@@ -208,12 +209,14 @@ export const QUESTS = {
         choices: ['Sunlight', 'Snow', 'Wind'],
         answer: 'Sunlight',
         hint: 'Good try! It comes from the sun. What do we call its warm light?',
+        pic: '🌿',
       },
       {
         prompt: 'The seed is tucked into soft, brown dirt. What is that called?',
         choices: ['Soil', 'Soup', 'Sand'],
         answer: 'Soil',
         hint: 'Good try! It is the dirt plants sleep in. What is it called?',
+        pic: '🪴',
       },
       {
         prompt: 'Which part of the plant drinks water down in the soil?',
@@ -562,12 +565,12 @@ function _cinderellaRound(h, m, digital) {
 }
 
 
-const _sci = (prompt, choices, hint) => ({ prompt, choices, answer: choices[0], hint });
+const _sci = (prompt, choices, hint, pic) => (pic ? { prompt, choices, answer: choices[0], hint, pic } : { prompt, choices, answer: choices[0], hint });
 const SCI_T1 = [
   _sci('Which part of the plant drinks water down in the soil?', ['🌱 Roots', '🌸 Petals', '🍃 Leaves'],
     'Good try! This part hides under the ground. What drinks the water?'),
   _sci('Little leaves reach up to catch the warm...', ['☀️ Sunlight', '❄️ Snow', '💨 Wind'],
-    'Good try! It is warm and bright and comes from the sky.'),
+    'Good try! It is warm and bright and comes from the sky.', '🌿'),
   // More kindergarten plant warm-ups, so a T1 quest has 5 different rounds.
   _sci('A sleepy seed wants to grow. What does it drink?', ['💧 Water', '🧃 Juice', '🥛 Milk'],
     'Good try! It falls from the clouds as rain.'),
@@ -576,7 +579,7 @@ const SCI_T1 = [
   _sci('A seed grows into a...', ['🌱 Plant', '🚗 Car', '☁️ Cloud'],
     'Good try! Seeds go in the soil. What pops up?'),
   _sci('The seed is tucked into soft, brown dirt. What is that called?', ['🟫 Soil', '🍲 Soup', '🏖️ Sand'],
-    'Good try! Plants grow in it, and worms live in it too.'),
+    'Good try! Plants grow in it, and worms live in it too.', '🪴'),
 ];
 const SCI_T2 = [
   _sci('When can we see the sun?', ['☀️ Day', '🌙 Night', '🚫 Never'], 'Good try! The sun is up when it is bright outside.'),
@@ -589,7 +592,7 @@ const SCI_T2 = [
 const SCI_T3 = [
   _sci('What makes sound?', ['🥁 Something shaking', '😴 Something sleeping', '🧊 Something cold'],
     'Good try! Tap a drum. It wiggles and shakes. That makes sound!'),
-  _sci('Light helps us...', ['👀 See', '👃 Smell', '👅 Taste'], 'Good try! We use our eyes with light.'),
+  _sci('Light helps us...', ['👀 See', '👃 Smell', '👅 Taste'], 'Good try! We use our eyes with light.', '💡'),
   _sci('In a room with no light at all, can you see?', ['🙈 No', '👀 Yes', '🔴 Only red'],
     'Good try! We need light to see. With no light, can we see?'),
   _sci('A baby duck grows up to look like...', ['🦆 A duck', '🐱 A cat', '🐸 A frog'],

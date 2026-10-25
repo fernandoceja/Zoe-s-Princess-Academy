@@ -259,8 +259,7 @@ export async function main(container) {
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);
     }
-    if (npcId === 'rapunzel') return `<div style="font-size:42px;text-align:center">🌱💧☀️</div>`;
-    if (npcId === 'belle') return `<div style="font-size:42px;text-align:center">📖✨</div>`;
+    if (round.pic && (npcId === 'rapunzel' || npcId === 'belle')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
   }
 
