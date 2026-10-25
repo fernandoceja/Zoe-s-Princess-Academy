@@ -220,24 +220,41 @@ export async function main(container) {
   }
 
   function visualHtml(npcId, round) {
+    // Snowflakes as ten-frame rows: fives with a gap between, ten per line, so they are easy to count.
+    // The last `gone` flakes are faded and crossed out (taken away).
+    const flakes = (n, gone = 0, w = 22) => {
+      n = Math.max(0, Math.min(n, 20));
+      let rows = '';
+      for (let r = 0; r < n; r += 10) {
+        let cells = '';
+        for (let i = r; i < Math.min(r + 10, n); i++) {
+          const away = i >= n - gone;
+          cells += `<span data-flake="${away ? 'gone' : 'kept'}" style="position:relative;display:inline-block;width:${w}px;text-align:center;font-size:${w - 2}px;line-height:1.3;${i % 10 === 5 ? 'margin-left:8px;' : ''}${away ? 'opacity:.3;' : ''}">❄️` +
+            (away ? `<span style="position:absolute;left:0;right:0;top:0;color:#e11d48;font-size:${w - 2}px;font-weight:700;opacity:1">✕</span>` : '') + '</span>';
+        }
+        rows += `<div style="white-space:nowrap">${cells}</div>`;
+      }
+      return `<div style="display:inline-block;margin:${w < 22 ? 0 : 2}px">${rows}</div>`;
+    };
     if (npcId === 'elsa' && round.visual && round.visual.tens != null) {
       // Tens and ones: each bundle of 10 snowflakes sits in its own box.
       const { tens, ones } = round.visual;
-      const bundle = `<span style="display:inline-block;border:3px solid #7dd3fc;border-radius:12px;padding:2px 6px;margin:3px;font-size:16px">${'❄️'.repeat(10)}</span>`;
+      const bundle = `<span style="display:inline-block;border:3px solid #7dd3fc;border-radius:12px;padding:2px 6px;margin:3px">${flakes(10, 0, 19)}</span>`;
       return `<div style="text-align:center;line-height:1.5">${bundle.repeat(tens)}` +
-        `<div style="font-size:24px">${'❄️'.repeat(ones)}</div></div>`;
+        `<div>${flakes(ones)}</div></div>`;
     }
     if (npcId === 'elsa' && round.visual && round.visual.parts) {
-      return `<div style="font-size:22px;line-height:1.6;text-align:center">` +
-        round.visual.parts.map((n) => '❄️'.repeat(n)).join('<div style="font-size:26px">➕</div>') + '</div>';
+      return `<div style="text-align:center">` +
+        round.visual.parts.map((n) => flakes(n)).join('<div style="font-size:26px">➕</div>') + '</div>';
     }
     if (npcId === 'elsa' && round.visual) {
       const { a, b } = round.visual;
       const isMinus = round.visual.op ? round.visual.op === '-'
         : (/−|-/.test(round.prompt) && !/\+/.test(round.prompt));
-      const fl = (n) => '❄️'.repeat(Math.max(0, Math.min(n, 20)));
-      return `<div style="font-size:24px;line-height:1.6;text-align:center">${fl(a)}` +
-        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${b > 0 ? fl(b) : '<span style="font-size:34px">❓</span>'}</div>`;
+      // Take-away: one group where the last b flakes are visibly removed.
+      if (isMinus && b > 0) return `<div style="text-align:center;line-height:1.6">${flakes(a, b)}</div>`;
+      return `<div style="text-align:center;line-height:1.6">${flakes(a)}` +
+        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${b > 0 ? flakes(b) : '<span style="font-size:34px">❓</span>'}</div>`;
     }
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);
