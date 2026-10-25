@@ -89,11 +89,12 @@ function injectCSS() {
   .zsq-iconbtn:active { transform: scale(.92); }
 
   /* ---------- dialogue sheet ---------- */
-  .zsq-sheet { position: absolute; left: 16px; right: 16px; bottom: 16px;
+  .zsq-sheet { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     pointer-events: auto; background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 60%, #e6f7ff 100%);
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 20px;
     box-shadow: 0 14px 40px rgba(31,41,55,.22); display: flex; gap: 16px; align-items: flex-start;
-    max-height: 70vh; overflow-y: auto;
+    max-height: 70vh; max-height: 70dvh; overflow-y: auto;
     animation: zsq-rise .25s ease-out; }
   .zsq-portrait { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex: none;
     border: 4px solid rgba(255,255,255,.9); outline: 3px solid ${GOLD};
@@ -117,11 +118,14 @@ function injectCSS() {
   /* ---------- challenge modal ---------- */
   .zsq-modal-wrap { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(31,41,55,.35); padding: 20px; animation: zsq-rise .25s ease-out; }
+    background: rgba(31,41,55,.35); padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
+    animation: zsq-rise .25s ease-out; }
   .zsq-modal { background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 60%, #e6f7ff 100%);
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 28px;
     max-width: 640px; width: 100%; box-shadow: 0 18px 50px rgba(31,41,55,.3);
-    text-align: center; max-height: 92vh; overflow-y: auto; position: relative; }
+    text-align: center; max-height: 92vh; max-height: 92dvh; overflow-y: auto; position: relative; }
   .zsq-kicker { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
     color: #92400e; margin-bottom: 8px; }
   .zsq-prompt { font-size: 30px; font-weight: 900; color: #334155; margin-bottom: 8px; line-height: 1.3; }
@@ -157,7 +161,10 @@ function injectCSS() {
   .zsq-celebrate { position: absolute; inset: 0; pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
     background: linear-gradient(135deg, #fdf4ff 0%, #fef9c3 55%, #e0f2fe 100%);
-    border-radius: 0; text-align: center; padding: 32px; animation: zsq-rise .25s ease-out; }
+    border-radius: 0; text-align: center; padding: 32px;
+    padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px));
+    animation: zsq-rise .25s ease-out; }
   .zsq-bigstars { font-size: 84px; animation: zsq-bob 3s ease-in-out 3; letter-spacing: 8px; }
   .zsq-cel-title { font-size: 44px; font-weight: 900; color: #92400e; line-height: 1.15; }
   .zsq-cel-sub { font-size: 24px; font-weight: 700; color: #475569; max-width: 560px; line-height: 1.5; }
@@ -170,7 +177,9 @@ function injectCSS() {
   /* ---------- finale ---------- */
   .zsq-finale { position: absolute; inset: 0; pointer-events: auto;
     background: linear-gradient(160deg, #1e1b4b 0%, #4c1d95 45%, #831843 100%);
-    display: flex; align-items: center; justify-content: center; padding: 24px; }
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
   .zsq-finale-card { background: rgba(255,255,255,.97); border: 5px solid ${GOLD};
     border-radius: 28px; padding: 36px; max-width: 680px; width: 100%; text-align: center;
     box-shadow: 0 24px 70px rgba(0,0,0,.45); animation: zsq-rise .25s ease-out; }
@@ -182,7 +191,7 @@ function injectCSS() {
     display: flex; align-items: center; justify-content: center;
     background: rgba(15,23,42,.5); padding: 20px; }
   .zsq-parent { background: rgba(255,255,255,.98); border: 3px solid rgba(148,163,184,.5);
-    border-radius: 20px; max-width: 720px; width: 100%; max-height: 88vh;
+    border-radius: 20px; max-width: 720px; width: 100%; max-height: 88vh; max-height: 88dvh;
     display: flex; flex-direction: column; box-shadow: 0 18px 50px rgba(15,23,42,.35); }
   .zsq-parent-head { display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px; border-bottom: 1px solid rgba(148,163,184,.35); }
@@ -207,7 +216,7 @@ function injectCSS() {
     box-shadow: 0 14px 34px rgba(31,41,55,.25); }
 
   /* ---------- joystick ---------- */
-  .zsq-joy { position: absolute; left: 24px; bottom: 24px; width: 148px; height: 148px;
+  .zsq-joy { position: absolute; left: max(24px, env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: 148px; height: 148px;
     border-radius: 50%; background: rgba(255,255,255,.35); border: 3px solid rgba(255,255,255,.7);
     box-shadow: 0 8px 24px rgba(31,41,55,.18); pointer-events: auto; touch-action: none; }
   .zsq-joy-knob { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; border-radius: 50%;
@@ -218,12 +227,14 @@ function injectCSS() {
   /* ---------- tutorial ---------- */
   .zsq-tutorial { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center; padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
     background: linear-gradient(160deg, #fdf4ff 0%, #fef3c7 45%, #e0f2fe 100%);
     animation: zsq-rise .25s ease-out; }
   .zsq-tut-card { background: rgba(255,255,255,.97); border: 4px solid ${GOLD};
     border-radius: 28px; padding: 36px 32px; max-width: 620px; width: 100%;
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.25);
-    max-height: 92vh; overflow-y: auto; }
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
   .zsq-tut-emoji { font-size: 76px; margin-bottom: 10px; animation: zsq-bob 3s ease-in-out 3; }
   .zsq-tut-title { font-size: 36px; font-weight: 900; color: #92400e; margin-bottom: 12px; line-height: 1.15; }
   .zsq-tut-text { font-size: 24px; font-weight: 700; color: #475569; line-height: 1.5; margin-bottom: 8px; }
@@ -238,11 +249,13 @@ function injectCSS() {
   /* ---------- pause menu ---------- */
   .zsq-pause-wrap { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center; padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
     background: rgba(31,41,55,.45); animation: zsq-rise .25s ease-out; }
   .zsq-pause-card { background: rgba(255,255,255,.98); border: 4px solid ${GOLD};
     border-radius: 28px; padding: 36px 32px; max-width: 560px; width: 100%;
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.4);
-    max-height: 92vh; overflow-y: auto; }
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
   .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
 
   /* ---------- responsive: phones ---------- */
@@ -258,8 +271,9 @@ function injectCSS() {
     .zsq-toasts { top: 70px; }
     .zsq-toast { padding: 10px 20px; }
     .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 44%; max-width: 92vw; white-space: normal; text-align: center; }
-    .zsq-sheet { left: 10px; right: 10px; bottom: 10px; padding: 14px; gap: 12px;
-      max-height: 64vh; overflow-y: auto; }
+    .zsq-sheet { left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px));
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 14px; gap: 12px;
+      max-height: 64vh; max-height: 64dvh; overflow-y: auto; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
     .zsq-portrait-fallback { font-size: 34px; }
     .zsq-dname { font-size: 20px; }
@@ -268,7 +282,7 @@ function injectCSS() {
     .zsq-modal { padding: 18px; }
     .zsq-prompt { font-size: 26px; }
     .zsq-choice { min-height: 64px; font-size: 26px; padding: 12px 14px; }
-    .zsq-joy { width: 124px; height: 124px; left: 16px; bottom: 16px; }
+    .zsq-joy { width: 124px; height: 124px; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
     .zsq-cel-title { font-size: 32px; }
     .zsq-bigstars { font-size: 64px; }
     .zsq-bigbtn { font-size: 23px; padding: 14px 40px; }
@@ -288,26 +302,30 @@ function injectCSS() {
   @media (max-height: 500px) {
     .zsq-title { gap: 10px; padding: 16px; overflow-y: auto; justify-content: flex-start; }
     .zsq-zoe-hero { width: 96px; height: 96px; }
-    .zsq-tut-card, .zsq-pause-card { max-height: 94vh; padding: 20px; }
+    .zsq-tut-card, .zsq-pause-card { max-height: 94vh; max-height: 94dvh; padding: 20px; }
     .zsq-tut-emoji { font-size: 52px; margin-bottom: 4px; }
   }
 
   /* Short screens: phones in landscape, small laptop windows. */
   @media (max-height: 560px) {
-    .zsq-sheet { max-height: 78vh; padding: 12px 16px; }
+    .zsq-sheet { max-height: 78vh; max-height: 78dvh; padding: 12px 16px; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
-    .zsq-modal { max-height: 96vh; padding: 12px 16px; }
+    .zsq-modal { max-height: 96vh; max-height: 96dvh; padding: 12px 16px; }
     .zsq-kicker { font-size: 15px; margin-bottom: 2px; }
     .zsq-prompt { font-size: 24px; margin-bottom: 2px; }
     .zsq-visual { margin: 4px 0; }
     .zsq-choices { flex-direction: row; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
     .zsq-choice { flex: 1 1 0; min-width: 120px; min-height: 60px; font-size: 24px; padding: 8px 10px; }
     .zsq-answer-msg { margin: 8px 0 2px; }
-    .zsq-finale { align-items: flex-start; overflow-y: auto; padding: 10px; }
+    .zsq-finale { align-items: flex-start; overflow-y: auto; padding: 10px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+      padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
     .zsq-finale-card { max-height: none; padding: 14px 20px; }
     .zsq-finale h2 { font-size: 26px; margin-bottom: 4px; }
     .zsq-finale-line { margin: 4px 0; line-height: 1.3; }
-    .zsq-celebrate { gap: 8px; padding: 12px; overflow-y: auto; justify-content: flex-start; }
+    .zsq-celebrate { gap: 8px; padding: 12px; overflow-y: auto; justify-content: flex-start;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+      padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
     .zsq-bigstars { font-size: 48px; }
     .zsq-cel-title { font-size: 30px; }
     .zsq-bigbtn { min-height: 60px; padding: 10px 36px; font-size: 24px; }
