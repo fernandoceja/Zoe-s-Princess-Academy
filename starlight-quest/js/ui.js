@@ -725,6 +725,9 @@ export const UI = {
       if (typeof onNext === 'function') onNext();
     };
     modal.appendChild(next);
+    // On short screens the message and Next land below the fold; bring them into view for a child who won't scroll.
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { next.scrollIntoView({ block: 'end', behavior: calm ? 'auto' : 'smooth' }); } catch (e) { /* ignore */ }
   },
 
   /** Update the ⭐ counter with a little bump. */
