@@ -35,8 +35,10 @@ const _hideTimers = new WeakMap();
 function hide(node) {
   if (!node || node.classList.contains('zsq-hidden') || _hideTimers.has(node)) return;
   node.classList.add('zsq-leaving');
+  node.inert = true; // no taps, keys or focus while it fades
   _hideTimers.set(node, setTimeout(() => {
     _hideTimers.delete(node);
+    node.inert = false;
     node.classList.remove('zsq-leaving');
     node.classList.add('zsq-hidden');
   }, 180));
@@ -45,6 +47,7 @@ function show(node) {
   if (!node) return;
   clearTimeout(_hideTimers.get(node));
   _hideTimers.delete(node);
+  node.inert = false;
   node.classList.remove('zsq-leaving', 'zsq-hidden');
 }
 
