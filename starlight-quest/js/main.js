@@ -180,6 +180,7 @@ export async function main(container) {
       activeNPC = npcId;
       state = 'dialogue';
       world.setInputEnabled(false);
+      world.focus(npcId);
       UI.setRoamUI(false);
       UI.promptInteract(null);
       showRest(npcId);
@@ -193,6 +194,7 @@ export async function main(container) {
     rounds = buildRounds(npcId, Math.random, landState(Save.data.ladder[npcId]));
     state = 'dialogue';
     world.setInputEnabled(false);
+    world.focus(npcId);
     UI.setRoamUI(false);
     UI.promptInteract(null);
     const P = PRINCESSES[npcId];
@@ -442,6 +444,7 @@ export async function main(container) {
     activeNPC = null;
     state = 'roam';
     world.setInputEnabled(true);
+    world.unfocus();
     UI.setRoamUI(true);
     refreshPill();
   }
