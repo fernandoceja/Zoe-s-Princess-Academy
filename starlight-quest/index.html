@@ -12,7 +12,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
-<link href="./vendor/fonts/nunito.css?v=20261023s8" rel="stylesheet">
+<link href="./vendor/fonts/nunito.css?v=20261025s9" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1033; font-family: 'Nunito', system-ui, sans-serif; }
@@ -47,7 +47,7 @@
 <script type="module">
   const errBox = document.getElementById('load-error');
   try {
-    const { main } = await import('./js/main.js?v=20261023s8');
+    const { main } = await import('./js/main.js?v=20261025s9');
     await main(document.getElementById('game'));
     const l = document.getElementById('loading');
     l.style.opacity = '0';
