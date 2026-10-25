@@ -14,6 +14,7 @@ import { Input } from './input.js?v=20261023s8';
 
 const GOLD = 0xebd373;
 const WORLD_RADIUS = 34;          // invisible wall radius
+const PRINCESS_SCALE = 1.2;       // princesses and Zoe stand a little taller than the scenery props
 const NPC_INTERACT_DIST = 3.5;    // proximity radius for onNearNPC
 const PLAYER_SPEED = 7.5;         // units / second
 
@@ -113,6 +114,18 @@ function buildPrincess(opts, tagId) {
   const blushGeo = G('blush', () => new THREE.SphereGeometry(0.045, 8, 6));
   add(new THREE.Mesh(blushGeo, blushMat), -0.14, 1.8, 0.28);
   add(new THREE.Mesh(blushGeo, blushMat), 0.14, 1.8, 0.28);
+  // Face: two small dark eyes with a white glint each, and a soft smile arc
+  const eyeMat = M('eye', () => new THREE.MeshStandardMaterial({ color: 0x2a1f3d, roughness: 0.4 }));
+  const glintMat = M('glint', () => new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  const smileMat = M('smile', () => new THREE.MeshStandardMaterial({ color: 0xb04a6a, roughness: 0.6 }));
+  const eyeGeo = G('eye', () => new THREE.SphereGeometry(0.045, 10, 8));
+  const glintGeo = G('glint', () => new THREE.SphereGeometry(0.014, 6, 6));
+  [-1, 1].forEach((s) => {
+    add(new THREE.Mesh(eyeGeo, eyeMat), s * 0.1, 1.87, 0.29).scale.set(0.9, 1.2, 0.6);
+    add(new THREE.Mesh(glintGeo, glintMat), s * 0.1 + 0.015, 1.895, 0.315);
+  });
+  // Lower half of a thin ring = smile
+  add(new THREE.Mesh(G('smile', () => new THREE.TorusGeometry(0.07, 0.012, 6, 12, Math.PI)), smileMat), 0, 1.79, 0.3).rotation.z = Math.PI;
 
   // Hair by style
   if (opts.hairStyle === 'wavy') {
@@ -146,6 +159,7 @@ function buildPrincess(opts, tagId) {
     tiara.rotation.x = -0.15;
   }
 
+  group.scale.setScalar(PRINCESS_SCALE);
   return { group, hitMeshes };
 }
 
@@ -530,7 +544,7 @@ export function createWorld(container, hooks) {
     group.rotation.y = Math.atan2(-padPos.x, -padPos.z);
     scene.add(group);
     npcHitMeshes.push(...hitMeshes);
-    addCollider(padPos.x, padPos.z, 0.8);
+    addCollider(padPos.x, padPos.z, 0.8 * PRINCESS_SCALE);
 
     // Glowing circular pad
     const pad = new THREE.Mesh(
@@ -543,7 +557,7 @@ export function createWorld(container, hooks) {
     // Bobbing gold star marker above
     const starMat = new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
     const star = new THREE.Mesh(starGeoShared, starMat);
-    star.position.set(padPos.x, 3.1, padPos.z);
+    star.position.set(padPos.x, 3.1 * PRINCESS_SCALE, padPos.z);
     scene.add(star);
     star.userData.npcId = id;
     npcHitMeshes.push(star);
@@ -737,7 +751,7 @@ export function createWorld(container, hooks) {
 
     // ---- NPC stars: bob + spin; rainbow cycle when done ----
     for (const npc of Object.values(npcs)) {
-      npc.star.position.y = 3.1 + Math.sin(t * 2 + npc.hue * 6) * 0.22;
+      npc.star.position.y = 3.1 * PRINCESS_SCALE + Math.sin(t * 2 + npc.hue * 6) * 0.22;
       npc.star.rotation.y = t * 1.2;
       if (npc.state === 'done') {
         npc.starMat.color.setHSL((t * 0.25 + npc.hue) % 1, 0.85, 0.6);
