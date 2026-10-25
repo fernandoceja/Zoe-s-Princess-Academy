@@ -529,7 +529,26 @@ export function createWorld(container, hooks) {
   });
 
   // --- NPCs -----------------------------------------------------------------
-  const npcs = {}; // id -> { group, star, pad, state, hopT, baseY }
+  const npcs = {}; // id -> { group, star, pad, state, hopT, baseY, baseYaw, swayPhase }
+  const calmMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Soft round blob shadow so characters sit on the ground (no shadow maps).
+  const addShadow = (radius) => {
+    const sh = new THREE.Mesh(
+      G('blobShadow', () => new THREE.CircleGeometry(1, 24)),
+      M('blobShadow', () => new THREE.MeshBasicMaterial({ color: 0x1a1030, transparent: true, opacity: 0.25, depthWrite: false }))
+    );
+    sh.rotation.x = -Math.PI / 2;
+    sh.scale.setScalar(radius);
+    sh.renderOrder = 1;
+    scene.add(sh);
+    return sh;
+  };
+  const SHADOW_R = 0.75 * PRINCESS_SCALE;
+  // Shortest signed angle from a to b, in (-PI, PI]
+  const angleDelta = (a, b) => {
+    const d = (b - a) % (Math.PI * 2);
+    return d > Math.PI ? d - Math.PI * 2 : d < -Math.PI ? d + Math.PI * 2 : d;
+  };
   const npcHitMeshes = [];
   const starGeoShared = starGeometry(0.5, 0.21);
 
@@ -543,6 +562,8 @@ export function createWorld(container, hooks) {
     group.position.copy(padPos);
     group.rotation.y = Math.atan2(-padPos.x, -padPos.z);
     scene.add(group);
+    const shadow = addShadow(SHADOW_R);
+    shadow.position.set(padPos.x, 0.05, padPos.z);
     npcHitMeshes.push(...hitMeshes);
     addCollider(padPos.x, padPos.z, 0.8 * PRINCESS_SCALE);
 
@@ -562,7 +583,7 @@ export function createWorld(container, hooks) {
     star.userData.npcId = id;
     npcHitMeshes.push(star);
 
-    npcs[id] = { id, def, group, star, starMat, pad, state: 'available', hopT: -1, baseY: 0, hue: i * 0.27 };
+    npcs[id] = { id, def, group, star, starMat, pad, state: 'available', hopT: -1, baseY: 0, hue: i * 0.27, baseYaw: group.rotation.y, swayPhase: i * 1.7, padGlow: 0 };
   });
 
   // --- Player: Princess Zoe --------------------------------------------------
@@ -572,6 +593,7 @@ export function createWorld(container, hooks) {
   );
   player.position.set(0, 0, 4);
   scene.add(player);
+  const playerShadow = addShadow(SHADOW_R);
   const playerVel = new THREE.Vector3();
   const playerPos = player.position;
   let playerAngle = 0;
@@ -733,8 +755,10 @@ export function createWorld(container, hooks) {
       playerAngle = Math.atan2(playerVel.x, playerVel.z);
       walkPhase += dt * 11;
     }
-    player.rotation.y += (playerAngle - player.rotation.y + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+    // Ease the turn (frame-rate independent), always the short way round
+    player.rotation.y += angleDelta(player.rotation.y, playerAngle) * (1 - Math.exp(-12 * dt));
     player.position.y = speed > 0.6 ? Math.abs(Math.sin(walkPhase)) * 0.09 : 0;
+    playerShadow.position.set(playerPos.x, 0.05, playerPos.z);
 
     // ---- Camera: smooth top-down follow with slight look-ahead ----
     lookAhead.set(playerVel.x * 0.35, 0, playerVel.z * 0.35);
@@ -756,6 +780,17 @@ export function createWorld(container, hooks) {
       if (npc.state === 'done') {
         npc.starMat.color.setHSL((t * 0.25 + npc.hue) % 1, 0.85, 0.6);
         npc.pad.material.opacity = 0.6 + Math.sin(t * 3) * 0.15;
+      }
+      // Idle sway; turn toward Zoe when she is in talk range, brighten the pad
+      const near = Math.hypot(playerPos.x - npc.group.position.x, playerPos.z - npc.group.position.z) < NPC_INTERACT_DIST;
+      const yaw = near
+        ? Math.atan2(playerPos.x - npc.group.position.x, playerPos.z - npc.group.position.z)
+        : npc.baseYaw;
+      npc.group.rotation.y += angleDelta(npc.group.rotation.y, yaw) * (calmMotion ? 1 : 1 - Math.exp(-5 * dt));
+      npc.group.rotation.z = calmMotion ? 0 : Math.sin(t * 1.8 + npc.swayPhase) * 0.03;
+      if (npc.state !== 'done') {
+        npc.padGlow += ((near ? 1 : 0) - npc.padGlow) * (1 - Math.exp(-6 * dt));
+        npc.pad.material.opacity = 0.55 + npc.padGlow * 0.25;
       }
       // Happy hop after celebrate()
       if (npc.hopT >= 0) {
