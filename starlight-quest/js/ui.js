@@ -71,7 +71,11 @@ function injectCSS() {
     border: 3px solid ${GOLD}; border-radius: 999px; padding: 10px 20px;
     font-weight: 800; font-size: 20px; color: #475569;
     box-shadow: 0 4px 14px rgba(31,41,55,.12); min-height: 56px;
-    display: flex; align-items: center; }
+    display: flex; align-items: center; white-space: nowrap; }
+  /* Land shards: filled gems for restored lands, faded outlines for the rest. */
+  .zsq-shards { display: inline-flex; gap: 6px; align-items: center; }
+  .zsq-shard { font-size: 22px; line-height: 1; color: #d9a400; }
+  .zsq-shard.zsq-off { color: #94a3b8; opacity: .5; }
   .zsq-topright { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
   .zsq-stars { background: rgba(255,255,255,.92); border: 3px solid ${GOLD};
     border-radius: 999px; padding: 10px 18px; font-weight: 900; font-size: 22px;
@@ -144,9 +148,9 @@ function injectCSS() {
   /* ---------- toast ---------- */
   .zsq-toasts { position: absolute; top: 84px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: max-content; max-width: 92vw; }
-  .zsq-toast { background: #0f172a; color: #fff; border-radius: 24px; padding: 12px 26px;
+  .zsq-toast { background: #fffbeb; color: #3b1f04; border: 3px solid #f5c542; border-radius: 24px; padding: 12px 26px;
     font-size: 24px; font-weight: 700; white-space: normal; text-align: center;
-    box-shadow: 0 8px 24px rgba(15,23,42,.3);
+    box-shadow: 0 8px 24px rgba(146,64,14,.2);
     animation: zsq-rise .25s ease-out; }
 
   /* ---------- celebration ---------- */
@@ -246,9 +250,11 @@ function injectCSS() {
     .zsq-topbar { padding: 8px 10px; }
     /* Quest label wraps to two lines instead of being cut off. */
     .zsq-pill { min-height: 48px; max-width: calc(100vw - 222px); overflow: visible;
-      text-overflow: clip; white-space: normal; line-height: 1.15; font-size: 14px; padding: 6px 10px; }
-    .zsq-stars { font-size: 17px; padding: 6px 10px; min-height: 48px; }
-    .zsq-iconbtn { width: 48px; height: 48px; font-size: 22px; }
+      text-overflow: clip; white-space: normal; line-height: 1.15; font-size: 14px; padding: 6px 8px; }
+    .zsq-shards { gap: 2px; }
+    .zsq-shard { font-size: 14px; }
+    .zsq-stars { font-size: 17px; padding: 6px 8px; min-height: 48px; }
+    .zsq-iconbtn { width: 44px; height: 44px; font-size: 21px; }
     .zsq-toasts { top: 70px; }
     .zsq-toast { padding: 10px 20px; }
     .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 44%; max-width: 92vw; white-space: normal; text-align: center; }
