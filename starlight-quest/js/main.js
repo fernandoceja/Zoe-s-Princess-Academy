@@ -134,10 +134,10 @@ export async function main(container) {
   function refreshPill() {
     const done = Save.data.done.length;
     if (activeNPC && (state === 'dialogue' || state === 'challenge')) {
-      const q = QUESTS[activeNPC];
-      UI.setQuestPill(`✨ ${PRINCESSES[activeNPC].name} · ${q.title} · ${Math.min(roundIdx + 1, rounds.length)}/${rounds.length}`);
+      UI.setQuestPill(`✨ ${PRINCESSES[activeNPC].name} · ${Math.min(roundIdx + 1, rounds.length)}/${rounds.length}`);
     } else {
-      UI.setQuestPill(`🌟 ${done}/4 lands · ⭐ ${Save.data.stars} stars`);
+      const shards = NPC_IDS.map((id, i) => `<span class="zsq-shard${i < done ? '' : ' zsq-off'}">${i < done ? '◆' : '◇'}</span>`).join('');
+      UI.setQuestPill(`<span class="zsq-shards" role="img" aria-label="${done} of ${NPC_IDS.length} lands restored">${shards}</span>`);
     }
   }
 
