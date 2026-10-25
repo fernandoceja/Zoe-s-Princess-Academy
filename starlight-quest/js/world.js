@@ -184,6 +184,28 @@ export function createWorld(container, hooks) {
   scene.background = new THREE.Color(0xdff3ff); // soft sky
   scene.fog = new THREE.Fog(0xdff3ff, 45, 95);
 
+  // Sky dome: soft pastel at the horizon (matches the fog) to gentle lavender-blue overhead.
+  // Vertex colours only, one draw call; it follows the camera so it never moves relative to the view.
+  const skyMesh = (() => {
+    const geo = new THREE.SphereGeometry(250, 24, 16);
+    const horizon = new THREE.Color(0xdff3ff), zenith = new THREE.Color(0xbcd0f7), tmp = new THREE.Color();
+    const pos = geo.attributes.position;
+    const col = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const h = Math.max(0, pos.getY(i) / 250); // 0 at/below horizon, 1 overhead
+      tmp.copy(horizon).lerp(zenith, Math.pow(h, 0.7));
+      col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false,
+    }));
+    m.renderOrder = -10;
+    m.frustumCulled = false;
+    return m;
+  })();
+  scene.add(skyMesh);
+
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300);
 
   // Lights: hemisphere + directional, no shadow maps (tablet perf)
@@ -531,6 +553,32 @@ export function createWorld(container, hooks) {
   // --- NPCs -----------------------------------------------------------------
   const npcs = {}; // id -> { group, star, pad, state, hopT, baseY, baseYaw, swayPhase }
   const calmMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  // Starlight motes: a few dozen pale-gold points drifting slowly around the hub (skipped for calm motion)
+  let motePoints = null;
+  if (!calmMotion) {
+    const COUNT = 48;
+    const pos = new Float32Array(COUNT * 3);
+    for (let i = 0; i < COUNT; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 36;
+      pos[i * 3 + 1] = 0.8 + Math.random() * 5;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 36;
+    }
+    const moteGeo = new THREE.BufferGeometry();
+    moteGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    motePoints = new THREE.Points(moteGeo, new THREE.PointsMaterial({
+      color: 0xfff1b8, size: 0.35, transparent: true, opacity: 0.8,
+      map: makeCanvasSprite((ctx, s) => {
+        const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+        g.addColorStop(0, 'rgba(255,255,255,1)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+      }),
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    motePoints.frustumCulled = false;
+    scene.add(motePoints);
+  }
   // Soft round blob shadow so characters sit on the ground (no shadow maps).
   const addShadow = (radius) => {
     const sh = new THREE.Mesh(
@@ -819,6 +867,23 @@ export function createWorld(container, hooks) {
         if (y < 0) y = 12;
         if (x < c.x - 12) x = c.x + 12; else if (x > c.x + 12) x = c.x - 12;
         p.setY(i, y); p.setX(i, x);
+      }
+      p.needsUpdate = true;
+    }
+
+    // ---- Sky dome follows the camera ----
+    skyMesh.position.copy(camera.position);
+
+    // ---- Starlight motes drift ----
+    if (motePoints) {
+      const p = motePoints.geometry.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        let x = p.getX(i) + Math.sin(t * 0.3 + i) * dt * 0.35;
+        let z = p.getZ(i) + Math.cos(t * 0.25 + i * 1.7) * dt * 0.35;
+        const y = 0.8 + ((p.getY(i) - 0.8 + dt * 0.18) % 5);
+        if (x < -18) x = 18; else if (x > 18) x = -18;
+        if (z < -18) z = 18; else if (z > 18) z = -18;
+        p.setXYZ(i, x, y, z);
       }
       p.needsUpdate = true;
     }
