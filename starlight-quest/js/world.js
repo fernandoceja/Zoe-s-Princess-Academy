@@ -246,9 +246,10 @@ export function createWorld(container, hooks) {
   const starGeo = starGeometry(0.9, 0.38);
   const castleStar = new THREE.Mesh(starGeo, new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide }));
   castleStar.position.set(0, 8.4, -1.2); castle.add(castleStar);
-  castle.position.set(0, 0, -11.5);
+  // Off to the north-west so it never stands between the camera and Belle's path.
+  castle.position.set(-11.5, 0, -8.5);
   scene.add(castle);
-  addCollider(0, -11.5, 5.2);
+  addCollider(-11.5, -8.5, 5.2);
 
   // --- Lands ----------------------------------------------------------------
   const LAND_DIST = 27;         // land center distance from origin
@@ -322,6 +323,7 @@ export function createWorld(container, hooks) {
     const capGeo = new THREE.ConeGeometry(1.1, 2.2, 10);
     const capMat = new THREE.MeshStandardMaterial({ color: 0xbfe3ff, roughness: 0.7 });
     const N = 10;
+    let placed = 0;
     const cones = new THREE.InstancedMesh(coneGeo, coneMat, N);
     const caps = new THREE.InstancedMesh(capGeo, capMat, N);
     const moundGeo = new THREE.SphereGeometry(1.4, 12, 8);
@@ -329,16 +331,20 @@ export function createWorld(container, hooks) {
     const dummy = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2 + 0.15;
+      // Leave the hub side (west) open so Elsa's pad and path stay clear
+      if (Math.abs(Math.atan2(Math.sin(a - Math.PI), Math.cos(a - Math.PI))) < 1.2) continue;
       const rr = 4 + (i % 3) * 2;
       const x = c.x + Math.cos(a) * rr, z = c.z + Math.sin(a) * rr;
       const h = 4.5 + (i % 4);
       dummy.position.set(x, h / 2, z); dummy.scale.set(1, h / 6, 1);
       dummy.rotation.y = a; dummy.updateMatrix();
-      cones.setMatrixAt(i, dummy.matrix);
+      cones.setMatrixAt(placed, dummy.matrix);
       dummy.position.set(x, h + 0.9, z); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
-      caps.setMatrixAt(i, dummy.matrix);
+      caps.setMatrixAt(placed, dummy.matrix);
+      placed++;
       addCollider(x, z, 1.8);
     }
+    cones.count = caps.count = placed;
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2 + 0.6;
       const x = c.x + Math.cos(a) * 7.5, z = c.z + Math.sin(a) * 7.5;
