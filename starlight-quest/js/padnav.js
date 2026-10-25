@@ -16,7 +16,7 @@ const STICK = 0.5;
 const REPEAT_MS = 260;
 
 function visible(node) {
-  if (!node || node.classList.contains('zsq-hidden')) return false;
+  if (!node || node.classList.contains('zsq-hidden') || node.classList.contains('zsq-leaving')) return false;
   const cs = getComputedStyle(node);
   if (cs.display === 'none' || cs.visibility === 'hidden') return false;
   return node.getClientRects().length > 0;

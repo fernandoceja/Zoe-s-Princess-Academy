@@ -30,8 +30,26 @@ function el(tag, cls, html) {
   return d;
 }
 
-function hide(node) { if (node) node.classList.add('zsq-hidden'); }
-function show(node) { if (node) node.classList.remove('zsq-hidden'); }
+// hide() fades the node out (pointer-events off) before display:none; show() cancels a pending hide.
+const _hideTimers = new WeakMap();
+function hide(node) {
+  if (!node || node.classList.contains('zsq-hidden') || _hideTimers.has(node)) return;
+  node.classList.add('zsq-leaving');
+  node.inert = true; // no taps, keys or focus while it fades
+  _hideTimers.set(node, setTimeout(() => {
+    _hideTimers.delete(node);
+    node.inert = false;
+    node.classList.remove('zsq-leaving');
+    node.classList.add('zsq-hidden');
+  }, 180));
+}
+function show(node) {
+  if (!node) return;
+  clearTimeout(_hideTimers.get(node));
+  _hideTimers.delete(node);
+  node.inert = false;
+  node.classList.remove('zsq-leaving', 'zsq-hidden');
+}
 
 function injectCSS() {
   if (document.getElementById('zsq-style')) return;
@@ -39,6 +57,7 @@ function injectCSS() {
   s.id = 'zsq-style';
   s.textContent = `
   .zsq-hidden { display: none !important; }
+  .zsq-leaving { pointer-events: none !important; animation: zsq-fade-out .18s ease-in forwards !important; }
   #zsq-ui, #zsq-ui * { box-sizing: border-box; font-family: 'Nunito', 'Comic Sans MS', system-ui, sans-serif; }
   #zsq-ui { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   #zsq-ui button { touch-action: manipulation; }
@@ -71,7 +90,7 @@ function injectCSS() {
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 20px;
     box-shadow: 0 14px 40px rgba(31,41,55,.22); display: flex; gap: 16px; align-items: flex-start;
     max-height: 70vh; overflow-y: auto;
-    animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    animation: zsq-rise .25s ease-out; }
   .zsq-portrait { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex: none;
     border: 4px solid rgba(255,255,255,.9); outline: 3px solid ${GOLD};
     box-shadow: 0 8px 18px rgba(31,41,55,.2); background: #fff; }
@@ -94,7 +113,7 @@ function injectCSS() {
   /* ---------- challenge modal ---------- */
   .zsq-modal-wrap { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(31,41,55,.35); padding: 20px; animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    background: rgba(31,41,55,.35); padding: 20px; animation: zsq-rise .25s ease-out; }
   .zsq-modal { background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 60%, #e6f7ff 100%);
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 28px;
     max-width: 640px; width: 100%; box-shadow: 0 18px 50px rgba(31,41,55,.3);
@@ -109,7 +128,7 @@ function injectCSS() {
     padding: 14px 20px; box-shadow: 0 6px 0 rgba(0,0,0,.08); transition: transform .12s ease; }
   .zsq-choice:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
   .zsq-choice.zsq-correct { background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    border-color: #34c779; color: #065f46; animation: zsq-pop .35s cubic-bezier(0.175,0.885,0.32,1.275); }
+    border-color: #34c779; color: #065f46; animation: zsq-rise .25s ease-out; }
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
     animation: zsq-wiggle .4s ease; }
   .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
@@ -120,7 +139,7 @@ function injectCSS() {
   .zsq-interact { position: absolute; left: 50%; bottom: 38%; transform: translateX(-50%);
     pointer-events: none; background: rgba(255,255,255,.96); border: 3px solid ${GOLD};
     border-radius: 999px; padding: 14px 28px; font-size: 22px; font-weight: 900; color: #92400e;
-    box-shadow: 0 8px 24px rgba(31,41,55,.2); animation: zsq-bob 1.6s ease-in-out infinite; white-space: nowrap; }
+    box-shadow: 0 8px 24px rgba(31,41,55,.2); animation: zsq-bob 3s ease-in-out 3; white-space: nowrap; }
 
   /* ---------- toast ---------- */
   .zsq-toasts { position: absolute; top: 84px; left: 50%; transform: translateX(-50%);
@@ -128,14 +147,14 @@ function injectCSS() {
   .zsq-toast { background: #0f172a; color: #fff; border-radius: 24px; padding: 12px 26px;
     font-size: 24px; font-weight: 700; white-space: normal; text-align: center;
     box-shadow: 0 8px 24px rgba(15,23,42,.3);
-    animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    animation: zsq-rise .25s ease-out; }
 
   /* ---------- celebration ---------- */
   .zsq-celebrate { position: absolute; inset: 0; pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
     background: linear-gradient(135deg, #fdf4ff 0%, #fef9c3 55%, #e0f2fe 100%);
-    border-radius: 0; text-align: center; padding: 32px; animation: zsq-pop .4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  .zsq-bigstars { font-size: 84px; animation: zsq-bob 1.4s ease-in-out infinite; letter-spacing: 8px; }
+    border-radius: 0; text-align: center; padding: 32px; animation: zsq-rise .25s ease-out; }
+  .zsq-bigstars { font-size: 84px; animation: zsq-bob 3s ease-in-out 3; letter-spacing: 8px; }
   .zsq-cel-title { font-size: 44px; font-weight: 900; color: #92400e; line-height: 1.15; }
   .zsq-cel-sub { font-size: 24px; font-weight: 700; color: #475569; max-width: 560px; line-height: 1.5; }
   .zsq-bigbtn { min-height: 72px; padding: 16px 56px; border-radius: 24px; border: none;
@@ -150,7 +169,7 @@ function injectCSS() {
     display: flex; align-items: center; justify-content: center; padding: 24px; }
   .zsq-finale-card { background: rgba(255,255,255,.97); border: 5px solid ${GOLD};
     border-radius: 28px; padding: 36px; max-width: 680px; width: 100%; text-align: center;
-    box-shadow: 0 24px 70px rgba(0,0,0,.45); animation: zsq-pop .4s cubic-bezier(0.175,0.885,0.32,1.275); }
+    box-shadow: 0 24px 70px rgba(0,0,0,.45); animation: zsq-rise .25s ease-out; }
   .zsq-finale h2 { font-size: 38px; font-weight: 900; color: #92400e; margin: 0 0 12px; }
   .zsq-finale-line { font-size: 24px; font-weight: 700; color: #475569; line-height: 1.55; margin: 10px 0; }
 
@@ -176,7 +195,7 @@ function injectCSS() {
     gap: 22px; padding: 32px; text-align: center; }
   .zsq-logo { font-size: clamp(44px, 9vw, 96px); font-weight: 900; line-height: 1.05;
     color: #92400e; text-shadow: 3px 3px 0 ${GOLD}, 8px 8px 24px rgba(180,83,9,.25);
-    animation: zsq-bob 2.4s ease-in-out infinite; }
+    animation: zsq-bob 3s ease-in-out infinite; }
   .zsq-logo .zsq-sparkle { display: inline-block; animation: zsq-twinkle 1.6s ease-in-out infinite; }
   .zsq-tagline { font-size: clamp(20px, 3.5vw, 30px); font-weight: 700; color: #475569; max-width: 600px; line-height: 1.5; }
   .zsq-zoe-hero { width: 150px; height: 150px; border-radius: 32px; object-fit: cover;
@@ -196,12 +215,12 @@ function injectCSS() {
   .zsq-tutorial { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center; padding: 20px;
     background: linear-gradient(160deg, #fdf4ff 0%, #fef3c7 45%, #e0f2fe 100%);
-    animation: zsq-pop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    animation: zsq-rise .25s ease-out; }
   .zsq-tut-card { background: rgba(255,255,255,.97); border: 4px solid ${GOLD};
     border-radius: 28px; padding: 36px 32px; max-width: 620px; width: 100%;
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.25);
     max-height: 92vh; overflow-y: auto; }
-  .zsq-tut-emoji { font-size: 76px; margin-bottom: 10px; animation: zsq-bob 1.8s ease-in-out infinite; }
+  .zsq-tut-emoji { font-size: 76px; margin-bottom: 10px; animation: zsq-bob 3s ease-in-out 3; }
   .zsq-tut-title { font-size: 36px; font-weight: 900; color: #92400e; margin-bottom: 12px; line-height: 1.15; }
   .zsq-tut-text { font-size: 24px; font-weight: 700; color: #475569; line-height: 1.5; margin-bottom: 8px; }
   .zsq-tut-row { display: flex; gap: 14px; justify-content: center; align-items: center;
@@ -215,7 +234,7 @@ function injectCSS() {
   /* ---------- pause menu ---------- */
   .zsq-pause-wrap { position: absolute; inset: 0; pointer-events: auto;
     display: flex; align-items: center; justify-content: center; padding: 20px;
-    background: rgba(31,41,55,.45); animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    background: rgba(31,41,55,.45); animation: zsq-rise .25s ease-out; }
   .zsq-pause-card { background: rgba(255,255,255,.98); border: 4px solid ${GOLD};
     border-radius: 28px; padding: 36px 32px; max-width: 560px; width: 100%;
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.4);
@@ -287,9 +306,13 @@ function injectCSS() {
     .zsq-cel-title { font-size: 30px; }
     .zsq-bigbtn { min-height: 60px; padding: 10px 36px; font-size: 24px; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    #zsq-ui, #zsq-ui * { animation: none !important; transition: none !important; }
+  }
   button:focus-visible { outline: 4px solid rgba(14, 165, 233, 0.55); outline-offset: 3px; }
 
-  @keyframes zsq-pop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes zsq-rise { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes zsq-fade-out { from { opacity: 1; } to { opacity: 0; } }
   @keyframes zsq-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
   @keyframes zsq-wiggle { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
   @keyframes zsq-twinkle { 0%,100% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(1.35) rotate(18deg); opacity: .75; } }
