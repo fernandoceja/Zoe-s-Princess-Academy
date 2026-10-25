@@ -17,6 +17,9 @@ import { landState, recordQuest, today } from './ladder.js?v=20261023s8';
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
 
+// Let the star burst and happy hop play out before a full-screen card covers the world.
+const CELEBRATE_VIEW_MS = 1800;
+
 const PRAISES = [
   'Wonderful! You did it!',
   'Amazing work, superstar!',
@@ -385,7 +388,7 @@ export async function main(container) {
     world.celebrate(NPC_TO_LAND[npcId]);
     SoundFX.fanfare();
     refreshPill();
-    UI.showCelebration(
+    setTimeout(() => UI.showCelebration(
       `${P.name}'s land is glowing!`,
       `You earned the ${P.landName} star shard!  ⭐ +3 stars`,
       () => {
@@ -394,7 +397,7 @@ export async function main(container) {
           else showRest(npcId);
         });
       }
-    );
+    ), CELEBRATE_VIEW_MS);
   }
 
   function runFinale() {
@@ -402,10 +405,10 @@ export async function main(container) {
     UI.setRoamUI(false);
     NPC_IDS.forEach((id, i) => setTimeout(() => world.celebrate(NPC_TO_LAND[id]), i * 650));
     SoundFX.fanfare();
-    UI.showFinale(
+    setTimeout(() => UI.showFinale(
       FINALE_LINES.map((t) => ({ princessId: 'belle', kind: 'praise', text: t })),
       () => endToRoam()
-    );
+    ), CELEBRATE_VIEW_MS);
   }
 
   function endToRoam() {
