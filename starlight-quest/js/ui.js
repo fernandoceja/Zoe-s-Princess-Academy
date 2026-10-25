@@ -41,6 +41,7 @@ function injectCSS() {
   .zsq-hidden { display: none !important; }
   #zsq-ui, #zsq-ui * { box-sizing: border-box; font-family: 'Nunito', 'Comic Sans MS', system-ui, sans-serif; }
   #zsq-ui { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  #zsq-ui button { touch-action: manipulation; }
 
   /* ---------- top bar ---------- */
   .zsq-topbar { position: absolute; top: 0; left: 0; right: 0;
@@ -55,8 +56,8 @@ function injectCSS() {
   .zsq-topright { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
   .zsq-stars { background: rgba(255,255,255,.92); border: 3px solid ${GOLD};
     border-radius: 999px; padding: 10px 18px; font-weight: 900; font-size: 22px;
-    color: #b45309; min-height: 56px; display: flex; align-items: center; gap: 6px;
-    box-shadow: 0 4px 14px rgba(31,41,55,.12); transition: transform .25s ease; }
+    color: #92400e; min-height: 56px; display: flex; align-items: center; gap: 6px;
+    white-space: nowrap; box-shadow: 0 4px 14px rgba(31,41,55,.12); transition: transform .25s ease; }
   .zsq-stars.zsq-bump { transform: scale(1.18); }
   .zsq-iconbtn { width: 56px; height: 56px; border-radius: 50%; border: 3px solid ${GOLD};
     background: rgba(255,255,255,.94); font-size: 26px; cursor: pointer;
@@ -80,11 +81,11 @@ function injectCSS() {
     display: flex; align-items: center; justify-content: center; }
   .zsq-dbody { flex: 1; min-width: 0; }
   .zsq-dname { font-weight: 900; font-size: 24px; margin-bottom: 6px; }
-  .zsq-dtext { font-size: 22px; line-height: 1.5; color: #334155; font-weight: 600; }
+  .zsq-dtext { font-size: 24px; line-height: 1.5; color: #334155; font-weight: 600; }
   .zsq-drow { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
   .zsq-next { min-height: 64px; padding: 12px 36px; border-radius: 20px; border: none;
     font-size: 22px; font-weight: 900; color: #fff; cursor: pointer;
-    background: linear-gradient(135deg, #f472b6, #db4f9c);
+    background: linear-gradient(135deg, #be185d, #9d174d);
     box-shadow: 0 6px 0 rgba(0,0,0,.12); transition: transform .12s ease; }
   .zsq-next:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
   .zsq-replay { width: 64px; height: 64px; border-radius: 50%; border: 3px solid ${GOLD};
@@ -97,33 +98,36 @@ function injectCSS() {
   .zsq-modal { background: linear-gradient(135deg, #fdfcfe 0%, #f4faeb 60%, #e6f7ff 100%);
     border: 4px solid ${GOLD}; border-radius: 24px; padding: 28px;
     max-width: 640px; width: 100%; box-shadow: 0 18px 50px rgba(31,41,55,.3);
-    text-align: center; max-height: 92vh; overflow-y: auto; }
+    text-align: center; max-height: 92vh; overflow-y: auto; position: relative; }
   .zsq-kicker { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    color: #b45309; margin-bottom: 8px; }
+    color: #92400e; margin-bottom: 8px; }
   .zsq-prompt { font-size: 30px; font-weight: 900; color: #334155; margin-bottom: 8px; line-height: 1.3; }
   .zsq-visual { margin: 12px 0; display: flex; justify-content: center; }
   .zsq-choices { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
   .zsq-choice { min-height: 72px; border-radius: 20px; border: 4px solid ${GOLD};
-    background: #fff; font-size: 30px; font-weight: 900; color: #475569; cursor: pointer;
+    background: #fff; font-size: 30px; font-weight: 900; color: #334155; cursor: pointer;
     padding: 14px 20px; box-shadow: 0 6px 0 rgba(0,0,0,.08); transition: transform .12s ease; }
   .zsq-choice:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
   .zsq-choice.zsq-correct { background: linear-gradient(135deg, #d1fae5, #a7f3d0);
     border-color: #34c779; color: #065f46; animation: zsq-pop .35s cubic-bezier(0.175,0.885,0.32,1.275); }
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
     animation: zsq-wiggle .4s ease; }
-  .zsq-answer-msg { font-size: 22px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
+  .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
+  .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 52px; }
+  .zsq-modal-replay { position: absolute; top: 12px; right: 12px; width: 56px; height: 56px; }
 
   /* ---------- interact prompt ---------- */
   .zsq-interact { position: absolute; left: 50%; bottom: 38%; transform: translateX(-50%);
     pointer-events: none; background: rgba(255,255,255,.96); border: 3px solid ${GOLD};
-    border-radius: 999px; padding: 14px 28px; font-size: 22px; font-weight: 900; color: #b45309;
+    border-radius: 999px; padding: 14px 28px; font-size: 22px; font-weight: 900; color: #92400e;
     box-shadow: 0 8px 24px rgba(31,41,55,.2); animation: zsq-bob 1.6s ease-in-out infinite; white-space: nowrap; }
 
   /* ---------- toast ---------- */
   .zsq-toasts { position: absolute; top: 84px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; width: max-content; max-width: 92vw; }
-  .zsq-toast { background: #0f172a; color: #fff; border-radius: 999px; padding: 12px 26px;
-    font-size: 24px; font-weight: 700; box-shadow: 0 8px 24px rgba(15,23,42,.3);
+  .zsq-toast { background: #0f172a; color: #fff; border-radius: 24px; padding: 12px 26px;
+    font-size: 24px; font-weight: 700; white-space: normal; text-align: center;
+    box-shadow: 0 8px 24px rgba(15,23,42,.3);
     animation: zsq-pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
   /* ---------- celebration ---------- */
@@ -135,8 +139,8 @@ function injectCSS() {
   .zsq-cel-title { font-size: 44px; font-weight: 900; color: #92400e; line-height: 1.15; }
   .zsq-cel-sub { font-size: 24px; font-weight: 700; color: #475569; max-width: 560px; line-height: 1.5; }
   .zsq-bigbtn { min-height: 72px; padding: 16px 56px; border-radius: 24px; border: none;
-    font-size: 28px; font-weight: 900; color: #fff; cursor: pointer;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    font-size: 28px; font-weight: 900; color: #3b1f04; cursor: pointer;
+    background: linear-gradient(135deg, #fcd34d, #fbbf24);
     box-shadow: 0 8px 0 rgba(0,0,0,.12); transition: transform .12s ease; }
   .zsq-bigbtn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
 
@@ -202,9 +206,9 @@ function injectCSS() {
   .zsq-tut-text { font-size: 24px; font-weight: 700; color: #475569; line-height: 1.5; margin-bottom: 8px; }
   .zsq-tut-row { display: flex; gap: 14px; justify-content: center; align-items: center;
     margin-top: 22px; flex-wrap: wrap; }
-  .zsq-skip { min-height: 72px; padding: 14px 34px; border-radius: 24px; cursor: pointer;
-    font-size: 22px; font-weight: 800; color: #475569; background: #fff;
-    border: 3px solid rgba(148,163,184,.55); box-shadow: 0 6px 0 rgba(0,0,0,.08);
+  .zsq-skip { min-height: 44px; padding: 8px 16px; border-radius: 24px; cursor: pointer;
+    font-size: 18px; font-weight: 700; color: #475569; background: transparent;
+    border: none; box-shadow: none; text-decoration: underline; text-underline-offset: 4px;
     transition: transform .12s ease; }
   .zsq-skip:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
 
@@ -216,91 +220,53 @@ function injectCSS() {
     border-radius: 28px; padding: 36px 32px; max-width: 560px; width: 100%;
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.4);
     max-height: 92vh; overflow-y: auto; }
-  .zsq-howto { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+  .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
 
   /* ---------- responsive: phones ---------- */
   @media (max-width: 480px) {
     .zsq-topbar { padding: 8px 10px; }
-    .zsq-pill { font-size: 15px; padding: 8px 14px; min-height: 48px;
-      max-width: 44vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .zsq-stars { font-size: 17px; padding: 8px 12px; min-height: 48px; }
+    /* Quest label wraps to two lines instead of being cut off. */
+    .zsq-pill { min-height: 48px; max-width: calc(100vw - 222px); overflow: visible;
+      text-overflow: clip; white-space: normal; line-height: 1.15; font-size: 14px; padding: 6px 10px; }
+    .zsq-stars { font-size: 17px; padding: 6px 10px; min-height: 48px; }
     .zsq-iconbtn { width: 48px; height: 48px; font-size: 22px; }
     .zsq-toasts { top: 70px; }
-    .zsq-toast { font-size: 24px; padding: 10px 20px; }
+    .zsq-toast { padding: 10px 20px; }
     .zsq-interact { font-size: 18px; padding: 10px 20px; bottom: 44%; max-width: 92vw; white-space: normal; text-align: center; }
     .zsq-sheet { left: 10px; right: 10px; bottom: 10px; padding: 14px; gap: 12px;
       max-height: 64vh; overflow-y: auto; }
     .zsq-portrait, .zsq-portrait-fallback { width: 64px; height: 64px; }
     .zsq-portrait-fallback { font-size: 34px; }
     .zsq-dname { font-size: 20px; }
-    .zsq-dtext { font-size: 18px; }
     .zsq-next { min-height: 60px; font-size: 19px; padding: 10px 26px; }
     .zsq-replay { width: 56px; height: 56px; font-size: 24px; }
     .zsq-modal { padding: 18px; }
-    .zsq-prompt { font-size: 23px; }
-    .zsq-choice { min-height: 64px; font-size: 23px; padding: 12px 14px; }
-    .zsq-answer-msg { font-size: 19px; }
+    .zsq-prompt { font-size: 26px; }
+    .zsq-choice { min-height: 64px; font-size: 26px; padding: 12px 14px; }
     .zsq-joy { width: 124px; height: 124px; left: 16px; bottom: 16px; }
     .zsq-cel-title { font-size: 32px; }
-    .zsq-cel-sub { font-size: 20px; }
     .zsq-bigstars { font-size: 64px; }
     .zsq-bigbtn { font-size: 23px; padding: 14px 40px; }
     .zsq-tut-card, .zsq-pause-card { padding: 24px 20px; }
     .zsq-tut-emoji { font-size: 60px; }
     .zsq-tut-title { font-size: 28px; }
-    .zsq-tut-text { font-size: 20px; }
-    .zsq-skip { min-height: 64px; font-size: 19px; padding: 12px 28px; }
+    .zsq-skip { font-size: 17px; padding: 8px 12px; }
     .zsq-finale-card { padding: 24px 20px; }
     .zsq-finale h2 { font-size: 30px; }
-    .zsq-finale-line { font-size: 20px; }
+    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; top: 8px; right: 8px; }
+    .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 44px; }
+    .zsq-kicker { font-size: 14px; letter-spacing: 1px; }
+    .zsq-topright { gap: 6px; }
   }
 
   /* ---------- responsive: short screens (landscape phones) ---------- */
   @media (max-height: 500px) {
     .zsq-title { gap: 10px; padding: 16px; overflow-y: auto; justify-content: flex-start; }
     .zsq-zoe-hero { width: 96px; height: 96px; }
-    .zsq-sheet { max-height: 72vh; }
-    .zsq-modal { max-height: 94vh; padding: 16px; }
     .zsq-tut-card, .zsq-pause-card { max-height: 94vh; padding: 20px; }
     .zsq-tut-emoji { font-size: 52px; margin-bottom: 4px; }
   }
 
-  /* ---------- PR 3: readability, contrast, small screens ---------- */
-  /* Button text contrast >= 4.5:1 (WCAG AA). */
-  .zsq-bigbtn { color: #3b1f04; background: linear-gradient(135deg, #fcd34d, #fbbf24); }
-  .zsq-next { color: #fff; background: linear-gradient(135deg, #be185d, #9d174d); }
-  .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
-  .zsq-choice { color: #334155; }
-  .zsq-kicker { color: #92400e; }
-  .zsq-stars { color: #92400e; }
-  .zsq-interact { color: #92400e; }
-  #zsq-ui button { touch-action: manipulation; }
-  /* Skip is a quiet text link, clearly smaller than Next. */
-  .zsq-skip { min-height: 44px; padding: 8px 16px; font-size: 18px; font-weight: 700;
-    color: #475569; background: transparent; border: none; box-shadow: none;
-    text-decoration: underline; text-underline-offset: 4px; }
-  /* Body and prompt text at 24px or more. */
-  .zsq-dtext, .zsq-answer-msg, .zsq-tut-text, .zsq-cel-sub, .zsq-finale-line, .zsq-toast { font-size: 24px; }
-  .zsq-toast { white-space: normal; text-align: center; border-radius: 24px; }
-  .zsq-modal-replay { position: absolute; top: 12px; right: 12px; width: 56px; height: 56px; }
-  .zsq-modal { position: relative; }
-  .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 52px; }
-  .zsq-stars { white-space: nowrap; }
-  @media (max-width: 480px) {
-    .zsq-dtext, .zsq-answer-msg, .zsq-tut-text, .zsq-cel-sub, .zsq-finale-line { font-size: 24px; }
-    .zsq-prompt { font-size: 26px; }
-    .zsq-choice { font-size: 26px; }
-    .zsq-toast { font-size: 24px; }
-    .zsq-skip { min-height: 44px; font-size: 17px; padding: 8px 12px; }
-    /* Quest label wraps to two lines instead of being cut off. */
-    .zsq-pill { max-width: calc(100vw - 222px); white-space: normal; overflow: visible;
-      text-overflow: clip; line-height: 1.15; font-size: 14px; padding: 6px 10px; }
-    .zsq-modal-replay { width: 48px; height: 48px; font-size: 22px; top: 8px; right: 8px; }
-    .zsq-modal .zsq-prompt, .zsq-modal .zsq-kicker { padding: 0 44px; }
-    .zsq-kicker { font-size: 14px; letter-spacing: 1px; }
-    .zsq-topright { gap: 6px; }
-    .zsq-stars { padding: 6px 10px; }
-  }
   /* Short screens: phones in landscape, small laptop windows. */
   @media (max-height: 560px) {
     .zsq-sheet { max-height: 78vh; padding: 12px 16px; }
@@ -327,7 +293,6 @@ function injectCSS() {
   @keyframes zsq-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
   @keyframes zsq-wiggle { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
   @keyframes zsq-twinkle { 0%,100% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(1.35) rotate(18deg); opacity: .75; } }
-  .zsq-interact { animation: zsq-bob 1.6s ease-in-out infinite; }
   `;
   document.head.appendChild(s);
 }
@@ -864,7 +829,6 @@ export const UI = {
     const release = () => {
       active = false;
       setKnob(0, 0);
-      joy.releasePointerCapture && joy.releasePointerCapture;
       if (typeof onVector === 'function') onVector(0, 0);
     };
     const move = (e) => {
