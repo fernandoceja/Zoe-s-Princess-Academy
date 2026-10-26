@@ -9,7 +9,7 @@ import { createWorld } from './world.js?v=20261026w1';
 import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026w1';
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026w1';
 import { UI } from './ui.js?v=20261026w1';
-import { Save } from './save.js?v=20261026w1';
+import { Save, checkMilestones } from './save.js?v=20261026w1';
 import { Input } from './input.js?v=20261026w1';
 import { startPadNav } from './padnav.js?v=20261026w1';
 import { landState, recordQuest, today } from './ladder.js?v=20261026w1';
@@ -89,6 +89,19 @@ export async function main(container) {
   });
   // Title screen is up: no roaming input until the adventure starts.
   world.setInputEnabled(false);
+
+  // Stop drawing the 3D world while a full-screen card covers it (saves battery, keeps the phone cool).
+  // The pause menu is left out on purpose: it is translucent and the world loop delivers its resume key.
+  const COVER_SELECTOR = '.zsq-title, .zsq-tutorial, .zsq-modal-wrap, .zsq-celebrate, .zsq-finale, .zsq-parent-wrap';
+  function syncWorldCover() {
+    const covered = Array.from(document.querySelectorAll(COVER_SELECTOR))
+      .some((n) => !n.classList.contains('zsq-hidden') && !n.classList.contains('zsq-leaving'));
+    if (covered) world.pause(); else world.resume();
+  }
+  new MutationObserver(syncWorldCover).observe(document.getElementById('zsq-ui') || document.body, {
+    subtree: true, childList: true, attributes: true, attributeFilter: ['class'],
+  });
+  syncWorldCover();
 
   // Touch joystick -> unified input (screen-up = -z, matching keyboard)
   UI.joystick((x, z) => Input.setJoystick(x, z));
@@ -426,6 +439,24 @@ export async function main(container) {
       () => { Narrator.stop(); startQuest(npcId, { again: true }); });
   }
 
+  // After the quest's own end card: celebrate any newly reached star milestones
+  // (one combined card), then carry on. Unlocks are saved before the card shows,
+  // so a milestone is never celebrated twice.
+  function afterQuest(npcId, next) {
+    const fresh = checkMilestones(Save.data);
+    if (!fresh.length) { next(); return; }
+    Save.save();
+    const names = fresh.map((m) => m.label);
+    const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
+    const stars = fresh[fresh.length - 1].stars;
+    const sub = `You unlocked ${list}!`;
+    state = 'dialogue';
+    UI.setRoamUI(false);
+    Narrator.speakExact(npcId, `You earned ${stars} stars! ${sub}`);
+    UI.showMilestone({ title: `You earned ${stars} stars!`, sub, emoji: fresh.map((m) => m.emoji).join(' ') },
+      () => { Narrator.stop(); next(); });
+  }
+
   function completeQuest(npcId) {
     Save.data.ladder[npcId] = recordQuest(landState(Save.data.ladder[npcId]), results);
     Save.data.lastPlay[npcId] = today();
@@ -433,7 +464,7 @@ export async function main(container) {
       // Practice replay: no new shard, straight to the soft stop.
       Save.save();
       SoundFX.chime();
-      showRest(npcId);
+      afterQuest(npcId, () => showRest(npcId));
       return;
     }
     state = 'celebrate';
@@ -453,8 +484,10 @@ export async function main(container) {
       `You earned the ${P.landName} star shard!  ⭐ +3 stars`,
       () => {
         dlg(npcId, P.name, P.color, P.portrait, quest.complete, 'praise', () => {
-          if (Save.data.done.length >= NPC_IDS.length) runFinale();
-          else showRest(npcId);
+          afterQuest(npcId, () => {
+            if (Save.data.done.length >= NPC_IDS.length) runFinale();
+            else showRest(npcId);
+          });
         });
       }
     ), CELEBRATE_VIEW_MS);
