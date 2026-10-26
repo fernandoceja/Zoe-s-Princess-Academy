@@ -1163,6 +1163,60 @@ export function createWorld(container, hooks) {
   camera.position.copy(camTarget);
   camera.lookAt(lookTarget);
 
+  // --- Zoe's sparkle trail (W16) ---
+  // One pooled Points (24 slots, +1 draw call). Color fades toward black (additive => invisible).
+  const TRAIL_N = 24, TRAIL_LIFE = 0.8, TRAIL_EVERY = 0.05;
+  const trailPos = new Float32Array(TRAIL_N * 3);
+  const trailCol = new Float32Array(TRAIL_N * 3);
+  const trailBase = new Float32Array(TRAIL_N * 3); // full-brightness color per slot
+  const trailAge = new Float32Array(TRAIL_N).fill(TRAIL_LIFE);
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+  trailGeo.setAttribute('color', new THREE.BufferAttribute(trailCol, 3));
+  const sparkleTrailPoints = new THREE.Points(trailGeo, new THREE.PointsMaterial({
+    map: softDot, size: 0.35, sizeAttenuation: true, vertexColors: true,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  sparkleTrailPoints.frustumCulled = false;
+  sparkleTrailPoints.visible = false;
+  scene.add(sparkleTrailPoints);
+  const trailPink = new THREE.Color(0xffb3d9), trailGold = new THREE.Color(0xffe08a);
+  let trailNext = 0, trailTimer = 0;
+  function sparkleTrail(dt, speed) {
+    if (calmMotion) return; // fully off: no emit, Points stay hidden
+    if (speed > 0.6) {
+      trailTimer += dt;
+      while (trailTimer >= TRAIL_EVERY) {
+        trailTimer -= TRAIL_EVERY;
+        const i = trailNext; trailNext = (trailNext + 1) % TRAIL_N; // recycle oldest slot
+        trailAge[i] = 0;
+        trailPos[i * 3] = playerPos.x + (rand() - 0.5) * 0.3;
+        trailPos[i * 3 + 1] = 0.15;
+        trailPos[i * 3 + 2] = playerPos.z + (rand() - 0.5) * 0.3;
+        const m = rand();
+        trailBase[i * 3] = trailPink.r + (trailGold.r - trailPink.r) * m;
+        trailBase[i * 3 + 1] = trailPink.g + (trailGold.g - trailPink.g) * m;
+        trailBase[i * 3 + 2] = trailPink.b + (trailGold.b - trailPink.b) * m;
+      }
+    } else {
+      trailTimer = 0;
+    }
+    let alive = false;
+    for (let i = 0; i < TRAIL_N; i++) {
+      if (trailAge[i] >= TRAIL_LIFE) { trailCol[i * 3] = trailCol[i * 3 + 1] = trailCol[i * 3 + 2] = 0; continue; }
+      trailAge[i] += dt;
+      const k = Math.max(0, 1 - trailAge[i] / TRAIL_LIFE) * 0.7; // soft, never blown out
+      trailPos[i * 3 + 1] += dt * 0.25; // tiny upward drift
+      trailCol[i * 3] = trailBase[i * 3] * k;
+      trailCol[i * 3 + 1] = trailBase[i * 3 + 1] * k;
+      trailCol[i * 3 + 2] = trailBase[i * 3 + 2] * k;
+      alive = true;
+    }
+    sparkleTrailPoints.visible = alive;
+    trailGeo.attributes.position.needsUpdate = true;
+    trailGeo.attributes.color.needsUpdate = true;
+  }
+
   // --- Celebration bursts ------------------------------------------------------
   const bursts = []; // { points, vel, life, maxLife }
 
@@ -1288,6 +1342,7 @@ export function createWorld(container, hooks) {
     player.rotation.y += angleDelta(player.rotation.y, playerAngle) * (1 - Math.exp(-12 * dt));
     player.position.y = speed > 0.6 ? Math.abs(Math.sin(walkPhase)) * 0.09 : 0;
     playerShadow.position.set(playerPos.x, 0.05, playerPos.z);
+    sparkleTrail(dt, speed);
 
     // ---- Camera: smooth top-down follow with slight look-ahead ----
     lookAhead.set(playerVel.x * 0.35, 0, playerVel.z * 0.35);
