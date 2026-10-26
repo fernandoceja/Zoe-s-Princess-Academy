@@ -256,6 +256,7 @@ export function createWorld(container, hooks) {
   scene.add(sun);
 
   // --- Colliders ------------------------------------------------------------
+  let pondTwinkle = null; // per-frame pond twinkle fader (set in the meadow block, run in update)
   const colliders = []; // {x, z, r, shadowR?}
   // shadowR (optional): ground-shadow radius when the visible footprint is wider than the collider
   const addCollider = (x, z, r, shadowR) => colliders.push({ x, z, r, shadowR });
@@ -665,22 +666,19 @@ export function createWorld(container, hooks) {
       });
       pads.instanceMatrix.needsUpdate = true;
       scene.add(pads);
-      // Lotus on the first pad: 6 squashed pink petals around a pale center
-      const lotus = new THREE.Group();
-      lotus.position.set(px + padSpots[0][0], 0.08, pz + padSpots[0][1]);
-      const petalGeo = new THREE.SphereGeometry(0.1, 8, 6);
-      const petalMat = pastel(0xffb3d1);
+      // Lotus on the first pad: 6 squashed pink petals around a pale center (one InstancedMesh)
+      const lx = px + padSpots[0][0], lz = pz + padSpots[0][1];
+      const lotus = new THREE.InstancedMesh(new THREE.SphereGeometry(0.1, 8, 6), pastel(0xffffff), 7);
+      const lc = new THREE.Color(), lp = new THREE.Vector3(), ls = new THREE.Vector3();
       for (let i = 0; i < 6; i++) {
         const a = (i / 6) * Math.PI * 2;
-        const petal = new THREE.Mesh(petalGeo, petalMat);
-        petal.scale.set(0.55, 1.2, 0.35);
-        petal.position.set(Math.cos(a) * 0.09, 0.07, Math.sin(a) * 0.09);
-        petal.rotation.set(Math.sin(a) * 0.7, 0, -Math.cos(a) * 0.7);
-        lotus.add(petal);
+        e.set(Math.sin(a) * 0.7, 0, -Math.cos(a) * 0.7); q.setFromEuler(e);
+        m4.compose(lp.set(lx + Math.cos(a) * 0.09, 0.15, lz + Math.sin(a) * 0.09), q, ls.set(0.55, 1.2, 0.35));
+        lotus.setMatrixAt(i, m4); lotus.setColorAt(i, lc.setHex(0xffb3d1));
       }
-      const lotusCore = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), pastel(0xfff6d6));
-      lotusCore.position.y = 0.07;
-      lotus.add(lotusCore);
+      q.identity();
+      m4.compose(lp.set(lx, 0.15, lz), q, ls.setScalar(0.5));
+      lotus.setMatrixAt(6, m4); lotus.setColorAt(6, lc.setHex(0xfff6d6));
       scene.add(lotus);
       // Twinkles: additive points, brightness via vertex colors (map = softDot is attached on the first frame)
       const tSpots = [[-1.6, -0.6], [-0.3, -1.7], [1.5, -0.2], [0.2, 0.4], [-0.5, 1.7], [1.7, 1.0]];
@@ -1159,7 +1157,6 @@ export function createWorld(container, hooks) {
   let rafId = 0;
   let disposed = false;
 
-  var pondTwinkle; // per-frame pond twinkle fader (set in the meadow block; var, no initializer, so the earlier assignment survives)
   function update(dt, t) {
     if (pondTwinkle) pondTwinkle(t);
     // ---- Unified input (polled once per frame) ----
