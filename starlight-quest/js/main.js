@@ -5,14 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261025s9';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines } from './quests.js?v=20261025s9';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261025s9';
-import { UI } from './ui.js?v=20261025s9';
-import { Save } from './save.js?v=20261025s9';
-import { Input } from './input.js?v=20261025s9';
-import { startPadNav } from './padnav.js?v=20261025s9';
-import { landState, recordQuest, today } from './ladder.js?v=20261025s9';
+import { createWorld } from './world.js?v=20261026w1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines } from './quests.js?v=20261026w1';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026w1';
+import { UI } from './ui.js?v=20261026w1';
+import { Save } from './save.js?v=20261026w1';
+import { Input } from './input.js?v=20261026w1';
+import { startPadNav } from './padnav.js?v=20261026w1';
+import { landState, recordQuest, today } from './ladder.js?v=20261026w1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
