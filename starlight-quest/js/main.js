@@ -261,8 +261,35 @@ export async function main(container) {
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);
     }
+    if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
     if (round.pic && (npcId === 'rapunzel' || npcId === 'belle')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
+  }
+
+  // Measuring picture: flowers stand on one ground line (compare heights), or a stem beside a column of petal units.
+  function measureSVG(v) {
+    const FILL = { pink: '#f9a8d4', yellow: '#fde68a', purple: '#c4b5fd', blue: '#93c5fd' };
+    const U = 12, G = 124; // px per unit, ground y
+    if (v.kind === 'flowers') {
+      const n = v.heights.length, W = n * 60;
+      let body = '';
+      v.heights.forEach((h, i) => {
+        const cx = 30 + i * 60, top = G - h * U;
+        body += `<rect x="${cx - 3}" y="${top}" width="6" height="${h * U}" rx="3" fill="#86d19b"/>` +
+          `<circle cx="${cx}" cy="${top - 4}" r="14" fill="${FILL[v.colors[i]] || '#f9a8d4'}" stroke="#ffffff" stroke-width="3"/>` +
+          `<circle cx="${cx}" cy="${top - 4}" r="4" fill="#f59e0b"/>`;
+      });
+      return `<svg viewBox="0 0 ${W} 138" style="width:min(70vw,260px);height:auto;display:block;margin:0 auto" role="img" aria-label="${n} flowers of different heights standing on the ground">` +
+        `<line x1="0" y1="${G}" x2="${W}" y2="${G}" stroke="#a7d9b0" stroke-width="4" stroke-linecap="round"/>${body}</svg>`;
+    }
+    const n = Math.max(1, Math.min(v.length | 0, 8));
+    let petals = '';
+    for (let i = 0; i < n; i++) {
+      petals += `<ellipse cx="70" cy="${G - i * U - U / 2}" rx="13" ry="${U / 2 - 0.5}" fill="${i % 2 ? '#f9a8d4' : '#fbcfe8'}" stroke="#ec7fb4" stroke-width="1"/>`;
+    }
+    return `<svg viewBox="0 0 120 138" style="width:min(70vw,260px);height:auto;display:block;margin:0 auto" role="img" aria-label="A flower stem next to a column of ${n} petals, one petal for each unit of length">` +
+      `<line x1="0" y1="${G}" x2="120" y2="${G}" stroke="#a7d9b0" stroke-width="4" stroke-linecap="round"/>` +
+      `<rect x="27" y="${G - n * U}" width="6" height="${n * U}" rx="3" fill="#86d19b"/>${petals}</svg>`;
   }
 
   function clockSVG(h, m) {

@@ -314,8 +314,8 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 </div>
 <div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#f0fdf4;">
 <div style="font-weight:700;font-size:15px;">&#127803; Rapunzel &mdash; The Sleepy Garden</div>
-<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Science: plants &amp; living things &mdash; NGSS 1-LS1 (CA)</div>
-<div style="font-size:13px;margin-top:2px;color:#374151;">What plants need to grow (water, sunlight, soil) and living vs. nonliving things.</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Science: plants &amp; living things &mdash; NGSS 1-LS1 (CA); Math: measuring &mdash; CA CCSS 1.MD.1&ndash;2</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">What plants need to grow (water, sunlight, soil) and living vs. nonliving things. Also measuring: comparing flower heights and counting petal units for length.</div>
 </div>
 <div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fffbeb;">
 <div style="font-weight:700;font-size:15px;">&#9200; Cinderella &mdash; The Midnight Clock</div>
@@ -657,6 +657,60 @@ const SCI_T3 = [
   _sci('Which part helps a plant drink?', ['🌱 Roots', '🌸 Petals', '🌰 Seeds'], 'Good try! This part is under the ground.'),
 ];
 
+// Measuring rounds (CA 1.MD.1-2): compare flower heights, count petal units.
+// Each carries a plain-data `visual` so it survives the review queue.
+const FLOWER_COLORS = {
+  pink: { emoji: '🌸', name: 'pink' },
+  yellow: { emoji: '🌼', name: 'yellow' },
+  purple: { emoji: '💜', name: 'purple' },
+  blue: { emoji: '💙', name: 'blue' },
+};
+function _flowerLabel(c) { return `${FLOWER_COLORS[c].emoji} The ${FLOWER_COLORS[c].name} one`; }
+// n flowers of clearly different heights (at least 2 units apart), random colors.
+function _flowerSet(n, rng) {
+  const pool = n === 3 && rng() < 0.4 ? [3, 5, 7] : [2, 4, 6, 8];
+  const heights = _shuffle(pool, rng).slice(0, n);
+  const colors = _shuffle(Object.keys(FLOWER_COLORS), rng).slice(0, n);
+  return { heights, colors };
+}
+function _measureRound(tier, rng) {
+  if (tier === 3) {
+    const len = 3 + Math.floor(rng() * 6);
+    const other = len > 3 ? [len - 1, len + 1] : [len + 1, len + 2];
+    const label = (n) => `🌸 ${n} petals`;
+    return {
+      prompt: 'How many petals long is the stem?',
+      choices: [label(len), ...other.map(label)],
+      answer: label(len),
+      hint: 'Good try! Count the petals from the bottom to the top.',
+      visual: { kind: 'units', length: len },
+    };
+  }
+  if (tier === 1) {
+    const { heights, colors } = _flowerSet(2, rng);
+    const taller = rng() < 0.5;
+    const win = heights[0] > heights[1] === taller ? 0 : 1;
+    return {
+      prompt: taller ? 'Which flower is taller?' : 'Which flower is shorter?',
+      choices: [_flowerLabel(colors[win]), _flowerLabel(colors[1 - win])],
+      answer: _flowerLabel(colors[win]),
+      hint: taller ? 'Good try! Look at the tops. Which one reaches higher?' : 'Good try! Look at the tops. Which one stops lower?',
+      visual: { kind: 'flowers', heights, colors },
+    };
+  }
+  const { heights, colors } = _flowerSet(3, rng);
+  const tallest = rng() < 0.5;
+  const target = tallest ? Math.max(...heights) : Math.min(...heights);
+  const w = heights.indexOf(target);
+  return {
+    prompt: tallest ? 'Which flower is the tallest?' : 'Which flower is the shortest?',
+    choices: [w, ...[0, 1, 2].filter((i) => i !== w)].map((i) => _flowerLabel(colors[i])),
+    answer: _flowerLabel(colors[w]),
+    hint: tallest ? 'Good try! Look at the tops. Which one reaches the highest?' : 'Good try! Look at the tops. Which one stops the lowest?',
+    visual: { kind: 'flowers', heights, colors },
+  };
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -693,9 +747,9 @@ const TIERS = {
     },
   },
   rapunzel: {
-    1: (rng) => _pick(SCI_T1, rng),
-    2: (rng) => _pick(SCI_T2, rng),
-    3: (rng) => _pick(SCI_T3, rng),
+    1: (rng) => (rng() < 0.25 ? _measureRound(1, rng) : _pick(SCI_T1, rng)),
+    2: (rng) => (rng() < 0.25 ? _measureRound(2, rng) : _pick(SCI_T2, rng)),
+    3: (rng) => (rng() < 0.25 ? _measureRound(3, rng) : _pick(SCI_T3, rng)),
   },
 };
 

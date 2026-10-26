@@ -23,9 +23,12 @@
 
 ## 🌻 Rapunzel — "The Sleepy Garden" · Sunflower Meadows
 
-- **Standard:** Science: what plants need / living vs. nonliving — **NGSS 1-LS1** (CA)
+- **Standard:** Science: what plants need / living vs. nonliving — **NGSS 1-LS1** (CA);
+  Math: measuring — **CA CCSS 1.MD.1–2**
 - **What the child practices:** What plants need to grow (water, sunlight,
-  soil) and distinguishing living things from nonliving things.
+  soil) and distinguishing living things from nonliving things. Also
+  measuring: ordering and comparing flower heights, and counting petal units
+  for a stem's length.
 - **Example round:** *"A sleepy seed wants to wake up and grow. What does it drink first?"*
   — choices: `Water`, `Juice`, `Milk`.
 
