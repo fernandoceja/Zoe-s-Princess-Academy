@@ -541,6 +541,27 @@ export function createWorld(container, hooks) {
     addCollider(tx, tz, 1.9);
   }
 
+  // --- Soft blob shadows under scenery (one instanced draw, no shadow maps) ---
+  {
+    const props = colliders.filter((c) => c.r >= 0.7);
+    const propShadows = new THREE.InstancedMesh(
+      new THREE.CircleGeometry(1, 24),
+      new THREE.MeshBasicMaterial({ color: 0x1a1030, transparent: true, opacity: 0.18, depthWrite: false }),
+      props.length
+    );
+    const dummy = new THREE.Object3D();
+    props.forEach((c, i) => {
+      dummy.position.set(c.x, 0.045, c.z);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.setScalar(c.r * 1.15);
+      dummy.updateMatrix();
+      propShadows.setMatrixAt(i, dummy.matrix);
+    });
+    propShadows.instanceMatrix.needsUpdate = true;
+    propShadows.renderOrder = 1;
+    scene.add(propShadows);
+  }
+
   // --- Sparkle sprites (shared texture for markers/effects) ------------------
   const softDot = makeCanvasSprite((ctx, s) => {
     const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
