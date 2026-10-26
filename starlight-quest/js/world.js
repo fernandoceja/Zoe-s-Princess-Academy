@@ -630,7 +630,8 @@ export function createWorld(container, hooks) {
       doormats.push(wm.multiplyMatrices(g.matrixWorld, loc.matrix).clone());
     });
     {
-      const boxes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.18, 0.22), pastel(0x9a6a45), boxMats.length);
+      // Flower boxes + 2 wooden lamp posts share one mesh (posts are the same box, scaled thin and tall)
+      const boxes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.18, 0.22), pastel(0x9a6a45), boxMats.length + 2);
       boxMats.forEach((m, i) => boxes.setMatrixAt(i, m));
       scene.add(boxes);
       const blooms = new THREE.InstancedMesh(new THREE.SphereGeometry(0.08, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.7 }), bloomMats.length);
@@ -646,15 +647,16 @@ export function createWorld(container, hooks) {
       // Two lamp posts flanking Cinderella's pad, off the hub-to-pad path (pad sits on the z=0 line)
       const pad = landPads.village;
       const lampSpots = [[pad.x - 0.6, pad.z + 2.6], [pad.x - 0.6, pad.z - 2.6]];
-      const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.09, 2.2, 8), pastel(0x6b5a6e), 2);
       const topMat = new THREE.MeshStandardMaterial({ color: 0xffe3a0, emissive: 0xffe3a0, emissiveIntensity: 0.9, roughness: 0.4 });
       const tops = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8), topMat, 2);
       lampSpots.forEach(([lx, lz], i) => {
-        loc.position.set(lx, 1.1, lz); loc.updateMatrix(); posts.setMatrixAt(i, loc.matrix);
+        loc.position.set(lx, 1.1, lz); loc.scale.set(0.17, 12.2, 0.68); loc.updateMatrix();
+        boxes.setMatrixAt(boxMats.length + i, loc.matrix);
+        loc.scale.set(1, 1, 1);
         loc.position.set(lx, 2.3, lz); loc.updateMatrix(); tops.setMatrixAt(i, loc.matrix);
         addCollider(lx, lz, 0.3);
       });
-      scene.add(posts, tops);
+      scene.add(tops);
     }
 
     // Clock tower with readable clock face
