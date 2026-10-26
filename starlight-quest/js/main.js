@@ -89,6 +89,19 @@ export async function main(container) {
   // Title screen is up: no roaming input until the adventure starts.
   world.setInputEnabled(false);
 
+  // Stop drawing the 3D world while a full-screen card covers it (saves battery, keeps the phone cool).
+  // The pause menu is left out on purpose: it is translucent and the world loop delivers its resume key.
+  const COVER_SELECTOR = '.zsq-title, .zsq-tutorial, .zsq-modal-wrap, .zsq-celebrate, .zsq-finale, .zsq-parent-wrap';
+  function syncWorldCover() {
+    const covered = Array.from(document.querySelectorAll(COVER_SELECTOR))
+      .some((n) => !n.classList.contains('zsq-hidden') && !n.classList.contains('zsq-leaving'));
+    if (covered) world.pause(); else world.resume();
+  }
+  new MutationObserver(syncWorldCover).observe(document.getElementById('zsq-ui') || document.body, {
+    subtree: true, attributes: true, attributeFilter: ['class'],
+  });
+  syncWorldCover();
+
   // Touch joystick -> unified input (screen-up = -z, matching keyboard)
   UI.joystick((x, z) => Input.setJoystick(x, z));
 
