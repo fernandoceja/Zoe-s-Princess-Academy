@@ -487,6 +487,7 @@ export function createWorld(container, hooks) {
   // ---- (2) Frostfall Peaks: snowy cones + mounds + falling snow -------------
   let snowPoints = null;
   let iceCrystals = null; // 10 slowly turning crystals (animated in update unless calm motion)
+  let meadowSway = null; // meadow flowers gently swaying (animated in update unless calm motion)
   {
     const c = landCenters.frostfall;
     const coneGeo = new THREE.ConeGeometry(2.2, 6, 10);
@@ -601,11 +602,13 @@ export function createWorld(container, hooks) {
     const dummy = new THREE.Object3D();
     const col = new THREE.Color();
     const flowerColors = [0xffd34d, 0xff9ec6, 0xff8a7a, 0xfff3a0];
+    const fx = new Float32Array(N), fz = new Float32Array(N), fs = new Float32Array(N), fph = new Float32Array(N);
     for (let i = 0; i < N; i++) {
       const a = Math.random() * Math.PI * 2;
       const rr = 2.5 + Math.random() * 6.5;
       const x = c.x + Math.cos(a) * rr, z = c.z + Math.sin(a) * rr;
       const s = 0.8 + Math.random() * 0.7;
+      fx[i] = x; fz[i] = z; fs[i] = s; fph[i] = i * 2.399; // golden-angle phase spread
       dummy.rotation.set(0, 0, 0); dummy.scale.set(s, s, s);
       dummy.position.set(x, 0.55 * s, z); dummy.updateMatrix();
       stems.setMatrixAt(i, dummy.matrix);
@@ -620,6 +623,26 @@ export function createWorld(container, hooks) {
     centers.instanceMatrix.needsUpdate = true;
     if (petals.instanceColor) petals.instanceColor.needsUpdate = true;
     scene.add(stems, petals, centers);
+
+    // Gentle sway: rebuild matrices with a small tilt pivoting at each stem base (no allocations)
+    const swayOff = new THREE.Vector3();
+    const swayEuler = new THREE.Euler();
+    const swayParts = [[stems, 0.55], [petals, 1.12], [centers, 1.18]];
+    meadowSway = { userData: { set(t) {
+      for (let i = 0; i < N; i++) {
+        const s = fs[i];
+        swayEuler.set(Math.sin(t * 1.3 + fph[i]) * 0.08, 0, Math.sin(t * 1.1 + fph[i] * 1.7) * 0.08);
+        dummy.rotation.copy(swayEuler); dummy.scale.set(s, s, s);
+        for (let k = 0; k < 3; k++) {
+          swayOff.set(0, swayParts[k][1] * s, 0).applyEuler(swayEuler);
+          dummy.position.set(fx[i] + swayOff.x, swayOff.y, fz[i] + swayOff.z); dummy.updateMatrix();
+          swayParts[k][0].setMatrixAt(i, dummy.matrix);
+        }
+      }
+      stems.instanceMatrix.needsUpdate = true;
+      petals.instanceMatrix.needsUpdate = true;
+      centers.instanceMatrix.needsUpdate = true;
+    } } };
 
     // Fences: instanced posts + rails along two arcs
     const postGeo = new THREE.BoxGeometry(0.18, 1.1, 0.18);
@@ -1233,6 +1256,7 @@ export function createWorld(container, hooks) {
 
     // ---- Ice crystals turn and bob (still under calm motion) ----
     if (iceCrystals && !calmMotion) iceCrystals.userData.set(t);
+    if (meadowSway && !calmMotion) meadowSway.userData.set(t);
 
     // ---- Sky dome follows the camera ----
     skyMesh.position.copy(camera.position);
