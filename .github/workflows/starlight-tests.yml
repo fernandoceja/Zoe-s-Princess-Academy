@@ -24,3 +24,5 @@ jobs:
         run: node starlight-quest/tests/sound_check.mjs
       - name: Precache and stamp check
         run: node starlight-quest/tests/precache_check.mjs
+      - name: Measurement round check
+        run: node starlight-quest/tests/measure_check.mjs
