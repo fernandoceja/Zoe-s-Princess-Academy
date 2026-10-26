@@ -76,7 +76,7 @@ function M(key, make) {
 
 /**
  * Build a stylized low-poly princess.
- * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid', tiara: bool, tiaraColor?: 'silver' }
+ * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid', tiara: bool, tiaraColor?: 'silver', fancy?: bool (Zoe only: overskirt, hem trim, gem tiara, earrings, bodice gem) }
  * Returns { group, hitMeshes } — hitMeshes tagged for raycasting.
  */
 function buildPrincess(opts, tagId) {
@@ -104,6 +104,14 @@ function buildPrincess(opts, tagId) {
   add(new THREE.Mesh(sleeveGeo, dressMat), 0.52, 1.28, 0);
   // Bodice
   add(new THREE.Mesh(G('bodice', () => new THREE.CylinderGeometry(0.24, 0.3, 0.45, 10)), accentMat), 0, 1.32, 0);
+  if (opts.fancy) {
+    // Lilac overskirt over the pink cone (pink band still shows below), white-gold hem trim, bodice star gem
+    add(new THREE.Mesh(G('overskirt', () => new THREE.ConeGeometry(0.6, 0.9, 12, 1, true)), accentMat), 0, 0.75, 0).material.side = THREE.DoubleSide;
+    const trimMat = M('hemTrim', () => new THREE.MeshStandardMaterial({ color: 0xfff6e6, roughness: 0.5, emissive: 0xc8a24a, emissiveIntensity: 0.25 }));
+    add(new THREE.Mesh(G('hemTrim', () => new THREE.TorusGeometry(0.55, 0.035, 6, 24)), trimMat), 0, 0.04, 0).rotation.x = Math.PI / 2;
+    const gemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
+    add(new THREE.Mesh(G('bodiceStar', () => starGeometry(0.075, 0.032)), gemMat), 0, 1.36, 0.285);
+  }
   // Arms (skin capsules simplified as thin cylinders)
   const armGeo = G('arm', () => new THREE.CylinderGeometry(0.06, 0.05, 0.5, 8));
   add(new THREE.Mesh(armGeo, skin), -0.56, 1.05, 0).rotation.z = 0.25;
@@ -133,9 +141,10 @@ function buildPrincess(opts, tagId) {
     // Long wavy dark-brown hair: flattened sphere mass behind head + side falls
     const mass = add(new THREE.Mesh(G('hairMass', () => new THREE.SphereGeometry(0.4, 12, 10)), hairMat), 0, 1.78, -0.18);
     mass.scale.set(1.05, 1.7, 0.8);
+    const fz = opts.fancy ? 0.05 - 0.08 : 0.05; // fancy: side falls sit back so her face shows from above
     const fallGeo = G('hairFall', () => new THREE.SphereGeometry(0.16, 8, 8));
-    const l = add(new THREE.Mesh(fallGeo, hairMat), -0.32, 1.35, 0.05); l.scale.set(1, 2.2, 1);
-    const r = add(new THREE.Mesh(fallGeo, hairMat), 0.32, 1.35, 0.05); r.scale.set(1, 2.2, 1);
+    const l = add(new THREE.Mesh(fallGeo, hairMat), -0.32, 1.35, fz); l.scale.set(1, 2.2, 1);
+    const r = add(new THREE.Mesh(fallGeo, hairMat), 0.32, 1.35, fz); r.scale.set(1, 2.2, 1);
     // Cap over the top of the head
     add(new THREE.Mesh(G('hairCap', () => new THREE.SphereGeometry(0.335, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairMat), 0, 1.88, -0.02);
   } else if (opts.hairStyle === 'long') {
@@ -158,6 +167,24 @@ function buildPrincess(opts, tagId) {
   if (opts.tiara !== false) {
     const tiara = add(new THREE.Mesh(G('tiara', () => new THREE.TorusGeometry(0.16, 0.035, 8, 16, Math.PI)), opts.tiaraColor === 'silver' ? silverMat : goldMat), 0, 2.12, 0.02);
     tiara.rotation.x = -0.15;
+    if (opts.fancy) {
+      // Bigger, more upright tiara with three pink gems along the top
+      tiara.scale.setScalar(1.4);
+      tiara.rotation.x = -0.55;
+      const gemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
+      const tGemGeo = G('tiaraGem', () => new THREE.SphereGeometry(0.045, 8, 6));
+      [0.28, 0.5, 0.72].forEach((t) => {
+        const a = Math.PI * t;
+        add(new THREE.Mesh(tGemGeo, gemMat), Math.cos(a) * 0.16, Math.sin(a) * 0.16 + 0.03, 0);
+        tiara.add(group.children[group.children.length - 1]); // reparent so gems follow the tiara tilt/scale
+      });
+    }
+  }
+  if (opts.fancy) {
+    // Pink drop earrings just below the ears
+    const earMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
+    const earGeo = G('earring', () => new THREE.SphereGeometry(0.03, 8, 6));
+    [-1, 1].forEach((sx) => add(new THREE.Mesh(earGeo, earMat), sx * 0.3, 1.72, 0.05));
   }
 
   group.scale.setScalar(PRINCESS_SCALE);
@@ -659,7 +686,7 @@ export function createWorld(container, hooks) {
 
   // --- Player: Princess Zoe --------------------------------------------------
   const { group: player, hitMeshes: playerHit } = buildPrincess(
-    { dress: 0xff9cc4, accent: 0xdcc6f7, hair: 0x6b4430, hairStyle: 'wavy', tiara: true, tiaraColor: 'silver' },
+    { dress: 0xff9cc4, accent: 0xdcc6f7, hair: 0x6b4430, hairStyle: 'wavy', tiara: true, tiaraColor: 'silver', fancy: true },
     null
   );
   player.position.set(0, 0, 4);
