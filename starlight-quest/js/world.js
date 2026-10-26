@@ -415,8 +415,11 @@ export function createWorld(container, hooks) {
     const bookGeo = new THREE.BoxGeometry(0.9, 1.2, 0.28);
     const bookMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
     const N = 14;
-    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, N);
-    const books = new THREE.InstancedMesh(bookGeo, bookMat, N * 5);
+    const LAMPS = 3, STACK_BOOKS = [3, 2, 3];
+    // Lamp posts reuse the trunk mesh (thin + short), so they cost no extra draw call
+    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, N + LAMPS);
+    const books = new THREE.InstancedMesh(bookGeo, bookMat, N * 2 + 8);
+    const canopies = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.5, 0), pastel(0xffffff), N);
     const dummy = new THREE.Object3D();
     const palette = [0xff6b8a, 0x60a5fa, 0xffd34d, 0x6ee7a8, 0xb982f4, 0xff9e57];
     const col = new THREE.Color();
@@ -428,21 +431,52 @@ export function createWorld(container, hooks) {
       dummy.rotation.y = a; dummy.updateMatrix();
       trunks.setMatrixAt(i, dummy.matrix);
       addCollider(x, z, 0.7);
-      // 5 colorful "book" leaves around the treetop
-      for (let b = 0; b < 5; b++) {
-        const ba = (b / 5) * Math.PI * 2 + i;
-        dummy.position.set(x + Math.cos(ba) * 1.1, 3.4 + (b % 2) * 0.8, z + Math.sin(ba) * 1.1);
-        dummy.rotation.set(0.3 * (b % 3), ba, 0.2);
+      // Round storybook canopy, alternating soft teal and lavender
+      dummy.position.set(x, 4, z); dummy.rotation.set(0, i, 0); dummy.updateMatrix();
+      canopies.setMatrixAt(i, dummy.matrix);
+      canopies.setColorAt(i, col.setHex(i % 2 ? 0xc9b3f2 : 0x8fd6c4));
+      // 2 tilted books tucked against the canopy
+      for (let b = 0; b < 2; b++) {
+        const ba = i * 1.3 + b * Math.PI;
+        dummy.position.set(x + Math.cos(ba) * 1.35, 3.6 + b * 0.5, z + Math.sin(ba) * 1.35);
+        dummy.rotation.set(0.35, ba, b ? -0.4 : 0.4);
         dummy.updateMatrix();
-        const idx = i * 5 + b;
-        books.setMatrixAt(idx, dummy.matrix);
-        books.setColorAt(idx, col.setHex(palette[(i + b) % palette.length]));
+        books.setMatrixAt(i * 2 + b, dummy.matrix);
+        books.setColorAt(i * 2 + b, col.setHex(palette[(i + b * 3) % palette.length]));
       }
     }
+    // 3 small ground book stacks near trees (off the path and the rug)
+    let bi = N * 2;
+    [1, 5, 9].forEach((ti, s) => {
+      const a = (ti / N) * Math.PI * 2 + 0.3;
+      const rr = 3.5 + (ti % 3) * 2.2;
+      const sx = c.x + Math.cos(a + 0.28) * (rr + 0.4), sz = c.z + Math.sin(a + 0.28) * (rr + 0.4);
+      for (let b = 0; b < STACK_BOOKS[s]; b++, bi++) {
+        dummy.position.set(sx, 0.14 + b * 0.28, sz);
+        dummy.rotation.set(Math.PI / 2, 0, a + b * 0.5);   // lying flat, slightly turned
+        dummy.updateMatrix();
+        books.setMatrixAt(bi, dummy.matrix);
+        books.setColorAt(bi, col.setHex(palette[(s * 2 + b) % palette.length]));
+      }
+    });
+    // 3 lantern posts around the reading rug, clear of the hub-to-Belle path (+Z side)
+    const globeMat = new THREE.MeshStandardMaterial({ color: 0xffe3a0, emissive: 0xffe3a0, emissiveIntensity: 0.8, roughness: 0.6 });
+    const globes = new THREE.InstancedMesh(new THREE.SphereGeometry(0.3, 10, 8), globeMat, LAMPS);
+    [-0.2, 3.4, 4.8].forEach((a, l) => {
+      const lx = c.x + Math.cos(a) * 2.9, lz = c.z + Math.sin(a) * 2.9;
+      dummy.position.set(lx, 0.96, lz); dummy.rotation.set(0, 0, 0); dummy.scale.set(0.3, 0.6, 0.3); dummy.updateMatrix();
+      trunks.setMatrixAt(N + l, dummy.matrix);
+      dummy.position.set(lx, 2.1, lz); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+      globes.setMatrixAt(l, dummy.matrix);
+      addCollider(lx, lz, 0.3);
+    });
     trunks.instanceMatrix.needsUpdate = true;
     books.instanceMatrix.needsUpdate = true;
+    canopies.instanceMatrix.needsUpdate = true;
+    globes.instanceMatrix.needsUpdate = true;
     if (books.instanceColor) books.instanceColor.needsUpdate = true;
-    scene.add(trunks, books);
+    if (canopies.instanceColor) canopies.instanceColor.needsUpdate = true;
+    scene.add(trunks, books, canopies, globes);
     // Cozy reading nook: a tiny round rug + story book prop at the center
     const rug = new THREE.Mesh(new THREE.CircleGeometry(2, 24), pastel(0xffd9e8));
     rug.rotation.x = -Math.PI / 2; rug.position.set(c.x, 0.03, c.z);
