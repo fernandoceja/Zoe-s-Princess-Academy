@@ -858,7 +858,9 @@ export const UI = {
    * a wrong answer or Close just closes the card with no sound or message.
    */
   showParentGate() {
-    const wrap = _els.challengeWrap; // a .zsq-modal-wrap, so padnav's d-pad / ✕ focus works here
+    // Its own overlay (the Parent Corner one), never the challenge card: 📊 can be
+    // tapped mid-question. padnav already gives .zsq-parent-wrap the d-pad / ✕ focus.
+    const wrap = _els.parentWrap;
     wrap.innerHTML = '';
     const a = 6 + Math.floor(Math.random() * 4);
     const b = 6 + Math.floor(Math.random() * 4);
