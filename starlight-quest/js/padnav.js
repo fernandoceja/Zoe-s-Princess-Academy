@@ -6,7 +6,7 @@
  * ES module.
  */
 
-import { Input } from './input.js?v=20261026w1';
+import { Input } from './input.js?v=20261026n1';
 
 // Topmost first: the first visible root wins.
 const ROOTS = ['.zsq-tutorial', '.zsq-pause-wrap', '.zsq-parent-wrap', '.zsq-finale',
