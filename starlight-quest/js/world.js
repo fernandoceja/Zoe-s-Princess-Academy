@@ -221,9 +221,9 @@ export function createWorld(container, hooks) {
   const pastel = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 });
   const goldMat = M('gold', () => new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.35, metalness: 0, emissive: 0x7a5a14, emissiveIntensity: 0.9 }));
 
-  // --- Ground: big soft disc ------------------------------------------------
+  // --- Ground: big soft disc, reaches past the fog so the far edge fades into the sky ---
   const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(WORLD_RADIUS + 8, 48),
+    new THREE.CircleGeometry(160, 64),
     pastel(0xbfe6b4)
   );
   ground.rotation.x = -Math.PI / 2;
