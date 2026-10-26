@@ -270,7 +270,8 @@ export function createWorld(container, hooks) {
   const patchMatLight = pastel(0xc9eeb0);
   [[-22, -2], [22, 8], [-4, 22], [6, -24]].forEach(([x, z]) => {
     const p = new THREE.Mesh(patchGeo, patchMatLight);
-    p.rotation.x = -Math.PI / 2; p.position.set(x, 0.01, z);
+    // Slightly below the deeper patches so overlaps don't z-fight
+    p.rotation.x = -Math.PI / 2; p.position.set(x, 0.005, z);
     scene.add(p);
   });
 
