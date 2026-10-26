@@ -36,3 +36,5 @@ jobs:
         run: node starlight-quest/tests/todaystar_check.mjs
       - name: Tap-to-blend check
         run: node starlight-quest/tests/blend_check.mjs
+      - name: Sorting bins check
+        run: node starlight-quest/tests/sort_check.mjs

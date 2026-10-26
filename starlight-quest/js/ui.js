@@ -5,12 +5,12 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261026b1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026b1';
-import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, tileSound } from './quests.js?v=20261026b1';
-import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026b1';
-import { landState, today } from './ladder.js?v=20261026b1';
-import { Input } from './input.js?v=20261026b1';
+import { Narrator, SoundFX } from './audio.js?v=20261026s1';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026s1';
+import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, tileSound } from './quests.js?v=20261026s1';
+import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026s1';
+import { landState, today } from './ladder.js?v=20261026s1';
+import { Input } from './input.js?v=20261026s1';
 
 const GOLD = '#ebd373';
 
@@ -50,6 +50,84 @@ function _blendTiles(letters, pid) {
   box.append(...tiles);
   const wrap = el('div', '');
   wrap.append(box, blend);
+  return wrap;
+}
+// Sorting bins (Rapunzel): one picture at a time into Living / Not living. Wrong bin = gentle hint,
+// the item stays; onEvent('__sortwrong', hint) per wrong tap, '__sortdone' when all are sorted.
+const _an = (n) => (/^[aeiou]/.test(n) ? 'an' : 'a');
+const _itemLine = (i) => `${_an(i.name) === 'an' ? 'An' : 'A'} ${i.name}.`;
+function _sortBins(items, pid, prompt, onEvent) {
+  const wrap = el('div', 'zsq-sort');
+  const card = el('div', 'zsq-sort-card');
+  const pic = el('div', 'zsq-sort-pic');
+  const nm = el('div', 'zsq-sort-name');
+  const cnt = el('div', 'zsq-sort-count');
+  card.append(pic, nm, cnt);
+  const bins = el('div', 'zsq-bins');
+  const mk = (living, label, cls) => {
+    const b = el('button', `zsq-bin ${cls}`);
+    b.append(el('div', 'zsq-bin-label', label));
+    const tally = el('div', 'zsq-bin-tally');
+    b.append(tally);
+    b.dataset.living = living ? '1' : '0';
+    return { b, tally };
+  };
+  const L = mk(true, '🌱 Living', 'zsq-bin-yes'), N = mk(false, '🪨 Not living', 'zsq-bin-no');
+  bins.append(L.b, N.b);
+  const hint = el('div', 'zsq-sort-hint');
+  hint.setAttribute('aria-live', 'polite');
+  wrap.append(card, bins, hint);
+  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idx = 0, busy = false;
+  const say = (t) => { _els._lastLine = { princessId: pid || null, text: `${prompt} ${t}` }; };
+  const show1 = (speak) => {
+    const it = items[idx];
+    pic.textContent = it.pic;
+    nm.textContent = it.name;
+    cnt.textContent = `${idx + 1} of ${items.length}`;
+    card.className = 'zsq-sort-card';
+    card.style.transform = '';
+    card.style.opacity = '';
+    hint.textContent = '';
+    say(_itemLine(it));
+    if (speak) Narrator.speakExact(pid || 'rapunzel', _itemLine(it));
+  };
+  [L, N].forEach(({ b }) => {
+    b.onclick = () => {
+      if (busy || idx >= items.length) return;
+      const it = items[idx];
+      const living = b.dataset.living === '1';
+      if (living !== it.living) {
+        SoundFX.pop();
+        const h = it.living ? `Good try! ${_an(it.name) === 'an' ? 'An' : 'A'} ${it.name} needs water to grow. Is it living?`
+          : `Good try! Does ${_an(it.name)} ${it.name} need water to grow?`;
+        hint.textContent = h;
+        say(h);
+        onEvent('__sortwrong', h);
+        return;
+      }
+      busy = true;
+      SoundFX.pop();
+      hint.textContent = '';
+      const side = living ? L : N;
+      if (!calm) {
+        card.style.transform = `translate(${living ? '-26vw' : '26vw'}, 110px) scale(.3)`;
+        card.style.opacity = '0';
+      }
+      setTimeout(() => {
+        side.tally.textContent += it.pic;
+        idx++;
+        busy = false;
+        if (idx >= items.length) {
+          L.b.disabled = N.b.disabled = true;
+          card.style.visibility = 'hidden';
+          onEvent('__sortdone');
+        } else show1(true);
+      }, calm ? 150 : 380);
+    };
+  });
+  show1(false);
+  wrap.firstItemLine = _itemLine(items[0]);
   return wrap;
 }
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -196,6 +274,20 @@ function injectCSS() {
   .zsq-blend { display: block; min-height: 56px; margin: 12px auto 0; padding: 8px 28px; border-radius: 20px;
     border: 4px solid #f9a8d4; background: #fdf2f8; font-size: 24px; font-weight: 900; color: #9d174d;
     cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
+  .zsq-sort-card { text-align: center; margin-top: 8px; transition: transform .35s ease, opacity .35s ease; }
+  .zsq-sort-pic { font-size: 72px; line-height: 1.1; }
+  .zsq-sort-name { font-size: 28px; font-weight: 900; color: #3b1f04; }
+  .zsq-sort-count { font-size: 16px; font-weight: 700; color: #64748b; }
+  .zsq-bins { display: flex; gap: 12px; margin-top: 12px; }
+  .zsq-bin { flex: 1 1 0; min-width: 0; min-height: 96px; border-radius: 20px; border: 4px solid; padding: 8px 6px;
+    font-family: inherit; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
+  .zsq-bin-yes { background: #d1fae5; border-color: #34c779; color: #065f46; }
+  .zsq-bin-no { background: #f1f5f9; border-color: #94a3b8; color: #334155; }
+  .zsq-bin:disabled { opacity: .85; cursor: default; }
+  .zsq-bin-label { font-size: 22px; font-weight: 900; }
+  .zsq-bin-tally { font-size: 20px; line-height: 1.2; min-height: 24px; word-break: break-all; }
+  .zsq-sort-hint { font-size: 20px; font-weight: 700; color: #9d174d; margin-top: 12px; text-align: center; min-height: 28px; }
+  @media (prefers-reduced-motion: reduce) { .zsq-sort-card { transition: none; } }
   .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
   .zsq-modal-replay { width: 56px; height: 56px; flex: none; }
 
@@ -913,6 +1005,13 @@ export const UI = {
     if (data.tiles && data.tiles.length) {
       modal.appendChild(_blendTiles(data.tiles, data.princessId));
       modal.addEventListener('click', (e) => { if (!e.target.closest('.zsq-tile, .zsq-blend')) _blendTok++; }, true);
+    }
+    if (data.sort && data.sort.items && data.sort.items.length) {
+      const sb = _sortBins(data.sort.items, data.princessId, data.prompt || '', (id, h) => {
+        if (typeof onChoose === 'function') onChoose(id, h);
+      });
+      modal.appendChild(sb);
+      if (data.voiceText) data = { ...data, voiceText: `${data.voiceText} ${sb.firstItemLine}` };
     }
     const box = el('div', 'zsq-choices');
     const btns = {};
