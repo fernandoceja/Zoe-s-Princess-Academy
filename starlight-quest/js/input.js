@@ -57,7 +57,10 @@ export const Input = {
     if (this._inited || typeof window === 'undefined') return;
     this._inited = true;
 
+    // Typing in a text box (Parent Corner word list) must not walk or talk.
+    const typing = (e) => !!(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA'));
     this._onKeyDown = (e) => {
+      if (typing(e)) return;
       if (e.repeat) return;
       this._keys[e.code] = true;
       if (e.code === 'KeyE' || e.code === 'Space') this._interactEdge = true;
@@ -67,7 +70,7 @@ export const Input = {
         e.preventDefault();
       }
     };
-    this._onKeyUp = (e) => { this._keys[e.code] = false; };
+    this._onKeyUp = (e) => { this._keys[e.code] = false; }; // always clear, even while typing
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup', this._onKeyUp);
 

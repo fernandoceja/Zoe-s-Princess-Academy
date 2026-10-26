@@ -441,6 +441,25 @@ export function _belleSound(w, distractors) {
 // A parent can replace this with the class's own word list (e.g. Wonders
 // high-frequency words). When empty, the Dolch first-grade list below is used.
 export const SCHOOL_WORDS = [];
+
+/** Clean a grown-up's typed list: split on commas/newlines, trim, lowercase,
+ *  letters and apostrophes only, 1-12 chars, no repeats, at most 30 words. */
+export function cleanWordList(input) {
+  const parts = Array.isArray(input) ? input : String(input == null ? '' : input).split(/[,\n\r;]+/);
+  const out = [];
+  for (const p of parts) {
+    const w = String(p).trim().toLowerCase();
+    if (/^[a-z']{1,12}$/.test(w) && /[a-z]/.test(w) && !out.includes(w)) out.push(w);
+    if (out.length >= 30) break;
+  }
+  return out;
+}
+/** Set (or with [] clear) the class word list. Belle's Core level uses it at 3+ words. */
+export function setSchoolWords(list) {
+  SCHOOL_WORDS.length = 0;
+  SCHOOL_WORDS.push(...cleanWordList(list));
+  return SCHOOL_WORDS.slice();
+}
 const SIGHT_1ST = [
   'after', 'again', 'could', 'every', 'from', 'give', 'has', 'her', 'him', 'how',
   'just', 'know', 'live', 'once', 'open', 'some', 'them', 'then', 'think', 'were', 'when',

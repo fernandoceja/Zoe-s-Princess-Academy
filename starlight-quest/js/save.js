@@ -36,7 +36,8 @@ function defaults() {
     muted: false,
     started: false,
     ladder: {},   // per land: { tier, review } (see ladder.js)
-    lastPlay: {}  // per land: local day of the last finished quest
+    lastPlay: {}, // per land: local day of the last finished quest
+    schoolWords: [] // teacher's sight words (Parent Corner); [] = built-in list
   };
 }
 
@@ -75,6 +76,15 @@ function merge(raw) {
   for (const id of NPC_IDS) {
     if (raw.ladder && raw.ladder[id] && typeof raw.ladder[id] === 'object') out.ladder[id] = raw.ladder[id];
     if (raw.lastPlay && typeof raw.lastPlay[id] === 'string') out.lastPlay[id] = raw.lastPlay[id];
+  }
+
+  if (Array.isArray(raw.schoolWords)) {
+    const seen = [];
+    for (const w of raw.schoolWords) {
+      if (typeof w === 'string' && /^[a-z']{1,12}$/.test(w) && /[a-z]/.test(w) && !seen.includes(w)) seen.push(w);
+      if (seen.length >= 30) break;
+    }
+    out.schoolWords = seen;
   }
 
   return out;
