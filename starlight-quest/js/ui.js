@@ -7,7 +7,9 @@
 
 import { Narrator, SoundFX } from './audio.js?v=20261026w1';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026w1';
-import { PARENT_CORNER_HTML } from './quests.js?v=20261026w1';
+import { PARENT_CORNER_HTML, PRINCESSES } from './quests.js?v=20261026w1';
+import { Save } from './save.js?v=20261026w1';
+import { landState, today } from './ladder.js?v=20261026w1';
 import { Input } from './input.js?v=20261026w1';
 
 const GOLD = '#ebd373';
@@ -206,6 +208,12 @@ function injectCSS() {
   .zsq-parent-head h2 { margin: 0; font-size: 24px; color: #0f172a; }
   .zsq-parent-body { overflow-y: auto; padding: 20px; color: #334155; font-size: 17px; line-height: 1.6; }
   .zsq-parent-body h2, .zsq-parent-body h3 { color: #0f172a; }
+  .zsq-prog { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid rgba(148,163,184,.4); }
+  .zsq-prog h3 { margin: 0 0 6px; }
+  .zsq-prog table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.3; }
+  .zsq-prog th { text-align: left; color: #64748b; font-weight: 600; padding: 4px 4px; }
+  .zsq-prog td { padding: 6px 4px; border-top: 1px solid rgba(148,163,184,.3); vertical-align: top; }
+  .zsq-prog small { display: block; color: #64748b; }
   .zsq-close { min-width: 64px; min-height: 56px; border-radius: 14px; border: none;
     background: #0f172a; color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; padding: 10px 22px; }
 
@@ -833,6 +841,33 @@ export const UI = {
     show(_els.interact);
   },
 
+  /** Zoe's progress block for the top of Parent Corner (built fresh each open). */
+  _progressHtml() {
+    const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const d = Save.data || {};
+    const done = Array.isArray(d.done) ? d.done : [];
+    const tiers = { 1: 'Easy', 2: 'Core', 3: 'Stretch' };
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = (iso) => {
+      if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return 'Not yet';
+      const t = new Date();
+      if (iso === today(t)) return 'Today';
+      t.setDate(t.getDate() - 1);
+      if (iso === today(t)) return 'Yesterday';
+      return `${MON[+iso.slice(5, 7) - 1] || '?'} ${+iso.slice(8, 10)}`;
+    };
+    const rows = ['belle', 'elsa', 'rapunzel', 'cinderella'].map((id) => {
+      const p = PRINCESSES[id] || { name: id, landName: '' };
+      const st = landState(d.ladder && d.ladder[id]);
+      return `<tr><td><b>${esc(p.name)}</b>${done.includes(id) ? ' ✓' : ''}<small>${esc(p.landName)}</small></td>`
+        + `<td>${tiers[st.tier]}</td><td>${st.review.length}</td><td>${esc(day(d.lastPlay && d.lastPlay[id]))}</td></tr>`;
+    }).join('');
+    return '<div class="zsq-prog"><h3>Zoe\'s progress</h3>'
+      + `<p>⭐ ${(d.stars | 0)} stars &nbsp;·&nbsp; 🏰 ${done.length} of 4 lands restored</p>`
+      + '<table><tr><th>Land</th><th>Level</th><th>Review</th><th>Last played</th></tr>'
+      + `${rows}</table></div>`;
+  },
+
   /** Parent corner overlay (scrollable, with close button). */
   showParentCorner(onClose) {
     const wrap = _els.parentWrap;
@@ -846,7 +881,7 @@ export const UI = {
       if (typeof onClose === 'function') onClose();
     };
     head.appendChild(close);
-    const body = el('div', 'zsq-parent-body', PARENT_HTML);
+    const body = el('div', 'zsq-parent-body', this._progressHtml() + PARENT_HTML);
     panel.append(head, body);
     wrap.appendChild(panel);
     show(wrap);
