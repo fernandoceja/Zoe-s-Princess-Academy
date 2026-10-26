@@ -215,8 +215,9 @@ export function createWorld(container, hooks) {
   scene.add(sun);
 
   // --- Colliders ------------------------------------------------------------
-  const colliders = []; // {x, z, r}
-  const addCollider = (x, z, r) => colliders.push({ x, z, r });
+  const colliders = []; // {x, z, r, shadowR?}
+  // shadowR (optional): ground-shadow radius when the visible footprint is wider than the collider
+  const addCollider = (x, z, r, shadowR) => colliders.push({ x, z, r, shadowR });
 
   const pastel = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 });
   const goldMat = M('gold', () => new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.35, metalness: 0, emissive: 0x7a5a14, emissiveIntensity: 0.9 }));
@@ -378,7 +379,7 @@ export function createWorld(container, hooks) {
       dummy.position.set(x, h + 0.9, z); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
       caps.setMatrixAt(placed, dummy.matrix);
       placed++;
-      addCollider(x, z, 1.8);
+      addCollider(x, z, 1.8, 2.75); // cone base radius is 2.2, so the shadow must reach past it
     }
     cones.count = caps.count = placed;
     for (let i = 0; i < 8; i++) {
@@ -539,6 +540,27 @@ export function createWorld(container, hooks) {
     t.position.set(tx, 0, tz); t.rotation.y = 0.3;
     scene.add(t);
     addCollider(tx, tz, 1.9);
+  }
+
+  // --- Soft blob shadows under scenery (one instanced draw, no shadow maps) ---
+  {
+    const props = colliders.filter((c) => c.r >= 0.7);
+    const propShadows = new THREE.InstancedMesh(
+      new THREE.CircleGeometry(1, 24),
+      new THREE.MeshBasicMaterial({ color: 0x1a1030, transparent: true, opacity: 0.18, depthWrite: false }),
+      props.length
+    );
+    const dummy = new THREE.Object3D();
+    props.forEach((c, i) => {
+      dummy.position.set(c.x, 0.045, c.z);
+      dummy.rotation.set(-Math.PI / 2, 0, 0);
+      dummy.scale.setScalar(c.shadowR || c.r * 1.15);
+      dummy.updateMatrix();
+      propShadows.setMatrixAt(i, dummy.matrix);
+    });
+    propShadows.instanceMatrix.needsUpdate = true;
+    propShadows.renderOrder = 1;
+    scene.add(propShadows);
   }
 
   // --- Sparkle sprites (shared texture for markers/effects) ------------------
