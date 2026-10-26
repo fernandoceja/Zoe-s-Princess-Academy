@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES } from './quests.js?v=20261026t1';
+import { PRINCESSES } from './quests.js?v=20261026b1';
 
 export let LANG = 'EN';
 export function setLang(l) {
@@ -309,16 +309,17 @@ export const Narrator = {
 
   /**
    * Play one recorded clip by URL, then call onDone. Respects mute and cancels
-   * anything in flight. If the clip is missing or fails, it is skipped silently
-   * (no TTS fallback) and onDone still fires, unless something newer started.
+   * anything in flight. If muted, or the clip is missing or fails, it is skipped
+   * silently (no TTS fallback) and onDone still fires, unless something newer started.
+   * stopAt (seconds, optional): cut the clip there (timer backs up timeupdate).
    */
-  playClip(url, onDone) {
+  playClip(url, onDone, stopAt) {
     _stopTTS();
     _stopMP3();
     _speaking = false;
     _seq++;
     const done = _once(onDone);
-    if (_muted) return;
+    if (_muted) { done(); return; }
     try {
       if (typeof Audio === 'undefined') { done(); return; }
       const a = new Audio();
@@ -327,14 +328,30 @@ export const Narrator = {
       const finish = () => {
         if (over) return;
         over = true;
+        if (stopAt) { try { a.pause(); } catch (e) {} }
         if (_currentAudio === a) { _stopMP3(); _speaking = false; }
         done();
       };
       a.onerror = finish;
       a.onended = finish;
+      if (stopAt) {
+        a.addEventListener('timeupdate', () => { if (a.currentTime >= stopAt) finish(); });
+        // timeupdate is only ~4x/s: also a timer from when sound actually starts.
+        a.addEventListener('playing', () => {
+          const t0 = Date.now();
+          const chk = () => {
+            if (over) return;
+            const left = stopAt - a.currentTime;
+            if (left <= 0.01 || Date.now() - t0 > stopAt * 1000 + 400) finish();
+            else setTimeout(chk, Math.max(10, left * 1000));
+          };
+          setTimeout(chk, stopAt * 1000 * 0.9);
+        }, { once: true });
+      }
       a.oncanplaythrough = () => {
         _speaking = true;
-        a.play().catch(finish);
+        const p = a.play();
+        if (p && p.catch) p.catch(finish);
       };
       setTimeout(() => { if (!_speaking) finish(); }, 3000);
       a.src = url;

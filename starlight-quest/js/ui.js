@@ -5,14 +5,53 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261026t1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026t1';
-import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords } from './quests.js?v=20261026t1';
-import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026t1';
-import { landState, today } from './ladder.js?v=20261026t1';
-import { Input } from './input.js?v=20261026t1';
+import { Narrator, SoundFX } from './audio.js?v=20261026b1';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026b1';
+import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, tileSound } from './quests.js?v=20261026b1';
+import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026b1';
+import { landState, today } from './ladder.js?v=20261026b1';
+import { Input } from './input.js?v=20261026b1';
 
 const GOLD = '#ebd373';
+
+// Tap-to-blend (Belle CVC): a tile says its letter's SOUND; Blend says all, then the word.
+// _blendTok cancels an older sequence when anything new is tapped (any other modal button too).
+let _blendTok = 0;
+function _blendTiles(letters, pid) {
+  const voice = pid || 'belle';
+  const box = el('div', 'zsq-tiles');
+  const tiles = letters.map((l) => el('button', 'zsq-tile', l));
+  const lit = (i) => tiles.forEach((t, k) => t.classList.toggle('zsq-on', k === i));
+  const play = (l, done) => {
+    const s = tileSound(l);
+    if (!s) { done(); return; }
+    if (s.tts) Narrator.speakExact(voice, s.tts, done);
+    else Narrator.playClip(s.url, done, s.stopAt);
+  };
+  tiles.forEach((t, i) => {
+    t.setAttribute('aria-label', `Sound of ${letters[i]}`);
+    t.onclick = () => {
+      const my = ++_blendTok;
+      lit(i);
+      play(letters[i], () => { if (my === _blendTok) lit(-1); });
+    };
+  });
+  const blend = el('button', 'zsq-blend', '🔊 Blend it!');
+  blend.onclick = () => {
+    const my = ++_blendTok;
+    const step = (i) => {
+      if (my !== _blendTok || !box.isConnected) return;
+      if (i >= letters.length) { lit(-1); Narrator.speakExact(voice, letters.join('')); return; }
+      lit(i);
+      play(letters[i], () => setTimeout(() => step(i + 1), 150));
+    };
+    step(0);
+  };
+  box.append(...tiles);
+  const wrap = el('div', '');
+  wrap.append(box, blend);
+  return wrap;
+}
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
 
 let _root = null;
@@ -149,6 +188,14 @@ function injectCSS() {
     border-color: #34c779; color: #065f46; animation: zsq-rise .25s ease-out; }
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
     animation: zsq-soft-miss .3s ease-out forwards; }
+  .zsq-tiles { display: flex; justify-content: center; gap: 14px; margin-top: 12px; }
+  .zsq-tile { width: 76px; min-height: 76px; border-radius: 20px; border: 4px solid #c4b5fd; background: #f5f3ff;
+    font-size: 44px; font-weight: 900; color: #5b21b6; cursor: pointer; padding: 0;
+    box-shadow: 0 6px 0 rgba(0,0,0,.08); transition: transform .12s ease, background .12s ease; }
+  .zsq-tile.zsq-on { background: #fde68a; border-color: ${GOLD}; transform: scale(1.12); }
+  .zsq-blend { display: block; min-height: 56px; margin: 12px auto 0; padding: 8px 28px; border-radius: 20px;
+    border: 4px solid #f9a8d4; background: #fdf2f8; font-size: 24px; font-weight: 900; color: #9d174d;
+    cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
   .zsq-answer-msg { font-size: 24px; font-weight: 700; color: #475569; margin: 16px 0 4px; line-height: 1.45; }
   .zsq-modal-replay { width: 56px; height: 56px; flex: none; }
 
@@ -862,6 +909,10 @@ export const UI = {
       const vis = el('div', 'zsq-visual');
       vis.innerHTML = data.visualHtml;
       modal.appendChild(vis);
+    }
+    if (data.tiles && data.tiles.length) {
+      modal.appendChild(_blendTiles(data.tiles, data.princessId));
+      modal.addEventListener('click', (e) => { if (!e.target.closest('.zsq-tile, .zsq-blend')) _blendTok++; }, true);
     }
     const box = el('div', 'zsq-choices');
     const btns = {};

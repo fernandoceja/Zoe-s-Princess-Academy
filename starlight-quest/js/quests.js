@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261026t1';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261026t1';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261026t1';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261026t1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026t1';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261026b1';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261026b1';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261026b1';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261026b1';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026b1';
 
 export const PRINCESSES = {
   belle: {
@@ -411,6 +411,22 @@ const DIGRAPH_CLIPS = {
   sh: 's_h_says_shh_ship', ch: 'c_h_says_chh_chair', th: 't_h_says_thh_three',
   wh: 'w_h_says_wuh_wheel', ck: 'c_k_says_kuh_clock', ng: 'n_g_says_ing_ring',
 };
+// Tap-to-blend: seconds at which a letter's clip is cut so Zoe hears "c says kuh"
+// but not "cat" (the stop sits in the pause before the example word). e and s have
+// no such pause, so they play whole. o (clip is the long sound) and x (no clip)
+// speak a sound spelling with text-to-speech instead.
+export const BLEND_STOP = {
+  a: 0.59, b: 0.76, c: 0.85, d: 0.85, f: 0.79, g: 0.96, h: 0.8, i: 0.62, j: 0.96, k: 0.95,
+  l: 0.92, m: 1.51, n: 0.95, p: 0.86, r: 0.96, t: 0.68, u: 0.83, v: 0.99, w: 1.04, y: 0.7, z: 1.3,
+};
+export const BLEND_WHOLE = ['e', 's'];
+export const BLEND_TTS = { o: 'ah', x: 'ks' };
+/** How to voice one tile letter: { url, stopAt } | { tts } | undefined. */
+export function tileSound(l) {
+  if (BLEND_TTS[l]) return { tts: BLEND_TTS[l] };
+  if (!LETTER_CLIPS[l]) return undefined;
+  return { url: BELLE_CLIP_DIR + LETTER_CLIPS[l] + '.mp3', stopAt: BLEND_STOP[l] };
+}
 export const BELLE_CLIPS = [...Object.values(LETTER_CLIPS), ...Object.values(DIGRAPH_CLIPS)].map((c) => c + '.mp3');
 
 // Clip file for the letter the hint points at, or undefined when none fits
@@ -516,6 +532,7 @@ function _cvcRound(set) {
     say: 'Sound it out. Which word is it?',
     choices: set.slice(), answer: w,
     hint: _belleHint(w, d),
+    tiles: w.split(''), // tap-to-blend letter tiles (ui.js)
   };
   const sound = _belleSound(w, d);
   if (sound) r.sound = sound;
