@@ -709,7 +709,9 @@ export const UI = {
         const btns = [];
         def.choices.forEach((c, i) => {
           const b = el('button', 'zsq-swatch', '');
-          b.style.background = '#' + c.color.toString(16).padStart(6, '0');
+          b.style.background = c.rainbow // show the rainbow choice as a rainbow, not one color
+            ? 'conic-gradient(#ff9cc4, #ffd36e, #9be7a6, #8fd3ff, #c9a8ff, #ff9cc4)'
+            : '#' + c.color.toString(16).padStart(6, '0');
           b.setAttribute('aria-label', i === 0 ? `${def.name}: Default` : `${def.name}: ${c.label}`);
           b.setAttribute('aria-pressed', 'false');
           b.onclick = () => {
