@@ -956,6 +956,22 @@ export const UI = {
     SoundFX.fanfare();
   },
 
+  /** Milestone card: one happy card naming the unlocked reward(s). */
+  showMilestone({ title, sub, emoji }, onDone) {
+    const c = _els.celebrate;
+    c.innerHTML = '';
+    c.append(
+      el('div', 'zsq-bigstars', emoji || '🌟'),
+      el('div', 'zsq-cel-title', title || ''),
+      el('div', 'zsq-cel-sub', sub || ''),
+    );
+    const btn = el('button', 'zsq-bigbtn', 'Yay! ➜');
+    btn.onclick = () => { SoundFX.pop(); hide(c); if (typeof onDone === 'function') onDone(); };
+    c.appendChild(btn);
+    show(c);
+    SoundFX.fanfare();
+  },
+
   /** Soft stop card: Rest (default) or One more. */
   showRest({ title, sub }, onRest, onMore) {
     const c = _els.celebrate;
