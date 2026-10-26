@@ -1174,13 +1174,13 @@ export function createWorld(container, hooks) {
   trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
   trailGeo.setAttribute('color', new THREE.BufferAttribute(trailCol, 3));
   const sparkleTrailPoints = new THREE.Points(trailGeo, new THREE.PointsMaterial({
-    map: softDot, size: 0.35, sizeAttenuation: true, vertexColors: true,
+    map: softDot, size: 0.7, sizeAttenuation: true, vertexColors: true,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
   sparkleTrailPoints.frustumCulled = false;
   sparkleTrailPoints.visible = false;
   scene.add(sparkleTrailPoints);
-  const trailPink = new THREE.Color(0xffb3d9), trailGold = new THREE.Color(0xffe08a);
+  const trailPink = new THREE.Color(0xff6fb8), trailGold = new THREE.Color(0xffc24d);
   let trailNext = 0, trailTimer = 0;
   function sparkleTrail(dt, speed) {
     if (calmMotion) return; // fully off: no emit, Points stay hidden
@@ -1190,9 +1190,9 @@ export function createWorld(container, hooks) {
         trailTimer -= TRAIL_EVERY;
         const i = trailNext; trailNext = (trailNext + 1) % TRAIL_N; // recycle oldest slot
         trailAge[i] = 0;
-        trailPos[i * 3] = playerPos.x + (rand() - 0.5) * 0.3;
+        trailPos[i * 3] = playerPos.x + (rand() - 0.5) * 0.45;
         trailPos[i * 3 + 1] = 0.15;
-        trailPos[i * 3 + 2] = playerPos.z + (rand() - 0.5) * 0.3;
+        trailPos[i * 3 + 2] = playerPos.z + (rand() - 0.5) * 0.45;
         const m = rand();
         trailBase[i * 3] = trailPink.r + (trailGold.r - trailPink.r) * m;
         trailBase[i * 3 + 1] = trailPink.g + (trailGold.g - trailPink.g) * m;
@@ -1205,7 +1205,7 @@ export function createWorld(container, hooks) {
     for (let i = 0; i < TRAIL_N; i++) {
       if (trailAge[i] >= TRAIL_LIFE) { trailCol[i * 3] = trailCol[i * 3 + 1] = trailCol[i * 3 + 2] = 0; continue; }
       trailAge[i] += dt;
-      const k = Math.max(0, 1 - trailAge[i] / TRAIL_LIFE) * 0.7; // soft, never blown out
+      const k = Math.max(0, 1 - trailAge[i] / TRAIL_LIFE) * 0.85; // soft, never blown out
       trailPos[i * 3 + 1] += dt * 0.25; // tiny upward drift
       trailCol[i * 3] = trailBase[i * 3] * k;
       trailCol[i * 3 + 1] = trailBase[i * 3 + 1] * k;
