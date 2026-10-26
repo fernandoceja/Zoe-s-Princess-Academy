@@ -595,6 +595,9 @@ export function createWorld(container, hooks) {
       { dx: -5, dz: -3.5, rot: 0.4 }, { dx: 4.5, dz: -4, rot: -0.5 },
       { dx: -4.5, dz: 4.5, rot: 0.9 }, { dx: 5, dz: 4, rot: -1.1 },
     ];
+    const boxMats = [], bloomMats = [], doormats = []; // world matrices (+ bloom colors) for the instanced trim below
+    const bloomCols = [0xffb3d1, 0xffffff, 0xffe27a];
+    const loc = new THREE.Object3D(), wm = new THREE.Matrix4();
     houseSpots.forEach((h, i) => {
       const g = new THREE.Group();
       const walls = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.6, 3), pastel(wallColors[i]));
@@ -603,7 +606,7 @@ export function createWorld(container, hooks) {
       roof.position.y = 3.5; roof.rotation.y = Math.PI / 4; g.add(roof);
       const doorM = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.6), pastel(0x8a5a3b));
       doorM.position.set(0, 0.8, 1.51); g.add(doorM);
-      const winM = new THREE.MeshStandardMaterial({ color: 0xfffbe8, roughness: 0.3 });
+      const winM = new THREE.MeshStandardMaterial({ color: 0xfffbe8, roughness: 0.3, emissive: 0xffe2a0, emissiveIntensity: 0.5 }); // warm lit windows
       const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), winM);
       win.position.set(1.05, 1.6, 1.51); g.add(win);
       const win2 = win.clone(); win2.position.x = -1.05; g.add(win2);
@@ -611,7 +614,48 @@ export function createWorld(container, hooks) {
       g.position.set(wx, 0, wz); g.rotation.y = h.rot;
       scene.add(g);
       addCollider(wx, wz, 2.6);
+      g.updateMatrixWorld(true);
+      // Flower box hugging the wall under each window (wall face z=1.5, window bottom y=1.2), plus 3 blooms
+      [1.05, -1.05].forEach((fx) => {
+        loc.rotation.set(0, 0, 0); loc.scale.set(1, 1, 1);
+        loc.position.set(fx, 1.11, 1.61); loc.updateMatrix();
+        boxMats.push(wm.multiplyMatrices(g.matrixWorld, loc.matrix).clone());
+        for (let b = 0; b < 3; b++) {
+          loc.position.set(fx + (b - 1) * 0.28, 1.22, 1.62); loc.updateMatrix();
+          bloomMats.push({ m: wm.multiplyMatrices(g.matrixWorld, loc.matrix).clone(), c: bloomCols[b] });
+        }
+      });
+      // Round doormat just in front of the door
+      loc.position.set(0, 0.04, 2.15); loc.updateMatrix();
+      doormats.push(wm.multiplyMatrices(g.matrixWorld, loc.matrix).clone());
     });
+    {
+      const boxes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.18, 0.22), pastel(0x9a6a45), boxMats.length);
+      boxMats.forEach((m, i) => boxes.setMatrixAt(i, m));
+      scene.add(boxes);
+      const blooms = new THREE.InstancedMesh(new THREE.SphereGeometry(0.08, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.7 }), bloomMats.length);
+      const bc = new THREE.Color();
+      bloomMats.forEach((b, i) => { blooms.setMatrixAt(i, b.m); blooms.setColorAt(i, bc.set(b.c)); });
+      scene.add(blooms);
+      const matGeo = new THREE.CircleGeometry(0.55, 20); matGeo.rotateX(-Math.PI / 2);
+      const matMat = pastel(0xf2c48a);
+      matMat.polygonOffset = true; matMat.polygonOffsetFactor = -2; matMat.polygonOffsetUnits = -2;
+      const mats = new THREE.InstancedMesh(matGeo, matMat, doormats.length);
+      doormats.forEach((m, i) => mats.setMatrixAt(i, m));
+      scene.add(mats);
+      // Two lamp posts flanking Cinderella's pad, off the hub-to-pad path (pad sits on the z=0 line)
+      const pad = landPads.village;
+      const lampSpots = [[pad.x - 0.6, pad.z + 2.6], [pad.x - 0.6, pad.z - 2.6]];
+      const posts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.09, 2.2, 8), pastel(0x6b5a6e), 2);
+      const topMat = new THREE.MeshStandardMaterial({ color: 0xffe3a0, emissive: 0xffe3a0, emissiveIntensity: 0.9, roughness: 0.4 });
+      const tops = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8), topMat, 2);
+      lampSpots.forEach(([lx, lz], i) => {
+        loc.position.set(lx, 1.1, lz); loc.updateMatrix(); posts.setMatrixAt(i, loc.matrix);
+        loc.position.set(lx, 2.3, lz); loc.updateMatrix(); tops.setMatrixAt(i, loc.matrix);
+        addCollider(lx, lz, 0.3);
+      });
+      scene.add(posts, tops);
+    }
 
     // Clock tower with readable clock face
     const t = new THREE.Group();
