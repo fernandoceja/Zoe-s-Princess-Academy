@@ -236,10 +236,10 @@ export function createWorld(container, hooks) {
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300);
 
-  // Lights: hemisphere + directional, no shadow maps (tablet perf)
-  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x9fd8b0, 1.2));
-  const sun = new THREE.DirectionalLight(0xfff2d8, 1.35);
-  sun.position.set(20, 30, 12);
+  // Lights: soft cool-lilac sky fill + warm low golden-afternoon sun for a lit side and a shade side; no shadow maps (tablet perf)
+  scene.add(new THREE.HemisphereLight(0xf3f0ff, 0xb8dca0, 1.05));
+  const sun = new THREE.DirectionalLight(0xffe0b5, 1.7);
+  sun.position.set(18, 20, 14);
   scene.add(sun);
 
   // --- Colliders ------------------------------------------------------------
