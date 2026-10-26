@@ -1136,7 +1136,7 @@ export function createWorld(container, hooks) {
 
   // --- Today's star: one gentle marker over the land to visit (not raycast, so taps pass through) ---
   const todayStar = new THREE.Mesh(
-    starGeometry(0.62, 0.26),
+    starGeometry(0.95, 0.4), // clearly bigger than the 0.5 talk-marker star below it
     new THREE.MeshBasicMaterial({ color: 0xfff3a8, side: THREE.DoubleSide })
   );
   todayStar.visible = false;
@@ -1148,7 +1148,7 @@ export function createWorld(container, hooks) {
     todayStar.visible = !!todayTarget;
     if (todayTarget) {
       const g = todayTarget.group.position;
-      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.2, g.z);
+      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.5, g.z);
     }
   }
 
@@ -1498,7 +1498,7 @@ export function createWorld(container, hooks) {
     // ---- Today's star: slow bob + spin (still under calm motion) ----
     if (todayStar.visible && todayTarget) {
       const g = todayTarget.group.position;
-      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.2 + (calmMotion ? 0 : Math.sin(t * 1.4) * 0.18), g.z);
+      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.5 + (calmMotion ? 0 : Math.sin(t * 1.4) * 0.18), g.z);
       if (!calmMotion) todayStar.rotation.y = t * 0.8;
     }
 
