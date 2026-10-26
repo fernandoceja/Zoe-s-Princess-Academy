@@ -254,22 +254,29 @@ export function createWorld(container, hooks) {
   // --- Ground: big soft disc, reaches past the fog so the far edge fades into the sky ---
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(160, 64),
-    pastel(0xbfe6b4)
+    pastel(0xb3e29c)
   );
   ground.rotation.x = -Math.PI / 2;
   scene.add(ground);
 
-  // Gentle green tint patches (very cheap, 4 big flat discs)
+  // Gentle green tint patches (very cheap, flat discs; 4 deeper, 4 lighter)
   const patchGeo = new THREE.CircleGeometry(9, 24);
-  const patchMat = pastel(0xb2deb0);
+  const patchMat = pastel(0xa3d68a);
   [[-14, 8], [14, -6], [-6, -16], [10, 14]].forEach(([x, z]) => {
     const p = new THREE.Mesh(patchGeo, patchMat);
     p.rotation.x = -Math.PI / 2; p.position.set(x, 0.01, z);
     scene.add(p);
   });
+  const patchMatLight = pastel(0xc9eeb0);
+  [[-22, -2], [22, 8], [-4, 22], [6, -24]].forEach(([x, z]) => {
+    const p = new THREE.Mesh(patchGeo, patchMatLight);
+    // Slightly below the deeper patches so overlaps don't z-fight
+    p.rotation.x = -Math.PI / 2; p.position.set(x, 0.005, z);
+    scene.add(p);
+  });
 
   // --- Hub plaza ------------------------------------------------------------
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(8.5, 40), pastel(0xf6e7c8));
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(8.5, 40), pastel(0xfcefdc));
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02;
   scene.add(plaza);
   // Gold ring around plaza
@@ -279,7 +286,7 @@ export function createWorld(container, hooks) {
 
   // Paths: 4 straight ribbons from plaza edge outward to each land
   const pathGeo = new THREE.PlaneGeometry(4.4, 16);
-  const pathMat = pastel(0xead9b8);
+  const pathMat = pastel(0xf2deb6);
   Object.values(LANDS).forEach((land) => {
     const dir = new THREE.Vector3(Math.cos(land.angle), 0, Math.sin(land.angle));
     const p = new THREE.Mesh(pathGeo, pathMat);
@@ -324,12 +331,14 @@ export function createWorld(container, hooks) {
   const landPads = {};
 
   // Soft tinted disc under each land
-  const landTint = { library: 0xcfe4ff, frostfall: 0xe8f4ff, meadow: 0xd8f5d8, village: 0xfbeed3 };
+  const landTint = { library: 0xeadfff, frostfall: 0xf0f7ff, meadow: 0xd3f0b2, village: 0xffe8c6 };
   Object.entries(LANDS).forEach(([id, land]) => {
     const cx = Math.cos(land.angle) * LAND_DIST;
     const cz = Math.sin(land.angle) * LAND_DIST;
     landCenters[id] = new THREE.Vector3(cx, 0, cz);
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(10.5, 36), pastel(landTint[id]));
+    const discMat = pastel(landTint[id]);
+    discMat.emissive.set(landTint[id]); discMat.emissiveIntensity = 0.15; // soft self-glow so tints read in shade
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(10.5, 36), discMat);
     disc.rotation.x = -Math.PI / 2; disc.position.set(cx, 0.015, cz);
     scene.add(disc);
     const px = Math.cos(land.angle) * PAD_DIST;
