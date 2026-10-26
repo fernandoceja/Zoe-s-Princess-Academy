@@ -14,11 +14,11 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261026b1';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261026b1';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261026b1';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261026b1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026b1';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261026s1';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261026s1';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261026s1';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261026s1';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026s1';
 
 export const PRINCESSES = {
   belle: {
@@ -747,6 +747,31 @@ function _measureRound(tier, rng) {
   };
 }
 
+// Sorting bins: kid-obvious living / not living pictures (plain JSON; saved in the review queue).
+const SORT_ITEMS = [
+  ['🐶', 'dog', 1], ['🐱', 'cat', 1], ['🐦', 'bird', 1], ['🐟', 'fish', 1],
+  ['🌳', 'tree', 1], ['🌻', 'flower', 1], ['🐸', 'frog', 1], ['🦋', 'butterfly', 1],
+  ['🪨', 'rock', 0], ['👟', 'shoe', 0], ['⚽', 'ball', 0], ['🚗', 'car', 0],
+  ['🥄', 'spoon', 0], ['🪑', 'chair', 0], ['📚', 'book', 0], ['🧸', 'teddy bear', 0],
+].map(([pic, name, living]) => ({ pic, name, living: !!living }));
+function _sortRound(tier, rng) {
+  const n = tier + 2;
+  const nLiving = 1 + Math.floor(rng() * (n - 1));
+  const pick = (living, k) => _shuffle(SORT_ITEMS.filter((i) => i.living === living), rng).slice(0, k);
+  const items = _shuffle([...pick(true, nLiving), ...pick(false, n - nLiving)], rng).map((i) => ({ ...i }));
+  return {
+    prompt: 'Is it living or not living?',
+    choices: ['🌱 Living', '🪨 Not living'],
+    answer: '🌱 Living',
+    hint: 'Good try! Does it need water to grow?',
+    sort: { items },
+  };
+}
+const _sciOr = (tier, set) => (rng) => {
+  const x = rng();
+  return x < 0.25 ? _measureRound(tier, rng) : x < 0.45 ? _sortRound(tier, rng) : _pick(set, rng);
+};
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -783,9 +808,9 @@ const TIERS = {
     },
   },
   rapunzel: {
-    1: (rng) => (rng() < 0.25 ? _measureRound(1, rng) : _pick(SCI_T1, rng)),
-    2: (rng) => (rng() < 0.25 ? _measureRound(2, rng) : _pick(SCI_T2, rng)),
-    3: (rng) => (rng() < 0.25 ? _measureRound(3, rng) : _pick(SCI_T3, rng)),
+    1: _sciOr(1, SCI_T1),
+    2: _sciOr(2, SCI_T2),
+    3: _sciOr(3, SCI_T3),
   },
 };
 
@@ -793,7 +818,8 @@ const TIERS = {
 // Measuring rounds share prompts, so their picture is part of the id.
 export function roundKey(r) {
   const v = r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : '';
-  return `${r.prompt}|${r.answer}${v}`;
+  const s = r.sort && r.sort.items ? `|sort:${r.sort.items.map((i) => i.name).join(',')}` : '';
+  return `${r.prompt}|${r.answer}${v}${s}`;
 }
 
 function _tagged(npcId, tier, rng) {

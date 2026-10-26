@@ -5,14 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261026b1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026b1';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026b1';
-import { UI } from './ui.js?v=20261026b1';
-import { Save, checkMilestones } from './save.js?v=20261026b1';
-import { Input } from './input.js?v=20261026b1';
-import { startPadNav } from './padnav.js?v=20261026b1';
-import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026b1';
+import { createWorld } from './world.js?v=20261026s1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026s1';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026s1';
+import { UI } from './ui.js?v=20261026s1';
+import { Save, checkMilestones } from './save.js?v=20261026s1';
+import { Input } from './input.js?v=20261026s1';
+import { startPadNav } from './padnav.js?v=20261026s1';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026s1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -350,15 +350,16 @@ export async function main(container) {
     const P = PRINCESSES[npcId];
     const round = rounds[roundIdx];
     // After 2 misses, narrow to the answer plus one other choice.
-    let choices = round.choices;
-    if (misses >= 2) {
+    let choices = round.sort ? [] : round.choices;
+    if (misses >= 2 && !round.sort) {
       const other = round.choices.find((c) => c !== round.answer);
       choices = other ? [round.answer, other] : [round.answer];
     }
-    const { arr, correctId } = shuffledChoices(choices, round.answer);
+    // Sort rounds have no choice buttons; they finish via the bins ('__sortdone').
+    const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
-    if (npcId === 'cinderella' || npcId === 'rapunzel') {
+    if ((npcId === 'cinderella' || npcId === 'rapunzel') && !round.sort) {
       // Read the words only, not the picture emoji in front of them.
       const labels = arr.map((c) => c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';
@@ -375,13 +376,18 @@ export async function main(container) {
         choices: arr,
         visualHtml: visualHtml(npcId, round),
         tiles: round.tiles,
+        sort: round.sort,
         princessId: npcId,
         voiceText,
         replayText: round.replay || null, // Belle sentences: 🔊 reads the sentence
         exactVoice: true, // read the actual question aloud, not a generic MP3
       },
-      (pickedId) => {
-        if (pickedId === correctId) {
+      (pickedId, sortHint) => {
+        if (pickedId === '__sortwrong') {
+          // Wrong bin: the item stays; count it for the ladder but never reveal.
+          misses++;
+          Narrator.speakExact(npcId, sortHint || round.hint);
+        } else if (pickedId === correctId) {
           noteResult(round);
           Save.data.stars += 1;
           if (!Save.data.done.includes(npcId)) Save.data.shards[npcId] += 1;

@@ -28,7 +28,8 @@
 - **What the child practices:** What plants need to grow (water, sunlight,
   soil) and distinguishing living things from nonliving things. Also
   measuring: ordering and comparing flower heights, and counting petal units
-  for a stem's length.
+  for a stem's length. Sorting bins: tap a picture into Living or Not living
+  (living things need food and water, NGSS K-LS1-1 style).
 - **Example round:** *"A sleepy seed wants to wake up and grow. What does it drink first?"*
   — choices: `Water`, `Juice`, `Milk`.
 
