@@ -297,6 +297,54 @@ export function createWorld(container, hooks) {
     scene.add(p);
   });
 
+  // Path edge stones, path end caps and plaza star
+  {
+    const STONES_PER_EDGE = 10;
+    const stoneMesh = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.32, 0.38, 0.08, 7),
+      new THREE.MeshStandardMaterial({ color: 0xfff4e2, roughness: 0.85, flatShading: true }),
+      Object.keys(LANDS).length * 2 * STONES_PER_EDGE
+    );
+    const dummy = new THREE.Object3D();
+    let si = 0;
+    Object.values(LANDS).forEach((land) => {
+      const dx = Math.cos(land.angle), dz = Math.sin(land.angle);
+      for (const side of [-1, 1]) {
+        for (let i = 0; i < STONES_PER_EDGE; i++, si++) {
+          const t = 9.3 + i * 1.6;                       // distance along the path from the hub centre
+          const off = side * 2.5;                        // just outside the 4.4-wide walking lane
+          dummy.position.set(dx * t - dz * off, 0.06, dz * t + dx * off);
+          dummy.rotation.set(0, ((si * 37) % 11) * 0.57, 0);
+          const s = 0.88 + ((si * 7) % 5) * 0.06;        // tiny deterministic size variation
+          dummy.scale.set(s, 1, s);
+          dummy.updateMatrix();
+          stoneMesh.setMatrixAt(si, dummy.matrix);
+        }
+      }
+    });
+    stoneMesh.instanceMatrix.needsUpdate = true;
+    scene.add(stoneMesh);
+
+    // Round cap at the outer end of each path (paths run 8.5 to 24.5 from the centre)
+    const caps = new THREE.InstancedMesh(new THREE.CircleGeometry(2.2, 20), pathMat, Object.keys(LANDS).length);
+    dummy.rotation.set(-Math.PI / 2, 0, 0); dummy.scale.set(1, 1, 1);
+    Object.values(LANDS).forEach((land, ci) => {
+      dummy.position.set(Math.cos(land.angle) * 24.5, 0.025, Math.sin(land.angle) * 24.5);
+      dummy.updateMatrix();
+      caps.setMatrixAt(ci, dummy.matrix);
+    });
+    caps.instanceMatrix.needsUpdate = true;
+    scene.add(caps);
+
+    // Pale-gold star inlay, centred in the plaza (sits under the castle/anything in the middle)
+    const plazaStar = new THREE.Mesh(
+      starGeometry(3.2, 1.4),
+      new THREE.MeshStandardMaterial({ color: 0xf7e3a1, roughness: 0.85, flatShading: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })
+    );
+    plazaStar.rotation.x = -Math.PI / 2; plazaStar.position.y = 0.028;
+    scene.add(plazaStar);
+  }
+
   // --- Starlight Castle (hub, set back so the plaza stays walkable) ---------
   const castle = new THREE.Group();
   const wallMat = new THREE.MeshStandardMaterial({ color: 0xffe3ee, roughness: 0.85, emissive: 0xffc4dc, emissiveIntensity: 0.22, flatShading: true });
