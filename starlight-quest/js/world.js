@@ -46,6 +46,19 @@ function makeCanvasSprite(draw, size = 64) {
   return tex;
 }
 
+// Seeded RNG (mulberry32): same layout on every load. Use for any new scenery placement.
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(0x5741a11);
+
 // 5-point star shape, reused for all star markers.
 function starGeometry(outer = 0.45, inner = 0.19) {
   const shape = new THREE.Shape();
@@ -569,6 +582,99 @@ export function createWorld(container, hooks) {
     t.position.set(tx, 0, tz); t.rotation.y = 0.3;
     scene.add(t);
     addCollider(tx, tz, 1.9);
+  }
+
+  // --- Grass tufts + bushes in the empty areas (seeded, instanced, static) ---
+  {
+    const bushGreens = [0x86c785, 0x78bd7c];
+    const grassGreens = [0x8bd07f, 0x7cc476];
+    const flowerColors = [0xffb3d1, 0xffffff, 0xffe27a];
+    // Open ground only: outside the plaza, off the paths, away from lands, castle and NPC pads
+    const openSpot = (x, z, pad) => {
+      const r = Math.hypot(x, z);
+      if (r < 10 + pad || r > 40) return false;
+      for (const land of Object.values(LANDS)) {
+        const dx = Math.cos(land.angle), dz = Math.sin(land.angle);
+        const t = Math.max(0, Math.min(LAND_DIST, x * dx + z * dz));
+        if (Math.hypot(x - dx * t, z - dz * t) < 3 + pad) return false; // path center line
+      }
+      for (const c of Object.values(landCenters)) if (Math.hypot(x - c.x, z - c.z) < 11.5 + pad) return false;
+      if (Math.hypot(x + 11.5, z + 8.5) < 6.5 + pad) return false;
+      for (const p of Object.values(landPads)) if (Math.hypot(x - p.x, z - p.z) < 2.5 + pad) return false;
+      for (const c of colliders) if (Math.hypot(x - c.x, z - c.z) < c.r + pad) return false;
+      return true;
+    };
+    const pickSpot = (pad) => {
+      for (let tries = 0; tries < 60; tries++) {
+        const a = rand() * Math.PI * 2;
+        const r = Math.sqrt(100 + rand() * 1500); // uniform by area, 10..40
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        if (openSpot(x, z, pad)) return { x, z };
+      }
+      return null;
+    };
+    const dummy = new THREE.Object3D();
+    const col = new THREE.Color();
+
+    // Bushes (picked first so grass can keep clear of them)
+    const BUSHES = 18;
+    const bushSpots = [];
+    while (bushSpots.length < BUSHES) {
+      const p = pickSpot(0.8);
+      if (!p) break;
+      if (bushSpots.some((b) => Math.hypot(p.x - b.x, p.z - b.z) < 3)) continue;
+      bushSpots.push(p);
+    }
+    const bushes = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.85, 0), pastel(0xffffff), bushSpots.length);
+    const blooms = new THREE.InstancedMesh(new THREE.SphereGeometry(0.09, 6, 4), new THREE.MeshStandardMaterial({ roughness: 0.7 }), bushSpots.length * 3);
+    bushSpots.forEach((b, i) => {
+      const s = 0.85 + rand() * 0.3;
+      dummy.position.set(b.x, 0.5 * s, b.z);
+      dummy.rotation.set(0, rand() * Math.PI * 2, 0);
+      dummy.scale.set(s, s * 0.85, s);
+      dummy.updateMatrix();
+      bushes.setMatrixAt(i, dummy.matrix);
+      bushes.setColorAt(i, col.setHex(bushGreens[i % 2]));
+      addCollider(b.x, b.z, 0.8);
+      // 3 flowers sitting on the upper surface
+      for (let f = 0; f < 3; f++) {
+        const th = rand() * Math.PI * 2, el = 0.5 + rand() * 0.8;
+        const R = 0.85 * s * 0.98;
+        dummy.position.set(b.x + Math.cos(el) * Math.cos(th) * R, 0.5 * s + Math.sin(el) * R * 0.85, b.z + Math.cos(el) * Math.sin(th) * R);
+        dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        blooms.setMatrixAt(i * 3 + f, dummy.matrix);
+        blooms.setColorAt(i * 3 + f, col.setHex(flowerColors[(i + f) % 3]));
+      }
+    });
+    bushes.instanceMatrix.needsUpdate = true;
+    blooms.instanceMatrix.needsUpdate = true;
+    if (bushes.instanceColor) bushes.instanceColor.needsUpdate = true;
+    if (blooms.instanceColor) blooms.instanceColor.needsUpdate = true;
+    scene.add(bushes, blooms);
+
+    // Grass: ~220 blades in clumps of 3
+    const CLUMPS = 73;
+    const grass = new THREE.InstancedMesh(new THREE.ConeGeometry(0.1, 0.45, 4), pastel(0xffffff), CLUMPS * 3);
+    let g = 0;
+    for (let k = 0; k < CLUMPS; k++) {
+      const p = pickSpot(0.3);
+      if (!p) break;
+      for (let j = 0; j < 3; j++) {
+        const s = 0.8 + rand() * 0.6;
+        dummy.position.set(p.x + (rand() - 0.5) * 0.5, 0.225 * s, p.z + (rand() - 0.5) * 0.5);
+        dummy.rotation.set((rand() - 0.5) * 0.3, rand() * Math.PI, (rand() - 0.5) * 0.3);
+        dummy.scale.set(1, s, 1);
+        dummy.updateMatrix();
+        grass.setMatrixAt(g, dummy.matrix);
+        grass.setColorAt(g, col.setHex(grassGreens[(k + j) % 2]));
+        g++;
+      }
+    }
+    grass.count = g;
+    grass.instanceMatrix.needsUpdate = true;
+    if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
+    scene.add(grass);
   }
 
   // --- Soft blob shadows under scenery (one instanced draw, no shadow maps) ---
