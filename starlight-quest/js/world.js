@@ -1330,6 +1330,7 @@ export function createWorld(container, hooks) {
   const clock = new THREE.Clock();
   const tmpMove = new THREE.Vector2();
   let rafId = 0;
+  let padPollTimer = 0;
   let disposed = false;
   let simTime = 0; // seconds of un-paused play; replaces clock.elapsedTime so pauses never make time leap
 
@@ -1573,10 +1574,13 @@ export function createWorld(container, hooks) {
     if (disposed || worldPaused) return;
     worldPaused = true;
     cancelAnimationFrame(rafId);
+    // Keep controller discovery alive (no drawing) so the tutorial can switch to pad wording.
+    padPollTimer = setInterval(() => Input.poll(), 250);
   }
   function resumeRendering() {
     if (disposed || !worldPaused) return;
     worldPaused = false;
+    clearInterval(padPollTimer);
     clock.getDelta(); // discard the time spent paused (simTime only advances in loop)
     Input.consumeInteract(); Input.consumePause(); // taps/keys made on the card must not fire in the world
     restartMeasure();
@@ -1589,6 +1593,7 @@ export function createWorld(container, hooks) {
   function dispose() {
     disposed = true;
     cancelAnimationFrame(rafId);
+    clearInterval(padPollTimer);
     document.removeEventListener('visibilitychange', restartMeasure);
     Input.dispose();
     window.removeEventListener('resize', onResize);
