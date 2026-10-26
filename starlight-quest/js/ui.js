@@ -482,7 +482,7 @@ export const UI = {
       SoundFX.pop();
       if (typeof _hooks.onMuteToggle === 'function') _hooks.onMuteToggle();
     };
-    parentBtn.onclick = () => { SoundFX.pop(); this.showParentCorner(() => {}); };
+    parentBtn.onclick = () => { SoundFX.pop(); this.showParentGate(); };
     pauseBtn.onclick = () => { SoundFX.pop(); if (typeof _hooks.onPause === 'function') _hooks.onPause(); };
     right.append(stars, muteBtn, parentBtn, pauseBtn);
     topbar.append(pill, right);
@@ -849,6 +849,53 @@ export const UI = {
     const body = el('div', 'zsq-parent-body', PARENT_HTML);
     panel.append(head, body);
     wrap.appendChild(panel);
+    show(wrap);
+  },
+
+  /**
+   * Grown-up check in front of Parent Corner, so Zoe can't wander in.
+   * Silent: the question is not spoken. Right answer opens Parent Corner;
+   * a wrong answer or Close just closes the card with no sound or message.
+   */
+  showParentGate() {
+    const wrap = _els.challengeWrap; // a .zsq-modal-wrap, so padnav's d-pad / ✕ focus works here
+    wrap.innerHTML = '';
+    const a = 6 + Math.floor(Math.random() * 4);
+    const b = 6 + Math.floor(Math.random() * 4);
+    const sum = a + b;
+    const offsets = [-2, -1, 1, 2];
+    for (let i = offsets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [offsets[i], offsets[j]] = [offsets[j], offsets[i]];
+    }
+    const opts = [sum, sum + offsets[0], sum + offsets[1]];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    const modal = el('div', 'zsq-modal');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-label', 'For grown-ups');
+    const head = el('div', 'zsq-chead');
+    head.appendChild(el('div', 'zsq-kicker', 'For grown-ups'));
+    const close = el('button', 'zsq-close', 'Close ✕');
+    close.onclick = () => { hide(wrap); };
+    head.appendChild(close);
+    modal.append(head, el('div', 'zsq-prompt', `Tap the answer to ${a} + ${b}`));
+    const box = el('div', 'zsq-choices');
+    for (const n of opts) {
+      const btn = el('button', 'zsq-choice', String(n));
+      btn.onclick = () => {
+        hide(wrap);
+        if (n === sum) {
+          SoundFX.pop();
+          this.showParentCorner(() => {});
+        }
+      };
+      box.appendChild(btn);
+    }
+    modal.appendChild(box);
+    wrap.appendChild(modal);
     show(wrap);
   },
 
