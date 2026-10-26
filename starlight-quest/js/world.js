@@ -216,7 +216,19 @@ export function createWorld(container, hooks) {
 
   // --- Renderer / scene / camera -------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Lighter on phones/tablets (cooler device, longer battery): cap at 1.5 on touch or small screens, 2 on desktop.
+  const isHandheld = (() => {
+    try {
+      if (window.matchMedia && matchMedia('(pointer: coarse)').matches) return true;
+      if ((navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window) return true;
+    } catch (e) { /* fall through to size check */ }
+    return Math.min(window.innerWidth || 0, window.innerHeight || 0) <= 820;
+  })();
+  const deviceRatio = window.devicePixelRatio || 1;
+  let worldPaused = false; // declared early: onResize reads it
+  let pixelRatio = Math.min(deviceRatio, isHandheld ? 1.5 : 2);
+  const MIN_PIXEL_RATIO = 1.25; // adaptive step-down floor (one step, once per session)
+  renderer.setPixelRatio(pixelRatio);
   renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
@@ -1306,6 +1318,7 @@ export function createWorld(container, hooks) {
     camera.aspect = w / h;
     frameForAspect(camera.aspect);
     camera.updateProjectionMatrix();
+    if (worldPaused) renderer.render(scene, camera); // keep the frozen frame correct behind the card
   };
   window.addEventListener('resize', onResize);
   onResize();
@@ -1317,7 +1330,40 @@ export function createWorld(container, hooks) {
   const clock = new THREE.Clock();
   const tmpMove = new THREE.Vector2();
   let rafId = 0;
+  let padPollTimer = 0;
   let disposed = false;
+  let simTime = 0; // seconds of un-paused play; replaces clock.elapsedTime so pauses never make time leap
+
+  // Adaptive resolution: one step down to MIN_PIXEL_RATIO if play stays slow, never back up.
+  const WARMUP_MS = 3000;      // ignore shader-compile spikes after load / resume / tab return
+  const SLOW_WINDOW_MS = 2000; // continuous slow play needed to step down
+  const SLOW_AVG_MS = 22;      // average frame time above this = under ~45 fps
+  let steppedDown = pixelRatio <= MIN_PIXEL_RATIO;
+  let warmupUntil = performance.now() + WARMUP_MS;
+  let lastFrameTs = 0;
+  let winMs = 0, winFrames = 0;
+  function restartMeasure() {
+    warmupUntil = performance.now() + WARMUP_MS;
+    lastFrameTs = 0; winMs = 0; winFrames = 0;
+  }
+  function measureFrame(now) {
+    if (steppedDown) return;
+    const gap = lastFrameTs ? now - lastFrameTs : 0;
+    lastFrameTs = now;
+    if (now < warmupUntil || !gap) return;
+    if (gap > 250 || document.hidden) { winMs = 0; winFrames = 0; return; } // stall, not steady slowness
+    winMs += gap; winFrames++;
+    if (winMs >= SLOW_WINDOW_MS) {
+      if (winMs / winFrames > SLOW_AVG_MS) {
+        steppedDown = true;
+        pixelRatio = MIN_PIXEL_RATIO;
+        renderer.setPixelRatio(pixelRatio);
+        onResize();
+      }
+      winMs = 0; winFrames = 0;
+    }
+  }
+  document.addEventListener('visibilitychange', restartMeasure);
 
   function update(dt, t) {
     if (pondTwinkle) pondTwinkle(t);
@@ -1512,19 +1558,43 @@ export function createWorld(container, hooks) {
     if (didPause) onPauseRequest();
   }
 
-  function loop() {
-    if (disposed) return;
+  function loop(now) {
+    if (disposed || worldPaused) return;
     rafId = requestAnimationFrame(loop);
     const dt = Math.min(clock.getDelta(), 0.05);
-    update(dt, clock.elapsedTime);
+    simTime += dt;
+    update(dt, simTime);
     renderer.render(scene, camera);
+    measureFrame(typeof now === 'number' ? now : performance.now());
   }
   loop();
+
+  // Stop drawing while a full-screen card covers the world; resume with no time jump and one immediate frame.
+  function pauseRendering() {
+    if (disposed || worldPaused) return;
+    worldPaused = true;
+    cancelAnimationFrame(rafId);
+    // Keep controller discovery alive (no drawing) so the tutorial can switch to pad wording.
+    padPollTimer = setInterval(() => Input.poll(), 250);
+  }
+  function resumeRendering() {
+    if (disposed || !worldPaused) return;
+    worldPaused = false;
+    clearInterval(padPollTimer);
+    clock.getDelta(); // discard the time spent paused (simTime only advances in loop)
+    Input.consumeInteract(); Input.consumePause(); // taps/keys made on the card must not fire in the world
+    restartMeasure();
+    update(0, simTime);
+    renderer.render(scene, camera); // no blank/stale frame on the first paint back
+    rafId = requestAnimationFrame(loop);
+  }
 
   // --- Dispose -----------------------------------------------------------------
   function dispose() {
     disposed = true;
     cancelAnimationFrame(rafId);
+    clearInterval(padPollTimer);
+    document.removeEventListener('visibilitychange', restartMeasure);
     Input.dispose();
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
@@ -1551,6 +1621,10 @@ export function createWorld(container, hooks) {
     unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
     celebrate,
     setNPCState,
+    pause: pauseRendering,
+    resume: resumeRendering,
+    isPaused() { return worldPaused; },
+    getPixelRatio() { return renderer.getPixelRatio(); },
     dispose,
   };
 }
