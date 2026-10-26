@@ -6,7 +6,7 @@
  */
 
 import { createWorld } from './world.js?v=20261026w1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines } from './quests.js?v=20261026w1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026w1';
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026w1';
 import { UI } from './ui.js?v=20261026w1';
 import { Save } from './save.js?v=20261026w1';
@@ -358,7 +358,10 @@ export async function main(container) {
           misses++;
           // Speak exactly the on-screen text ('Good try!' + hint) in her voice,
           // so the words heard always match the words shown.
-          Narrator.speakExact(npcId, round.hint);
+          // Belle phonics: then play the letter's sound clip (not its name).
+          Narrator.speakExact(npcId, round.hint, round.sound
+            ? () => Narrator.playClip(BELLE_CLIP_DIR + round.sound)
+            : undefined);
           UI.revealAnswer({ correctId: null, pickedId, message: round.hint }, () => startRound());
         }
       }
