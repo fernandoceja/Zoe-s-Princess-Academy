@@ -5,14 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261026t1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026t1';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026t1';
-import { UI } from './ui.js?v=20261026t1';
-import { Save, checkMilestones } from './save.js?v=20261026t1';
-import { Input } from './input.js?v=20261026t1';
-import { startPadNav } from './padnav.js?v=20261026t1';
-import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026t1';
+import { createWorld } from './world.js?v=20261026b1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026b1';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026b1';
+import { UI } from './ui.js?v=20261026b1';
+import { Save, checkMilestones } from './save.js?v=20261026b1';
+import { Input } from './input.js?v=20261026b1';
+import { startPadNav } from './padnav.js?v=20261026b1';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026b1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -374,6 +374,7 @@ export async function main(container) {
         prompt: round.prompt,
         choices: arr,
         visualHtml: visualHtml(npcId, round),
+        tiles: round.tiles,
         princessId: npcId,
         voiceText,
         replayText: round.replay || null, // Belle sentences: 🔊 reads the sentence

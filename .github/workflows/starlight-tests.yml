@@ -34,3 +34,5 @@ jobs:
         run: node starlight-quest/tests/outfit_check.mjs
       - name: Today's star check
         run: node starlight-quest/tests/todaystar_check.mjs
+      - name: Tap-to-blend check
+        run: node starlight-quest/tests/blend_check.mjs
