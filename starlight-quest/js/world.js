@@ -256,6 +256,7 @@ export function createWorld(container, hooks) {
   scene.add(sun);
 
   // --- Colliders ------------------------------------------------------------
+  let pondTwinkle = null; // per-frame pond twinkle fader (set in the meadow block, run in update)
   const colliders = []; // {x, z, r, shadowR?}
   // shadowR (optional): ground-shadow radius when the visible footprint is wider than the collider
   const addCollider = (x, z, r, shadowR) => colliders.push({ x, z, r, shadowR });
@@ -647,9 +648,61 @@ export function createWorld(container, hooks) {
       new THREE.MeshStandardMaterial({ color: 0x8fd4f5, roughness: 0.35 }));
     pond.rotation.x = -Math.PI / 2; pond.position.set(c.x + 5.5, 0.035, c.z - 4.5);
     scene.add(pond);
-    const pondRim = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.1, 28), pastel(0xe8f7ff));
+    const pondRim = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.1, 28), pastel(0xf1e6d2));
     pondRim.rotation.x = -Math.PI / 2; pondRim.position.set(c.x + 5.5, 0.03, c.z - 4.5);
     scene.add(pondRim);
+    // Pond dressing: 3 notched lily pads (one InstancedMesh), a tiny lotus, 6 soft twinkles (one Points)
+    {
+      const px = c.x + 5.5, pz = c.z - 4.5;
+      const padMat = new THREE.MeshStandardMaterial({ color: 0x7cc98a, roughness: 0.85, side: THREE.DoubleSide,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const pads = new THREE.InstancedMesh(new THREE.CircleGeometry(0.45, 12, 0.3, 5.7), padMat, 3);
+      const padSpots = [[-0.9, 0.5, 0.4], [0.8, -0.9, 2.1], [0.9, 1.1, 4.0]];
+      const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+      padSpots.forEach(([dx, dz, yaw], i) => {
+        e.set(-Math.PI / 2, 0, yaw); q.setFromEuler(e);
+        m4.compose(new THREE.Vector3(px + dx, 0.06, pz + dz), q, new THREE.Vector3(1, 1, 1));
+        pads.setMatrixAt(i, m4);
+      });
+      pads.instanceMatrix.needsUpdate = true;
+      scene.add(pads);
+      // Lotus on the first pad: 6 squashed pink petals around a pale center (one InstancedMesh)
+      const lx = px + padSpots[0][0], lz = pz + padSpots[0][1];
+      const lotus = new THREE.InstancedMesh(new THREE.SphereGeometry(0.1, 8, 6), pastel(0xffffff), 7);
+      const lc = new THREE.Color(), lp = new THREE.Vector3(), ls = new THREE.Vector3();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        e.set(Math.sin(a) * 0.7, 0, -Math.cos(a) * 0.7); q.setFromEuler(e);
+        m4.compose(lp.set(lx + Math.cos(a) * 0.09, 0.15, lz + Math.sin(a) * 0.09), q, ls.set(0.55, 1.2, 0.35));
+        lotus.setMatrixAt(i, m4); lotus.setColorAt(i, lc.setHex(0xffb3d1));
+      }
+      q.identity();
+      m4.compose(lp.set(lx, 0.15, lz), q, ls.setScalar(0.5));
+      lotus.setMatrixAt(6, m4); lotus.setColorAt(6, lc.setHex(0xfff6d6));
+      scene.add(lotus);
+      // Twinkles: additive points, brightness via vertex colors (map = softDot is attached on the first frame)
+      const tSpots = [[-1.6, -0.6], [-0.3, -1.7], [1.5, -0.2], [0.2, 0.4], [-0.5, 1.7], [1.7, 1.0]];
+      const tPos = new Float32Array(tSpots.length * 3);
+      tSpots.forEach(([dx, dz], i) => { tPos[i * 3] = px + dx; tPos[i * 3 + 1] = 0.09; tPos[i * 3 + 2] = pz + dz; });
+      const tGeo = new THREE.BufferGeometry();
+      tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+      tGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(tSpots.length * 3), 3));
+      const tMat = new THREE.PointsMaterial({ size: 0.45, vertexColors: true, transparent: true,
+        blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+      const twinkles = new THREE.Points(tGeo, tMat);
+      twinkles.frustumCulled = false;
+      scene.add(twinkles);
+      pondTwinkle = (t) => {
+        if (!tMat.map) { tMat.map = softDot; tMat.needsUpdate = true; }
+        const col = tGeo.attributes.color.array;
+        for (let i = 0; i < tSpots.length; i++) {
+          // slow staggered swell (about 5 s per cycle); calm motion holds a soft steady glow
+          const k = calmMotion ? 0.45 : 0.1 + 0.5 * (0.5 + 0.5 * Math.sin(t * 1.25 + i * 1.9));
+          col[i * 3] = k; col[i * 3 + 1] = k * 0.92; col[i * 3 + 2] = k * 0.6;
+        }
+        tGeo.attributes.color.needsUpdate = true;
+      };
+    }
     addCollider(c.x + 5.5, c.z - 4.5, 2.9);
   }
 
@@ -1105,6 +1158,7 @@ export function createWorld(container, hooks) {
   let disposed = false;
 
   function update(dt, t) {
+    if (pondTwinkle) pondTwinkle(t);
     // ---- Unified input (polled once per frame) ----
     Input.poll();
     const iv = Input.vector;
