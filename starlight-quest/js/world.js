@@ -1134,6 +1134,24 @@ export function createWorld(container, hooks) {
     npcs[id] = { id, def, group, star, starMat, pad, state: 'available', hopT: -1, baseY: 0, hue: i * 0.27, baseYaw: group.rotation.y, swayPhase: i * 1.7, padGlow: 0 };
   });
 
+  // --- Today's star: one gentle marker over the land to visit (not raycast, so taps pass through) ---
+  const todayStar = new THREE.Mesh(
+    starGeometry(0.95, 0.4), // clearly bigger than the 0.5 talk-marker star below it
+    new THREE.MeshBasicMaterial({ color: 0xfff3a8, side: THREE.DoubleSide })
+  );
+  todayStar.visible = false;
+  todayStar.raycast = () => {};
+  scene.add(todayStar);
+  let todayTarget = null;
+  function setTodayStar(npcId) {
+    todayTarget = npcId && npcs[npcId] ? npcs[npcId] : null;
+    todayStar.visible = !!todayTarget;
+    if (todayTarget) {
+      const g = todayTarget.group.position;
+      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.5, g.z);
+    }
+  }
+
   // --- Player: Princess Zoe --------------------------------------------------
   const { group: player, hitMeshes: playerHit } = buildPrincess(
     { dress: 0xff9cc4, accent: 0xdcc6f7, hair: 0x6b4430, hairStyle: 'wavy', tiara: true, tiaraColor: 'silver', fancy: true },
@@ -1477,6 +1495,13 @@ export function createWorld(container, hooks) {
       }
     }
 
+    // ---- Today's star: slow bob + spin (still under calm motion) ----
+    if (todayStar.visible && todayTarget) {
+      const g = todayTarget.group.position;
+      todayStar.position.set(g.x, 3.1 * PRINCESS_SCALE + 1.5 + (calmMotion ? 0 : Math.sin(t * 1.4) * 0.18), g.z);
+      if (!calmMotion) todayStar.rotation.y = t * 0.8;
+    }
+
     // ---- Castle star gentle spin ----
     castleStar.rotation.y = t * 0.6;
 
@@ -1621,6 +1646,7 @@ export function createWorld(container, hooks) {
     unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
     celebrate,
     setNPCState,
+    setTodayStar,
     pause: pauseRendering,
     resume: resumeRendering,
     isPaused() { return worldPaused; },

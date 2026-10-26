@@ -54,3 +54,22 @@ export function today(d = new Date()) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+
+export const LAND_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+
+/**
+ * Which land should Zoe visit today? Pure and deterministic (land order breaks ties).
+ * Candidates: lands not finished today. Preference: review rounds waiting, then a land
+ * she has not restored yet. Returns an npc id, or null once every land has rested today.
+ */
+export function pickTodayStar(saveData, todayStr, order = LAND_ORDER) {
+  const d = saveData || {};
+  const lastPlay = d.lastPlay || {};
+  const done = Array.isArray(d.done) ? d.done : [];
+  const ladder = d.ladder || {};
+  const rank = (id) => (landState(ladder[id]).review.length > 0 ? 0 : 2) + (done.includes(id) ? 1 : 0);
+  const open = order.filter((id) => lastPlay[id] !== todayStr);
+  if (!open.length) return null;
+  return open.map((id, i) => ({ id, i, r: rank(id) }))
+    .sort((a, b) => a.r - b.r || a.i - b.i)[0].id;
+}
