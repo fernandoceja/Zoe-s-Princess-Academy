@@ -452,18 +452,20 @@ export function createWorld(container, hooks) {
 
   // ---- (2) Frostfall Peaks: snowy cones + mounds + falling snow -------------
   let snowPoints = null;
+  let iceCrystals = null; // 10 slowly turning crystals (animated in update unless calm motion)
   {
     const c = landCenters.frostfall;
     const coneGeo = new THREE.ConeGeometry(2.2, 6, 10);
-    const coneMat = new THREE.MeshStandardMaterial({ color: 0xf4faff, roughness: 0.9, emissive: 0xdcebff, emissiveIntensity: 0.28, flatShading: true });
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xd6ebff, roughness: 0.9, emissive: 0xdcebff, emissiveIntensity: 0.28, flatShading: true });
     const capGeo = new THREE.ConeGeometry(1.1, 2.2, 10);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xbfe3ff, roughness: 0.7, emissive: 0x9fcfff, emissiveIntensity: 0.25, flatShading: true });
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7, emissive: 0xffffff, emissiveIntensity: 0.25, flatShading: true });
     const N = 10;
     let placed = 0;
     const cones = new THREE.InstancedMesh(coneGeo, coneMat, N);
     const caps = new THREE.InstancedMesh(capGeo, capMat, N);
     const moundGeo = new THREE.SphereGeometry(1.4, 12, 8);
-    const mounds = new THREE.InstancedMesh(moundGeo, coneMat, 8);
+    const moundMat = new THREE.MeshStandardMaterial({ color: 0xf4faff, roughness: 0.9, emissive: 0xdcebff, emissiveIntensity: 0.28, flatShading: true });
+    const mounds = new THREE.InstancedMesh(moundGeo, moundMat, 8);
     const dummy = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2 + 0.15;
@@ -481,17 +483,48 @@ export function createWorld(container, hooks) {
       addCollider(x, z, 1.8, 2.75); // cone base radius is 2.2, so the shadow must reach past it
     }
     cones.count = caps.count = placed;
+    let moundN = 0;
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2 + 0.6;
+      // Same hub-side test as the cones: keep the walk to Elsa's pad clear
+      if (Math.abs(Math.atan2(Math.sin(a - Math.PI), Math.cos(a - Math.PI))) < 1.2) continue;
       const x = c.x + Math.cos(a) * 7.5, z = c.z + Math.sin(a) * 7.5;
       dummy.position.set(x, -0.5, z); dummy.scale.set(1.6, 0.7, 1.6);
       dummy.rotation.y = 0; dummy.updateMatrix();
-      mounds.setMatrixAt(i, dummy.matrix);
+      mounds.setMatrixAt(moundN++, dummy.matrix);
     }
+    mounds.count = moundN;
     cones.instanceMatrix.needsUpdate = true;
     caps.instanceMatrix.needsUpdate = true;
     mounds.instanceMatrix.needsUpdate = true;
     scene.add(cones, caps, mounds);
+
+    // Ice crystals: one InstancedMesh, spread around the far side of the peaks (clear of the hub path and pad)
+    const crystals = new THREE.InstancedMesh(
+      new THREE.OctahedronGeometry(0.45),
+      new THREE.MeshStandardMaterial({ color: 0xbfe9ff, roughness: 0.4, emissive: 0x7fd3ff, emissiveIntensity: 0.6, flatShading: true }),
+      10
+    );
+    const crystalBase = [];
+    for (let i = 0; i < 10; i++) {
+      const a = Math.PI + 1.45 + i * (Math.PI * 2 - 2.9) / 9; // sweeps the non-hub side
+      const r = 10.4 + (i % 2) * 0.8;
+      crystalBase.push({ x: c.x + Math.cos(a) * r, z: c.z + Math.sin(a) * r, y: 0.9 + (i % 3) * 0.25, phase: i * 1.7 });
+    }
+    const setCrystals = (t) => {
+      for (let i = 0; i < 10; i++) {
+        const b = crystalBase[i];
+        dummy.position.set(b.x, b.y + Math.sin(t * 0.8 + b.phase) * 0.12, b.z);
+        dummy.rotation.set(0, t * 0.4 + b.phase, 0);
+        dummy.scale.set(1, 1.5, 1); dummy.updateMatrix();
+        crystals.setMatrixAt(i, dummy.matrix);
+      }
+      crystals.instanceMatrix.needsUpdate = true;
+    };
+    setCrystals(0);
+    crystals.userData.set = setCrystals;
+    iceCrystals = crystals;
+    scene.add(crystals);
 
     // Falling snow: cheap Points cloud drifting down, wraps around
     const COUNT = 260;
@@ -1117,6 +1150,9 @@ export function createWorld(container, hooks) {
       }
       p.needsUpdate = true;
     }
+
+    // ---- Ice crystals turn and bob (still under calm motion) ----
+    if (iceCrystals && !calmMotion) iceCrystals.userData.set(t);
 
     // ---- Sky dome follows the camera ----
     skyMesh.position.copy(camera.position);
