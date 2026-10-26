@@ -30,5 +30,7 @@ jobs:
         run: node starlight-quest/tests/words_check.mjs
       - name: Star milestone check
         run: node starlight-quest/tests/milestone_check.mjs
+      - name: Wardrobe outfit check
+        run: node starlight-quest/tests/outfit_check.mjs
       - name: Today's star check
         run: node starlight-quest/tests/todaystar_check.mjs

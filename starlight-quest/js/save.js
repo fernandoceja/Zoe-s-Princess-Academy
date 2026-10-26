@@ -26,12 +26,55 @@ export function checkMilestones(data) {
   return fresh;
 }
 
+/** Wardrobe: one slot per milestone reward. Each choice has an id (what is saved) and
+ * a color (swatch + world). The first choice of a slot is the default look and is saved as nothing.
+ * Colors are 0xRRGGBB; a trail choice has two colors it blends between (or rainbow: true). */
+export const OUTFIT = {
+  trail: { need: 'trail-10', name: 'Sparkle trail', choices: [
+    { id: 'pinkgold', label: 'Pink gold', color: 0xff9fc4, trail: [0xff6fb8, 0xffc24d] },
+    { id: 'rainbow', label: 'Rainbow', color: 0xffd36e, rainbow: true },
+    { id: 'icy', label: 'Icy blue', color: 0x9fdcff, trail: [0xa9e4ff, 0x7fb6ff] },
+    { id: 'lilac', label: 'Lilac', color: 0xcdb0ff, trail: [0xd3b2ff, 0xb58cff] }
+  ] },
+  gem: { need: 'tiara-25', name: 'Tiara gems', choices: [
+    { id: 'pink', label: 'Pink', color: 0xff7fb0 },
+    { id: 'blue', label: 'Blue', color: 0x7fc4ff },
+    { id: 'purple', label: 'Purple', color: 0xb98cff },
+    { id: 'green', label: 'Green', color: 0x7fe0a8 }
+  ] },
+  skirt: { need: 'skirt-50', name: 'Skirt', choices: [
+    { id: 'rose', label: 'Rose', color: 0xff9cc4 },
+    { id: 'lavender', label: 'Lavender', color: 0xb9a6f2 },
+    { id: 'mint', label: 'Mint', color: 0x9be3c4 },
+    { id: 'sunshine', label: 'Sunshine', color: 0xffe27a }
+  ] }
+};
+export const BUDDY_NEED = 'butterfly-100';
+
+/** Keep only known outfit keys with known values whose milestone is unlocked.
+ * Default choices and "off" are dropped (absent = default). Never throws. */
+export function sanitizeOutfit(raw, unlocked) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  const has = (id) => Array.isArray(unlocked) && unlocked.includes(id);
+  for (const slot of Object.keys(OUTFIT)) {
+    const def = OUTFIT[slot];
+    const v = raw[slot];
+    if (typeof v !== 'string' || !has(def.need)) continue;
+    const i = def.choices.findIndex((c) => c.id === v);
+    if (i > 0) out[slot] = v;
+  }
+  if (raw.buddy === true && has(BUDDY_NEED)) out.buddy = true;
+  return out;
+}
+
 function defaults() {
   return {
     stars: 0,
     shards: { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0 },
     done: [],
     milestones: [], // unlocked milestone ids (see MILESTONES)
+    outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
     lang: 'EN',
     muted: false,
     started: false,
@@ -66,6 +109,8 @@ function merge(raw) {
   if (Array.isArray(raw.milestones)) {
     out.milestones = MILESTONES.map((m) => m.id).filter((id) => raw.milestones.includes(id));
   }
+
+  out.outfit = sanitizeOutfit(raw.outfit, out.milestones);
 
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
   if (typeof raw.muted === 'boolean') out.muted = raw.muted;
