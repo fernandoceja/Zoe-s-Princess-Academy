@@ -133,9 +133,22 @@ function _stopMP3() {
   } catch (e) {}
 }
 
-/** Pick a warm young-female-ish voice for the given language, if one exists. */
+// Chosen voice per language prefix; cleared when the voice list changes.
+const _voiceCache = {};
+try {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      for (const k of Object.keys(_voiceCache)) delete _voiceCache[k];
+    });
+  }
+} catch (e) {}
+
+/** Pick a warm young-female-ish voice for the given language, if one exists.
+ *  Any Enhanced/Premium voice in the language wins (preferred names first among
+ *  them); otherwise the original logic over all in-language voices. */
 function _pickVoice(langPrefix) {
   try {
+    if (_voiceCache[langPrefix]) return _voiceCache[langPrefix];
     const voices = window.speechSynthesis.getVoices();
     if (!voices || !voices.length) return null;
     const inLang = voices.filter(v => (v.lang || '').toLowerCase().startsWith(langPrefix));
@@ -145,11 +158,17 @@ function _pickVoice(langPrefix) {
       /samantha/i, /zira/i, /karen/i, /moira/i, /tessa/i, /veena/i,
       /google us english/i, /google español/i, /female/i, /mujer/i, /niña/i
     ];
-    for (const rx of preferred) {
-      const hit = pool.find(v => rx.test(v.name || ''));
-      if (hit) return hit;
-    }
-    return pool[0];
+    const pickFrom = (list) => {
+      for (const rx of preferred) {
+        const hit = list.find(v => rx.test(v.name || ''));
+        if (hit) return hit;
+      }
+      return null;
+    };
+    const enhanced = pool.filter(v => /enhanced|premium/i.test(v.name || ''));
+    const chosen = (enhanced.length && (pickFrom(enhanced) || enhanced[0])) || pickFrom(pool) || pool[0];
+    if (chosen) _voiceCache[langPrefix] = chosen;
+    return chosen;
   } catch (e) {
     return null;
   }

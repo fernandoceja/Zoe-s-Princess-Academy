@@ -327,6 +327,7 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-size:13px;margin-top:2px;color:#374151;">Finishing all four quests restores the Starlight Crown and celebrates persistence &mdash; no fail states, ever.</div>
 </div>
 </div>
+<p style="margin:12px 0 0;font-size:13px;color:#374151;"><b>Tip:</b> for a clearer voice on iPhone or iPad, open Settings &rarr; Accessibility &rarr; Spoken Content &rarr; Voices &rarr; English, and download an Enhanced voice (for example Samantha). The game uses it automatically.</p>
 <p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">No scores, no penalties &mdash; wrong answers get a gentle hint and a retry.</p>
 </div>`;
 
