@@ -483,7 +483,9 @@ function _sightRound(w, pool, rng) {
   const others = pool.filter((x) => x !== w);
   const close = _shuffle(others.filter((x) => x[0] === w[0] || x.length === w.length), rng);
   const d = [...new Set([...close, ..._shuffle(others, rng)])].slice(0, 2);
-  return _wordRound(w, d);
+  // Sight words are not decodable (know, give, here), so no letter-sound clip.
+  const { sound, ...r } = _wordRound(w, d);
+  return r;
 }
 function _cvcRound(set) {
   const w = set[0];
