@@ -5,14 +5,14 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261026n1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026n1';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026n1';
-import { UI } from './ui.js?v=20261026n1';
-import { Save, checkMilestones } from './save.js?v=20261026n1';
-import { Input } from './input.js?v=20261026n1';
-import { startPadNav } from './padnav.js?v=20261026n1';
-import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026n1';
+import { createWorld } from './world.js?v=20261026t1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026t1';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026t1';
+import { UI } from './ui.js?v=20261026t1';
+import { Save, checkMilestones } from './save.js?v=20261026t1';
+import { Input } from './input.js?v=20261026t1';
+import { startPadNav } from './padnav.js?v=20261026t1';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026t1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -239,41 +239,47 @@ export async function main(container) {
   }
 
   function visualHtml(npcId, round) {
-    // Snowflakes as ten-frame rows: fives with a gap between, ten per line, so they are easy to count.
-    // The last `gone` flakes are faded and crossed out (taken away).
-    const flakes = (n, gone = 0, w = 22) => {
-      n = Math.max(0, Math.min(n, 20));
-      let rows = '';
-      for (let r = 0; r < n; r += 10) {
-        let cells = '';
-        for (let i = r; i < Math.min(r + 10, n); i++) {
-          const away = i >= n - gone;
-          cells += `<span data-flake="${away ? 'gone' : 'kept'}" style="position:relative;display:inline-block;width:${w}px;text-align:center;font-size:${w - 2}px;line-height:1.3;${i % 10 === 5 ? 'margin-left:8px;' : ''}${away ? 'opacity:.3;' : ''}">❄️` +
-            (away ? `<span style="position:absolute;left:0;right:0;top:0;color:#e11d48;font-size:${w - 2}px;font-weight:700;opacity:1">✕</span>` : '') + '</span>';
+    // Ten-frames: 5x2 grid of cells, dots fill left-to-right, top row first; n (0-20) uses ceil(n/10) frames.
+    // The last `gone` dots are faded and crossed out (taken away). `c` = cell size in px.
+    const frame = (dots, goneFrom, c) => {
+      let cells = '';
+      for (let i = 0; i < 10; i++) {
+        let inner = '';
+        if (i < dots) {
+          const away = i >= goneFrom;
+          inner = `<span data-dot="${away ? 'gone' : 'kept'}" style="width:${Math.round(c * 0.64)}px;height:${Math.round(c * 0.64)}px;border-radius:50%;background:#38bdf8;border:2px solid #0284c7;box-sizing:border-box;${away ? 'opacity:.3;' : ''}"></span>` +
+            (away ? `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#e11d48;font-size:${c - 4}px;font-weight:700;line-height:1">✕</span>` : '');
         }
-        rows += `<div style="white-space:nowrap">${cells}</div>`;
+        cells += `<span style="position:relative;display:flex;align-items:center;justify-content:center;width:${c}px;height:${c}px;box-sizing:border-box;border:1px solid #bae6fd;background:#f8fdff">${inner}</span>`;
       }
-      return `<div style="display:inline-block;margin:${w < 22 ? 0 : 2}px">${rows}</div>`;
+      return `<span style="display:inline-grid;grid-template-columns:repeat(5,${c}px);border:2px solid #7dd3fc;border-radius:8px;overflow:hidden;background:#7dd3fc">${cells}</span>`;
+    };
+    const frames = (n, gone = 0, c = 22, label = '') => {
+      n = Math.max(0, Math.min(n, 20));
+      gone = Math.max(0, Math.min(gone, n));
+      let out = '';
+      for (let r = 0; r === 0 || r < n; r += 10) out += frame(Math.max(0, Math.min(10, n - r)), n - gone - r, c);
+      const aria = label || `ten-frame showing ${n}${gone ? `, ${gone} crossed out` : ''}`;
+      return `<span role="img" aria-label="${aria}" style="display:inline-flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:100%;margin:3px">${out}</span>`;
     };
     if (npcId === 'elsa' && round.visual && round.visual.tens != null) {
-      // Tens and ones: each bundle of 10 snowflakes sits in its own box.
+      // Tens and ones: each ten is one full frame, ones in one partial frame; smaller cells, frames wrap.
       const { tens, ones } = round.visual;
-      const bundle = `<span style="display:inline-block;border:3px solid #7dd3fc;border-radius:12px;padding:2px 6px;margin:3px">${flakes(10, 0, 19)}</span>`;
-      return `<div style="text-align:center;line-height:1.5">${bundle.repeat(tens)}` +
-        `<div>${flakes(ones)}</div></div>`;
+      return `<div role="img" aria-label="ten-frames showing ${tens} tens and ${ones} ones" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:100%">` +
+        frame(10, 10, 17).repeat(tens) + (ones > 0 ? frame(ones, ones, 17) : '') + '</div>';
     }
     if (npcId === 'elsa' && round.visual && round.visual.parts) {
       return `<div style="text-align:center">` +
-        round.visual.parts.map((n) => flakes(n)).join('<div style="font-size:26px">➕</div>') + '</div>';
+        round.visual.parts.map((n) => frames(n)).join('<div style="font-size:26px">➕</div>') + '</div>';
     }
     if (npcId === 'elsa' && round.visual) {
       const { a, b } = round.visual;
       const isMinus = round.visual.op ? round.visual.op === '-'
         : (/−|-/.test(round.prompt) && !/\+/.test(round.prompt));
-      // Take-away: one group where the last b flakes are visibly removed.
-      if (isMinus && b > 0) return `<div style="text-align:center;line-height:1.6">${flakes(a, b)}</div>`;
-      return `<div style="text-align:center;line-height:1.6">${flakes(a)}` +
-        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${b > 0 ? flakes(b) : '<span style="font-size:34px">❓</span>'}</div>`;
+      // Take-away: one group where the last b dots are visibly removed.
+      if (isMinus && b > 0) return `<div style="text-align:center;line-height:1.6">${frames(a, b)}</div>`;
+      return `<div style="text-align:center;line-height:1.6">${frames(a)}` +
+        `<div style="font-size:30px">${isMinus ? '➖' : '➕'}</div>${b > 0 ? frames(b) : '<span style="font-size:34px">❓</span>'}</div>`;
     }
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);

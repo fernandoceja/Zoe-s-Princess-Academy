@@ -6,8 +6,8 @@
 // ============================================================================
 
 import * as THREE from 'three';
-import { Input } from './input.js?v=20261026n1';
-import { OUTFIT } from './save.js?v=20261026n1';
+import { Input } from './input.js?v=20261026t1';
+import { OUTFIT } from './save.js?v=20261026t1';
 
 // ---------------------------------------------------------------------------
 // Config
