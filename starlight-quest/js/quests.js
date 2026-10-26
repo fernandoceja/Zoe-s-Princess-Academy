@@ -754,7 +754,11 @@ const TIERS = {
 };
 
 /** Stable id for a round, used by the review queue. */
-export function roundKey(r) { return `${r.prompt}|${r.answer}`; }
+// Measuring rounds share prompts, so their picture is part of the id.
+export function roundKey(r) {
+  const v = r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : '';
+  return `${r.prompt}|${r.answer}${v}`;
+}
 
 function _tagged(npcId, tier, rng) {
   const r = { ...TIERS[npcId][tier](rng), tier };

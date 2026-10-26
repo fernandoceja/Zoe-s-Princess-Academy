@@ -1,5 +1,5 @@
 // Rapunzel measuring rounds (CA 1.MD.1-2): one right answer, distinct choices, sane visuals, ~1 in 4 rounds.
-import { buildRounds } from '../js/quests.js';
+import { buildRounds, roundKey } from '../js/quests.js';
 let n = 0, meas = 0; const bad = [];
 for (let tier = 1; tier <= 3; tier++) {
   for (let seed = 1; seed <= 3000; seed++) {
@@ -27,6 +27,10 @@ for (let tier = 1; tier <= 3; tier++) {
     }
   }
 }
+// Same question, different picture: must not share a review-queue id.
+const a = { prompt: 'Which flower is taller?', answer: '🌸 The pink one', visual: { kind: 'flowers', heights: [4, 2], colors: ['pink', 'blue'] } };
+const b = { ...a, visual: { kind: 'flowers', heights: [4, 8], colors: ['yellow', 'pink'] } };
+if (roundKey(a) === roundKey(b)) bad.push(['key', 'flower pictures share a roundKey']);
 const pct = (100 * meas) / n;
 console.log(`checked ${n} rapunzel rounds, ${meas} measuring (${pct.toFixed(1)}%), violations ${bad.length}`);
 if (pct < 15 || pct > 35) bad.push(['share', pct]);
