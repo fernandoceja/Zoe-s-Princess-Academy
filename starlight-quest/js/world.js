@@ -76,7 +76,7 @@ function M(key, make) {
 
 /**
  * Build a stylized low-poly princess.
- * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid', tiara: bool }
+ * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid', tiara: bool, tiaraColor?: 'silver' }
  * Returns { group, hitMeshes } — hitMeshes tagged for raycasting.
  */
 function buildPrincess(opts, tagId) {
@@ -87,6 +87,7 @@ function buildPrincess(opts, tagId) {
   const accentMat = new THREE.MeshStandardMaterial({ color: opts.accent, roughness: 0.6 });
   const hairMat = new THREE.MeshStandardMaterial({ color: opts.hair, roughness: 0.85 });
   const goldMat = M('gold', () => new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.35, metalness: 0, emissive: 0x7a5a14, emissiveIntensity: 0.9 }));
+  const silverMat = M('silver', () => new THREE.MeshStandardMaterial({ color: 0xe9eef5, roughness: 0.25, metalness: 0, emissive: 0x9aa6b8, emissiveIntensity: 0.5 }));
 
   const add = (mesh, x, y, z) => {
     mesh.position.set(x, y, z);
@@ -153,9 +154,9 @@ function buildPrincess(opts, tagId) {
     add(new THREE.Mesh(G('bun', () => new THREE.SphereGeometry(0.18, 10, 8)), hairMat), 0, 2.22, -0.18);
   }
 
-  // Tiny gold tiara
+  // Tiny tiara: gold, or silver for Zoe (matches her portrait)
   if (opts.tiara !== false) {
-    const tiara = add(new THREE.Mesh(G('tiara', () => new THREE.TorusGeometry(0.16, 0.035, 8, 16, Math.PI)), goldMat), 0, 2.12, 0.02);
+    const tiara = add(new THREE.Mesh(G('tiara', () => new THREE.TorusGeometry(0.16, 0.035, 8, 16, Math.PI)), opts.tiaraColor === 'silver' ? silverMat : goldMat), 0, 2.12, 0.02);
     tiara.rotation.x = -0.15;
   }
 
@@ -658,7 +659,7 @@ export function createWorld(container, hooks) {
 
   // --- Player: Princess Zoe --------------------------------------------------
   const { group: player, hitMeshes: playerHit } = buildPrincess(
-    { dress: 0xff8fb3, accent: 0xffc9da, hair: 0x3d2a1e, hairStyle: 'wavy', tiara: true },
+    { dress: 0xff9cc4, accent: 0xdcc6f7, hair: 0x6b4430, hairStyle: 'wavy', tiara: true, tiaraColor: 'silver' },
     null
   );
   player.position.set(0, 0, 4);
