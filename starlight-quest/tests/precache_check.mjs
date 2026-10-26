@@ -28,7 +28,7 @@ for (const f of jsFiles) scan(f, read(f));
 // PRECACHE_URLS array in sw.js.
 const arr = sw.match(/const PRECACHE_URLS = \[([\s\S]*?)\];/);
 if (!arr) { console.log('PRECACHE_URLS not found in sw.js'); process.exit(1); }
-const entries = [...arr[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+const entries = [...arr[1].replace(/\/\/.*$/gm, '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
 const precache = new Map();
 for (const e of entries) {
   const [url, q] = e.split('?v=');
