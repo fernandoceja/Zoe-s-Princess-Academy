@@ -247,7 +247,8 @@ export function createWorld(container, hooks) {
   // shadowR (optional): ground-shadow radius when the visible footprint is wider than the collider
   const addCollider = (x, z, r, shadowR) => colliders.push({ x, z, r, shadowR });
 
-  const pastel = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 });
+  // flatShading gives each low-poly facet its own shade (storybook look, no cost)
+  const pastel = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true });
   const goldMat = M('gold', () => new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.35, metalness: 0, emissive: 0x7a5a14, emissiveIntensity: 0.9 }));
 
   // --- Ground: big soft disc, reaches past the fog so the far edge fades into the sky ---
@@ -291,8 +292,8 @@ export function createWorld(container, hooks) {
 
   // --- Starlight Castle (hub, set back so the plaza stays walkable) ---------
   const castle = new THREE.Group();
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0xffe3ee, roughness: 0.85, emissive: 0xffc4dc, emissiveIntensity: 0.22 });
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0xff9ec6, roughness: 0.6 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xffe3ee, roughness: 0.85, emissive: 0xffc4dc, emissiveIntensity: 0.22, flatShading: true });
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0xff9ec6, roughness: 0.6, flatShading: true });
   const towerGeo = new THREE.CylinderGeometry(1.5, 1.7, 7, 12);
   const roofGeo = new THREE.ConeGeometry(2.1, 2.8, 12);
   const towerPos = [[-3.4, 0], [3.4, 0], [-1.7, -2.2], [1.7, -2.2]];
@@ -384,9 +385,9 @@ export function createWorld(container, hooks) {
   {
     const c = landCenters.frostfall;
     const coneGeo = new THREE.ConeGeometry(2.2, 6, 10);
-    const coneMat = new THREE.MeshStandardMaterial({ color: 0xf4faff, roughness: 0.9, emissive: 0xdcebff, emissiveIntensity: 0.28 });
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xf4faff, roughness: 0.9, emissive: 0xdcebff, emissiveIntensity: 0.28, flatShading: true });
     const capGeo = new THREE.ConeGeometry(1.1, 2.2, 10);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xbfe3ff, roughness: 0.7, emissive: 0x9fcfff, emissiveIntensity: 0.25 });
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xbfe3ff, roughness: 0.7, emissive: 0x9fcfff, emissiveIntensity: 0.25, flatShading: true });
     const N = 10;
     let placed = 0;
     const cones = new THREE.InstancedMesh(coneGeo, coneMat, N);
