@@ -70,7 +70,7 @@ export const Input = {
         e.preventDefault();
       }
     };
-    this._onKeyUp = (e) => { if (typing(e)) return; this._keys[e.code] = false; };
+    this._onKeyUp = (e) => { this._keys[e.code] = false; }; // always clear, even while typing
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup', this._onKeyUp);
 

@@ -920,7 +920,8 @@ export const UI = {
       note('Cleared.');
     };
     // Typing must never reach the game's key controls.
-    for (const t of ['keydown', 'keyup']) input.addEventListener(t, (e) => e.stopPropagation());
+    // Keys typed here don't reach the game; releases still do, so a key held before typing can't stick.
+    input.addEventListener('keydown', (e) => e.stopPropagation());
     box.append(input, row, stat);
     return box;
   },
