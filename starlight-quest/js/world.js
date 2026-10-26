@@ -154,7 +154,7 @@ function buildPrincess(opts, tagId) {
     add(new THREE.Mesh(G('bun', () => new THREE.SphereGeometry(0.18, 10, 8)), hairMat), 0, 2.22, -0.18);
   }
 
-  // Tiny gold tiara
+  // Tiny tiara: gold, or silver for Zoe (matches her portrait)
   if (opts.tiara !== false) {
     const tiara = add(new THREE.Mesh(G('tiara', () => new THREE.TorusGeometry(0.16, 0.035, 8, 16, Math.PI)), opts.tiaraColor === 'silver' ? silverMat : goldMat), 0, 2.12, 0.02);
     tiara.rotation.x = -0.15;
