@@ -8,11 +8,30 @@ const KEY = 'zoe-starlight-quest-v1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 
+/** Star milestones. N10 can use this list to show rewards on Zoe. */
+export const MILESTONES = [
+  { id: 'trail-10', stars: 10, label: 'a new sparkle trail color', emoji: '✨' },
+  { id: 'tiara-25', stars: 25, label: 'a new tiara gem color', emoji: '💎' },
+  { id: 'skirt-50', stars: 50, label: 'a new skirt color', emoji: '👗' },
+  { id: 'butterfly-100', stars: 100, label: 'a butterfly friend', emoji: '🦋' }
+];
+
+/** Unlock every milestone that data.stars has reached and data.milestones lacks.
+ * Mutates data.milestones and returns the newly unlocked ones (oldest first).
+ * An existing save past several milestones gets them all in one call. */
+export function checkMilestones(data) {
+  if (!Array.isArray(data.milestones)) data.milestones = [];
+  const fresh = MILESTONES.filter((m) => data.stars >= m.stars && !data.milestones.includes(m.id));
+  for (const m of fresh) data.milestones.push(m.id);
+  return fresh;
+}
+
 function defaults() {
   return {
     stars: 0,
     shards: { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0 },
     done: [],
+    milestones: [], // unlocked milestone ids (see MILESTONES)
     lang: 'EN',
     muted: false,
     started: false,
@@ -41,6 +60,10 @@ function merge(raw) {
 
   if (Array.isArray(raw.done)) {
     out.done = raw.done.filter(x => typeof x === 'string');
+  }
+
+  if (Array.isArray(raw.milestones)) {
+    out.milestones = MILESTONES.map((m) => m.id).filter((id) => raw.milestones.includes(id));
   }
 
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
