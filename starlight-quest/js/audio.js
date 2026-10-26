@@ -144,8 +144,8 @@ try {
 } catch (e) {}
 
 /** Pick a warm young-female-ish voice for the given language, if one exists.
- *  Enhanced/Premium voices in the language are tried first (same preferred-name
- *  list), then the original logic over all in-language voices. */
+ *  Any Enhanced/Premium voice in the language wins (preferred names first among
+ *  them); otherwise the original logic over all in-language voices. */
 function _pickVoice(langPrefix) {
   try {
     if (_voiceCache[langPrefix]) return _voiceCache[langPrefix];
@@ -166,7 +166,7 @@ function _pickVoice(langPrefix) {
       return null;
     };
     const enhanced = pool.filter(v => /enhanced|premium/i.test(v.name || ''));
-    const chosen = (enhanced.length && pickFrom(enhanced)) || pickFrom(pool) || pool[0];
+    const chosen = (enhanced.length && (pickFrom(enhanced) || enhanced[0])) || pickFrom(pool) || pool[0];
     if (chosen) _voiceCache[langPrefix] = chosen;
     return chosen;
   } catch (e) {
