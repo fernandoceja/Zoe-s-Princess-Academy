@@ -1006,6 +1006,39 @@ export function createWorld(container, hooks) {
     };
   })();
 
+  // --- Clouds (W17) ---------------------------------------------------------
+  // Six soft puffs on a wide ring out past the meadow, high enough to read as sky near the top edge.
+  const cloudTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const puffs = [[24, 38, 18], [38, 30, 20], [44, 40, 15]]; // fixed puff centres and radii (x, y, r)
+    for (const [x, y, r] of puffs) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.6, 'rgba(255,255,255,0.55)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })();
+  const cloudMat = new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, fog: false, opacity: 0.9 });
+  const cloudRing = new THREE.Group();
+  const CLOUD_OFFSETS = [0.13, -0.08, 0.21, -0.17, 0.05, 0.11]; // fixed per-cloud angle nudges (radians)
+  const CLOUD_Y = [22, 26, 19, 28, 24, 21];
+  const CLOUD_SCALE = [1, 1.08, 0.95, 1.12, 0.97, 1.04];
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + CLOUD_OFFSETS[i];
+    const cloud = new THREE.Sprite(cloudMat);
+    cloud.position.set(Math.cos(a) * 120, CLOUD_Y[i], Math.sin(a) * 120);
+    cloud.scale.set(28 * CLOUD_SCALE[i], 14 * CLOUD_SCALE[i], 1);
+    cloudRing.add(cloud);
+  }
+  scene.add(cloudRing);
+
   // --- Sparkle sprites (shared texture for markers/effects) ------------------
   const softDot = makeCanvasSprite((ctx, s) => {
     const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
@@ -1244,6 +1277,7 @@ export function createWorld(container, hooks) {
 
   function update(dt, t) {
     if (pondTwinkle) pondTwinkle(t);
+    if (!calmMotion) cloudRing.rotation.y += dt * 0.004;
     // ---- Unified input (polled once per frame) ----
     Input.poll();
     const iv = Input.vector;
