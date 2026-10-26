@@ -653,9 +653,9 @@ export function createWorld(container, hooks) {
     if (blooms.instanceColor) blooms.instanceColor.needsUpdate = true;
     scene.add(bushes, blooms);
 
-    // Grass: ~220 blades in clumps of 3
-    const CLUMPS = 73;
-    const grass = new THREE.InstancedMesh(new THREE.ConeGeometry(0.1, 0.45, 4), pastel(0xffffff), CLUMPS * 3);
+    // Grass: ~330 blades in clumps of 3 (sized to read from the phone camera)
+    const CLUMPS = 110;
+    const grass = new THREE.InstancedMesh(new THREE.ConeGeometry(0.14, 0.65, 4), pastel(0xffffff), CLUMPS * 3);
     let g = 0;
     for (let k = 0; k < CLUMPS; k++) {
       const p = pickSpot(0.3);
