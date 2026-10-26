@@ -98,7 +98,7 @@ export async function main(container) {
     if (covered) world.pause(); else world.resume();
   }
   new MutationObserver(syncWorldCover).observe(document.getElementById('zsq-ui') || document.body, {
-    subtree: true, attributes: true, attributeFilter: ['class'],
+    subtree: true, childList: true, attributes: true, attributeFilter: ['class'],
   });
   syncWorldCover();
 
