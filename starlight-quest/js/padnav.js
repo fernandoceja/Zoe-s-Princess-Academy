@@ -170,6 +170,8 @@ export function startPadNav() {
   document.head.appendChild(css);
   // Keyboard: arrows move between buttons only while a menu is open.
   window.addEventListener('keydown', (e) => {
+    const tg = e.target;
+    if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA')) return; // typing, not navigating
     const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
     if (!activeRoot()) return;
     // Space / Enter press the focused (or main) button while a menu is open.

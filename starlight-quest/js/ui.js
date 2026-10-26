@@ -7,7 +7,7 @@
 
 import { Narrator, SoundFX } from './audio.js?v=20261026w1';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026w1';
-import { PARENT_CORNER_HTML, PRINCESSES } from './quests.js?v=20261026w1';
+import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords } from './quests.js?v=20261026w1';
 import { Save } from './save.js?v=20261026w1';
 import { landState, today } from './ladder.js?v=20261026w1';
 import { Input } from './input.js?v=20261026w1';
@@ -214,6 +214,15 @@ function injectCSS() {
   .zsq-prog th { text-align: left; color: #64748b; font-weight: 600; padding: 4px 4px; }
   .zsq-prog td { padding: 6px 4px; border-top: 1px solid rgba(148,163,184,.3); vertical-align: top; }
   .zsq-prog small { display: block; color: #64748b; }
+  .zsq-words { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid rgba(148,163,184,.4); }
+  .zsq-words h3 { margin: 0 0 6px; }
+  .zsq-words input { width: 100%; box-sizing: border-box; min-height: 56px; font-size: 18px; padding: 10px 14px;
+    border-radius: 14px; border: 2px solid #94a3b8; color: #0f172a; background: #fff; }
+  .zsq-words .zsq-wrow { display: flex; gap: 12px; margin: 10px 0; }
+  .zsq-words .zsq-wrow button { flex: 1; min-height: 56px; border-radius: 14px; border: none; font-size: 20px;
+    font-weight: 800; cursor: pointer; background: #0f172a; color: #fff; }
+  .zsq-words .zsq-wrow button.zsq-wsave { background: #16a34a; }
+  .zsq-words .zsq-wstat { margin: 0; font-size: 15px; line-height: 1.4; }
   .zsq-close { min-width: 64px; min-height: 56px; border-radius: 14px; border: none;
     background: #0f172a; color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; padding: 10px 22px; }
 
@@ -868,6 +877,54 @@ export const UI = {
       + `${rows}</table></div>`;
   },
 
+  /** Teacher's word list editor for Parent Corner (saved on this device). */
+  _wordsBlock() {
+    const box = el('div', 'zsq-words');
+    box.innerHTML = '<h3>This week\'s class words</h3>'
+      + '<p style="margin:0 0 8px;font-size:15px">Type the sight words from school, separated by commas. Belle\'s Core level will use them (3 or more).</p>';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.setAttribute('aria-label', 'Class sight words, separated by commas');
+    input.placeholder = 'jump, look, play';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'off';
+    input.spellcheck = false;
+    input.value = SCHOOL_WORDS.join(', ');
+    const row = el('div', 'zsq-wrow');
+    const save = el('button', 'zsq-wsave', 'Save');
+    const clear = el('button', '', 'Clear');
+    row.append(save, clear);
+    const stat = el('p', 'zsq-wstat', '');
+    const note = (extra) => {
+      stat.textContent = (SCHOOL_WORDS.length >= 3
+        ? `Using your ${SCHOOL_WORDS.length} words: ${SCHOOL_WORDS.join(', ')}.`
+        : 'Using the built-in list.') + (extra ? ` ${extra}` : '');
+    };
+    note('');
+    save.onclick = () => {
+      SoundFX.pop();
+      const words = cleanWordList(input.value);
+      Save.data.schoolWords = words;
+      Save.save();
+      setSchoolWords(words);
+      input.value = words.join(', ');
+      note(words.length >= 3 ? `Saved ${words.length} words.`
+        : words.length ? `Saved ${words.length}, but 3 or more are needed.` : 'No valid words found.');
+    };
+    clear.onclick = () => {
+      SoundFX.pop();
+      Save.data.schoolWords = [];
+      Save.save();
+      setSchoolWords([]);
+      input.value = '';
+      note('Cleared.');
+    };
+    // Typing must never reach the game's key controls.
+    for (const t of ['keydown', 'keyup']) input.addEventListener(t, (e) => e.stopPropagation());
+    box.append(input, row, stat);
+    return box;
+  },
+
   /** Parent corner overlay (scrollable, with close button). */
   showParentCorner(onClose) {
     const wrap = _els.parentWrap;
@@ -881,7 +938,9 @@ export const UI = {
       if (typeof onClose === 'function') onClose();
     };
     head.appendChild(close);
-    const body = el('div', 'zsq-parent-body', this._progressHtml() + PARENT_HTML);
+    const body = el('div', 'zsq-parent-body', this._progressHtml());
+    body.appendChild(this._wordsBlock());
+    body.insertAdjacentHTML('beforeend', PARENT_HTML);
     panel.append(head, body);
     wrap.appendChild(panel);
     show(wrap);
