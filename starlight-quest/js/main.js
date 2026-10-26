@@ -111,6 +111,7 @@ export async function main(container) {
     if (NPC_IDS.includes(id)) world.setNPCState(id, 'done');
   }
   UI.updateStars(Save.data.stars);
+  world.setOutfit(Save.data.outfit);
   refreshPill();
 
   UI.showTitle(() => {
@@ -159,6 +160,7 @@ export async function main(container) {
     UI.showPauseMenu({
       onResume: () => togglePause(),
       onHowTo: () => UI.showTutorial({ onDone: () => showPauseMenu() }),
+      onOutfit: (o) => world.setOutfit(o),
     });
   }
 

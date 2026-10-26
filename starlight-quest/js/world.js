@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { Input } from './input.js?v=20261026w1';
+import { OUTFIT } from './save.js?v=20261026w1';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -95,6 +96,7 @@ function M(key, make) {
 function buildPrincess(opts, tagId) {
   const group = new THREE.Group();
   const hitMeshes = [];
+  let tiaraGemMat = null;
   const skin = M('skin', () => new THREE.MeshStandardMaterial({ color: 0xf6cfa8, roughness: 0.8 }));
   const dressMat = new THREE.MeshStandardMaterial({ color: opts.dress, roughness: 0.7 });
   const accentMat = new THREE.MeshStandardMaterial({ color: opts.accent, roughness: 0.6 });
@@ -184,7 +186,8 @@ function buildPrincess(opts, tagId) {
       // Bigger, more upright tiara with three pink gems along the top
       tiara.scale.setScalar(1.4);
       tiara.rotation.x = -1.0;
-      const gemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
+      // Zoe's own copy of the pink gem (the Wardrobe recolors it; the shared pinkGem stays pink)
+      const gemMat = tiaraGemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 })).clone();
       const tGemGeo = G('tiaraGem', () => new THREE.SphereGeometry(0.045, 8, 6));
       [0.28, 0.5, 0.72].forEach((t) => {
         const a = Math.PI * t;
@@ -201,7 +204,7 @@ function buildPrincess(opts, tagId) {
   }
 
   group.scale.setScalar(PRINCESS_SCALE);
-  return { group, hitMeshes };
+  return { group, hitMeshes, dressMat, tiaraGemMat };
 }
 
 // ---------------------------------------------------------------------------
@@ -961,6 +964,7 @@ export function createWorld(container, hooks) {
   // not in npcHitMeshes and raycast is a no-op, so taps pass through; no colliders.
   // Calm motion: perched on meadow flowers with a tiny, slow flap and no drifting.
   const butterflies = [];
+  let butterflyAssets = null; // wing geometry + material, reused by Zoe's butterfly friend
   const butterflyFlutter = (() => {
     const wingTex = makeCanvasSprite((ctx, s) => {
       // Wing hinged at the left edge, extending right: soft upper and lower lobes + a light spot.
@@ -1018,6 +1022,7 @@ export function createWorld(container, hooks) {
       });
       scene.add(group);
     });
+    butterflyAssets = { wingGeo, wingMat: wingMats[2] };
     return (t) => {
       for (let i = 0; i < butterflies.length; i++) {
         const b = butterflies[i], r = b.r;
@@ -1135,7 +1140,7 @@ export function createWorld(container, hooks) {
   });
 
   // --- Player: Princess Zoe --------------------------------------------------
-  const { group: player, hitMeshes: playerHit } = buildPrincess(
+  const { group: player, hitMeshes: playerHit, dressMat: playerDressMat, tiaraGemMat: playerGemMat } = buildPrincess(
     { dress: 0xff9cc4, accent: 0xdcc6f7, hair: 0x6b4430, hairStyle: 'wavy', tiara: true, tiaraColor: 'silver', fancy: true },
     null
   );
@@ -1217,6 +1222,8 @@ export function createWorld(container, hooks) {
   scene.add(sparkleTrailPoints);
   const trailPink = new THREE.Color(0xff6fb8), trailGold = new THREE.Color(0xffc24d);
   let trailNext = 0, trailTimer = 0;
+  let trailRainbow = false;
+  const trailTmp = new THREE.Color();
   function sparkleTrail(dt, speed) {
     if (calmMotion) return; // fully off: no emit, Points stay hidden
     if (speed > 0.6) {
@@ -1229,9 +1236,14 @@ export function createWorld(container, hooks) {
         trailPos[i * 3 + 1] = 0.15;
         trailPos[i * 3 + 2] = playerPos.z + (rand() - 0.5) * 0.45;
         const m = rand();
-        trailBase[i * 3] = trailPink.r + (trailGold.r - trailPink.r) * m;
-        trailBase[i * 3 + 1] = trailPink.g + (trailGold.g - trailPink.g) * m;
-        trailBase[i * 3 + 2] = trailPink.b + (trailGold.b - trailPink.b) * m;
+        if (trailRainbow) {
+          trailTmp.setHSL(rand(), 0.85, 0.68);
+          trailBase[i * 3] = trailTmp.r; trailBase[i * 3 + 1] = trailTmp.g; trailBase[i * 3 + 2] = trailTmp.b;
+        } else {
+          trailBase[i * 3] = trailPink.r + (trailGold.r - trailPink.r) * m;
+          trailBase[i * 3 + 1] = trailPink.g + (trailGold.g - trailPink.g) * m;
+          trailBase[i * 3 + 2] = trailPink.b + (trailGold.b - trailPink.b) * m;
+        }
       }
     } else {
       trailTimer = 0;
@@ -1250,6 +1262,75 @@ export function createWorld(container, hooks) {
     sparkleTrailPoints.visible = alive;
     trailGeo.attributes.position.needsUpdate = true;
     trailGeo.attributes.color.needsUpdate = true;
+  }
+
+  // --- Wardrobe (N10): outfit recolors + butterfly friend -------------------------
+  // Zoe's dress and tiara-gem materials are hers alone (buildPrincess makes the dress per princess and
+  // clones the gem), so recoloring never touches the other princesses. Buddy = 2 wing meshes (+2 draws).
+  const dressDefault = playerDressMat.color.getHex();
+  const gemDefault = playerGemMat ? playerGemMat.color.getHex() : 0;
+  let buddy = null;
+  const buddyPos = new THREE.Vector3();
+  const buddyTarget = new THREE.Vector3();
+  function makeBuddy() {
+    if (!butterflyAssets) return null;
+    const g = new THREE.Group();
+    const wl = new THREE.Group(), wr = new THREE.Group();
+    // Same wing texture + color; a clone with forceSinglePass so the two-sided wings cost 1 draw each, not 2.
+    const wm = butterflyAssets.wingMat.clone();
+    wm.forceSinglePass = true;
+    const ml = new THREE.Mesh(butterflyAssets.wingGeo, wm);
+    const mr = new THREE.Mesh(butterflyAssets.wingGeo, wm);
+    ml.scale.x = -1;
+    ml.raycast = mr.raycast = () => {};
+    wl.add(ml); wr.add(mr);
+    g.add(wl, wr);
+    g.scale.setScalar(1.4);
+    g.visible = false;
+    scene.add(g);
+    return { g, wl, wr };
+  }
+  let buddySnap = true;
+  function buddyUpdate(dt, t) {
+    if (!buddy || !buddy.g.visible) return;
+    const yaw = player.rotation.y, sy = Math.sin(yaw), cy = Math.cos(yaw);
+    let a;
+    if (calmMotion) {
+      // Perched on her shoulder, wings still
+      const k = PRINCESS_SCALE;
+      buddyTarget.set(playerPos.x + (0.55 * cy) * k, 1.95 * k + player.position.y, playerPos.z - (0.55 * sy) * k);
+      buddyPos.copy(buddyTarget);
+      a = 0.55;
+    } else {
+      // Behind and a bit above, drifting; eased so it lags gently
+      const bob = Math.sin(t * 2.3) * 0.18;
+      buddyTarget.set(playerPos.x - sy * 1.6 + cy * 0.8, 2.9 + bob, playerPos.z - cy * 1.6 - sy * 0.8);
+      if (buddySnap) buddyPos.copy(buddyTarget);
+      else buddyPos.lerp(buddyTarget, 1 - Math.exp(-2.6 * dt));
+      a = 0.35 + Math.sin(t * 9) * 0.8;
+    }
+    buddySnap = false;
+    buddy.g.position.copy(buddyPos);
+    buddy.g.rotation.y = yaw;
+    buddy.wl.rotation.z = a; buddy.wr.rotation.z = -a;
+  }
+  function setOutfit(o) {
+    o = o || {};
+    const pick = (slot) => OUTFIT[slot].choices.find((c) => c.id === o[slot]) || OUTFIT[slot].choices[0];
+    const tr = pick('trail');
+    trailRainbow = !!tr.rainbow;
+    if (tr.trail) { trailPink.set(tr.trail[0]); trailGold.set(tr.trail[1]); }
+    if (playerGemMat) {
+      const gm = o.gem ? pick('gem') : null;
+      if (gm) { playerGemMat.color.setHex(gm.color); playerGemMat.emissive.setHex(gm.color).multiplyScalar(0.55); }
+      else { playerGemMat.color.setHex(gemDefault); playerGemMat.emissive.setHex(0xff4f90); }
+    }
+    playerDressMat.color.setHex(o.skirt ? pick('skirt').color : dressDefault);
+    if (o.buddy && !buddy) buddy = makeBuddy();
+    if (buddy) {
+      if (o.buddy && !buddy.g.visible) buddySnap = true;
+      buddy.g.visible = !!o.buddy;
+    }
   }
 
   // --- Celebration bursts ------------------------------------------------------
@@ -1412,6 +1493,7 @@ export function createWorld(container, hooks) {
     player.position.y = speed > 0.6 ? Math.abs(Math.sin(walkPhase)) * 0.09 : 0;
     playerShadow.position.set(playerPos.x, 0.05, playerPos.z);
     sparkleTrail(dt, speed);
+    buddyUpdate(dt, t);
 
     // ---- Camera: smooth top-down follow with slight look-ahead ----
     lookAhead.set(playerVel.x * 0.35, 0, playerVel.z * 0.35);
@@ -1621,6 +1703,7 @@ export function createWorld(container, hooks) {
     unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
     celebrate,
     setNPCState,
+    setOutfit,
     pause: pauseRendering,
     resume: resumeRendering,
     isPaused() { return worldPaused; },

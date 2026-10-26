@@ -8,7 +8,7 @@
 import { Narrator, SoundFX } from './audio.js?v=20261026w1';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026w1';
 import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords } from './quests.js?v=20261026w1';
-import { Save } from './save.js?v=20261026w1';
+import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026w1';
 import { landState, today } from './ladder.js?v=20261026w1';
 import { Input } from './input.js?v=20261026w1';
 
@@ -282,6 +282,18 @@ function injectCSS() {
     text-align: center; box-shadow: 0 18px 50px rgba(31,41,55,.4);
     max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
   .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+
+  /* ---------- wardrobe ---------- */
+  .zsq-wd-row { margin: 14px 0 0; text-align: left; }
+  .zsq-wd-name { font-size: 22px; font-weight: 900; color: #92400e; margin-bottom: 8px; }
+  .zsq-wd-swatches { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .zsq-swatch { width: 64px; height: 64px; border-radius: 50%; border: 4px solid #fff; cursor: pointer;
+    box-shadow: 0 0 0 3px #cbd5e1, 0 4px 0 rgba(0,0,0,.12); font-size: 26px; line-height: 1; padding: 0;
+    display: flex; align-items: center; justify-content: center; }
+  .zsq-swatch.zsq-on { box-shadow: 0 0 0 5px ${GOLD}, 0 4px 0 rgba(0,0,0,.12); }
+  .zsq-swatch-txt { background: #f1f5f9; color: #334155; font-size: 16px; font-weight: 800; }
+  .zsq-wd-locked { opacity: .55; filter: grayscale(1); }
+  .zsq-wd-locked .zsq-wd-need { font-size: 18px; font-weight: 800; color: #475569; }
 
   /* ---------- responsive: phones ---------- */
   @media (max-width: 480px) {
@@ -631,7 +643,7 @@ export const UI = {
   },
 
   /** Pause menu: resume or replay the how-to-play tutorial. */
-  showPauseMenu({ onResume, onHowTo } = {}) {
+  showPauseMenu({ onResume, onHowTo, onOutfit } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
     const card = el('div', 'zsq-pause-card');
@@ -652,8 +664,96 @@ export const UI = {
       hide(wrap);
       if (typeof onHowTo === 'function') onHowTo();
     };
-    row.append(resume, howto);
+    const wardrobe = el('button', 'zsq-bigbtn zsq-howto', '👗 Wardrobe');
+    wardrobe.onclick = () => {
+      SoundFX.pop();
+      this.showWardrobe({ onOutfit, onClose: () => this.showPauseMenu({ onResume, onHowTo, onOutfit }) });
+    };
+    row.append(resume, howto, wardrobe);
     card.appendChild(row);
+    wrap.appendChild(card);
+    show(wrap);
+  },
+
+  /** Wardrobe card (inside the pause overlay): wear unlocked star rewards. onOutfit(outfit) applies + saves. */
+  showWardrobe({ onOutfit, onClose } = {}) {
+    const wrap = _els.pauseWrap;
+    wrap.innerHTML = '';
+    const card = el('div', 'zsq-pause-card');
+    card.append(el('div', 'zsq-tut-emoji', '👗'), el('div', 'zsq-tut-title', 'Wardrobe'));
+    const unlocked = Save.data.milestones || [];
+    const outfit = Save.data.outfit || (Save.data.outfit = {});
+    const earn = (id) => {
+      const m = MILESTONES.find((x) => x.id === id);
+      return m ? `Earn ${m.stars} stars ⭐` : '';
+    };
+    const apply = () => {
+      Save.data.outfit = sanitizeOutfit(Save.data.outfit, Save.data.milestones);
+      Save.save();
+      if (typeof onOutfit === 'function') onOutfit(Save.data.outfit);
+      SoundFX.pop();
+    };
+    const mkRow = (title, need, icon) => {
+      const open = unlocked.includes(need);
+      const row = el('div', 'zsq-wd-row' + (open ? '' : ' zsq-wd-locked'));
+      row.appendChild(el('div', 'zsq-wd-name', `${icon} ${title}`));
+      if (!open) row.appendChild(el('div', 'zsq-wd-need', '🔒 ' + earn(need)));
+      return { row, open };
+    };
+    const sw = el('div', 'zsq-wd-swatches');
+    for (const slot of Object.keys(OUTFIT)) {
+      const def = OUTFIT[slot];
+      const { row, open } = mkRow(def.name, def.need, MILESTONES.find((m) => m.id === def.need).emoji);
+      if (open) {
+        const box = el('div', 'zsq-wd-swatches');
+        const btns = [];
+        def.choices.forEach((c, i) => {
+          const b = el('button', 'zsq-swatch', '');
+          b.style.background = '#' + c.color.toString(16).padStart(6, '0');
+          b.setAttribute('aria-label', i === 0 ? `${def.name}: Default` : `${def.name}: ${c.label}`);
+          b.setAttribute('aria-pressed', 'false');
+          b.onclick = () => {
+            if (i === 0) delete Save.data.outfit[slot]; else Save.data.outfit[slot] = c.id;
+            apply(); sync();
+          };
+          btns.push(b); box.appendChild(b);
+        });
+        const sync = () => btns.forEach((b, i) => {
+          const on = (Save.data.outfit[slot] || def.choices[0].id) === def.choices[i].id;
+          b.classList.toggle('zsq-on', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.textContent = on ? '✓' : '';
+        });
+        sync();
+        row.appendChild(box);
+      }
+      card.appendChild(row);
+    }
+    {
+      const { row, open } = mkRow('Butterfly friend', BUDDY_NEED, '🦋');
+      if (open) {
+        const box = el('div', 'zsq-wd-swatches');
+        const on = el('button', 'zsq-swatch zsq-swatch-txt', 'On');
+        const off = el('button', 'zsq-swatch zsq-swatch-txt', 'Off');
+        const sync = () => {
+          const v = !!Save.data.outfit.buddy;
+          on.classList.toggle('zsq-on', v); off.classList.toggle('zsq-on', !v);
+          on.setAttribute('aria-pressed', v ? 'true' : 'false'); off.setAttribute('aria-pressed', v ? 'false' : 'true');
+        };
+        on.setAttribute('aria-label', 'Butterfly friend: On'); off.setAttribute('aria-label', 'Butterfly friend: Off');
+        on.onclick = () => { Save.data.outfit.buddy = true; apply(); sync(); };
+        off.onclick = () => { delete Save.data.outfit.buddy; apply(); sync(); };
+        sync();
+        box.append(on, off);
+        row.appendChild(box);
+      }
+      card.appendChild(row);
+    }
+    const crow = el('div', 'zsq-tut-row');
+    const close = el('button', 'zsq-bigbtn', '✔ Done');
+    close.onclick = () => { SoundFX.pop(); if (typeof onClose === 'function') onClose(); };
+    crow.appendChild(close);
+    card.appendChild(crow);
     wrap.appendChild(card);
     show(wrap);
   },
