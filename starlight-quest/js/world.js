@@ -105,8 +105,8 @@ function buildPrincess(opts, tagId) {
   // Bodice
   add(new THREE.Mesh(G('bodice', () => new THREE.CylinderGeometry(0.24, 0.3, 0.45, 10)), accentMat), 0, 1.32, 0);
   if (opts.fancy) {
-    // Lilac overskirt over the pink cone (pink band still shows below), white-gold hem trim, bodice star gem
-    add(new THREE.Mesh(G('overskirt', () => new THREE.ConeGeometry(0.6, 0.9, 12, 1, true)), accentMat), 0, 0.75, 0).material.side = THREE.DoubleSide;
+    // Short lilac overskirt (peplum) so the pink skirt still shows below, like her portrait;, white-gold hem trim, bodice star gem
+    add(new THREE.Mesh(G('overskirt', () => new THREE.ConeGeometry(0.42, 0.5, 12, 1, true)), accentMat), 0, 1.0, 0).material.side = THREE.DoubleSide;
     const trimMat = M('hemTrim', () => new THREE.MeshStandardMaterial({ color: 0xfff6e6, roughness: 0.5, emissive: 0xc8a24a, emissiveIntensity: 0.25 }));
     add(new THREE.Mesh(G('hemTrim', () => new THREE.TorusGeometry(0.55, 0.035, 6, 24)), trimMat), 0, 0.04, 0).rotation.x = Math.PI / 2;
     const gemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
@@ -170,7 +170,7 @@ function buildPrincess(opts, tagId) {
     if (opts.fancy) {
       // Bigger, more upright tiara with three pink gems along the top
       tiara.scale.setScalar(1.4);
-      tiara.rotation.x = -0.55;
+      tiara.rotation.x = -1.0;
       const gemMat = M('pinkGem', () => new THREE.MeshStandardMaterial({ color: 0xff7fb0, roughness: 0.3, emissive: 0xff4f90, emissiveIntensity: 0.35 }));
       const tGemGeo = G('tiaraGem', () => new THREE.SphereGeometry(0.045, 8, 6));
       [0.28, 0.5, 0.72].forEach((t) => {
