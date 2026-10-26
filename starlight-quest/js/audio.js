@@ -299,12 +299,47 @@ export const Narrator = {
    * skipping the MP3. Use for quest-specific lines (story, questions,
    * hints) where the spoken words must match the on-screen text.
    */
-  speakExact(princessId, text) {
+  speakExact(princessId, text, onDone) {
     _stopTTS();
     _stopMP3();
     _speaking = false;
     _seq++;
-    _speakTTS(text, _voiceParams(princessId));
+    _speakTTS(text, _voiceParams(princessId), _once(onDone));
+  },
+
+  /**
+   * Play one recorded clip by URL, then call onDone. Respects mute and cancels
+   * anything in flight. If the clip is missing or fails, it is skipped silently
+   * (no TTS fallback) and onDone still fires, unless something newer started.
+   */
+  playClip(url, onDone) {
+    _stopTTS();
+    _stopMP3();
+    _speaking = false;
+    _seq++;
+    const done = _once(onDone);
+    if (_muted) return;
+    try {
+      if (typeof Audio === 'undefined') { done(); return; }
+      const a = new Audio();
+      _currentAudio = a;
+      let over = false;
+      const finish = () => {
+        if (over) return;
+        over = true;
+        if (_currentAudio === a) { _stopMP3(); _speaking = false; }
+        done();
+      };
+      a.onerror = finish;
+      a.onended = finish;
+      a.oncanplaythrough = () => {
+        _speaking = true;
+        a.play().catch(finish);
+      };
+      setTimeout(() => { if (!_speaking) finish(); }, 3000);
+      a.src = url;
+      a.load();
+    } catch (e) { done(); }
   },
 
   /** Speak a non-princess line with explicit voice shaping. */

@@ -20,5 +20,7 @@ jobs:
         run: node starlight-quest/tests/pic_check.mjs
       - name: Voice check
         run: node starlight-quest/tests/voice_check.mjs
+      - name: Sound clip check
+        run: node starlight-quest/tests/sound_check.mjs
       - name: Precache and stamp check
         run: node starlight-quest/tests/precache_check.mjs

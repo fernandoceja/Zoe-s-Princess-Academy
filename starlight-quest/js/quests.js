@@ -368,20 +368,66 @@ function _shuffle(arr, rng) {
 }
 function _sample(arr, n, rng) { return _shuffle(arr, rng).slice(0, n); }
 
+// Which letter the Belle hint points at: a letter the right word has that NO
+// wrong choice shares in the same spot (first letter, then last letter, then
+// any position). Returns the index, or -1 when the hint is about length/spelling.
+function _hintPos(w, distractors) {
+  const differs = (i, ch) => distractors.every((d) => d[i] !== ch);
+  if (differs(0, w[0])) return 0;
+  const last = w[w.length - 1];
+  if (distractors.every((d) => d[d.length - 1] !== last)) return w.length - 1;
+  for (let i = 1; i < w.length; i++) if (differs(i, w[i])) return i;
+  return -1;
+}
+
 // Belle hint: point at a letter the right word has that NO wrong choice shares
 // in the same spot (first letter, then last letter, then any position).
 export function _belleHint(w, distractors) {
-  const differs = (i, ch) => distractors.every((d) => d[i] !== ch);
-  if (differs(0, w[0])) return `Good try! Let's look again. '${w}' starts with the letter ${w[0]}.`;
+  const i = _hintPos(w, distractors);
   const last = w[w.length - 1];
-  if (distractors.every((d) => d[d.length - 1] !== last)) return `Good try! Let's look again. '${w}' ends with the letter ${last}.`;
+  if (i === 0) return `Good try! Let's look again. '${w}' starts with the letter ${w[0]}.`;
+  if (i === w.length - 1) return `Good try! Let's look again. '${w}' ends with the letter ${last}.`;
   const ord = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
-  for (let i = 1; i < w.length; i++) {
-    if (differs(i, w[i])) return `Good try! Let's look again. The ${ord[i] || 'next'} letter in '${w}' is ${w[i]}.`;
-  }
+  if (i > 0) return `Good try! Let's look again. The ${ord[i] || 'next'} letter in '${w}' is ${w[i]}.`;
   const lens = distractors.every((d) => d.length !== w.length);
   if (lens) return `Good try! Let's look again. '${w}' has ${w.length} letters.`;
   return `Good try! Let's look again. Spell it with me: ${w.split('').join(' - ')}.`;
+}
+
+// Belle's recorded phonics clips (repo-root assets/audio/EN/curriculum/belle/).
+// A wrong answer plays the clip for the letter the hint points at, so Zoe hears
+// the letter's SOUND (text-to-speech would say its name). Short vowels only
+// (the 'o' clip says the long sound); no x or q.
+export const BELLE_CLIP_DIR = '../assets/audio/EN/curriculum/belle/';
+const LETTER_CLIPS = {
+  a: 'a_says_ah_apple', b: 'b_says_buh_ball', c: 'c_says_kuh_cat', d: 'd_says_duh_dog',
+  e: 'e_says_eh_egg', f: 'f_says_fuh_fish', g: 'g_says_guh_goat', h: 'h_says_huh_hat',
+  i: 'i_says_ih_igloo', j: 'j_says_juh_jar', k: 'k_says_kuh_kite', l: 'l_says_luh_lion',
+  m: 'm_says_mmm_moon', n: 'n_says_nuh_nest', p: 'p_says_puh_pig', r: 'r_says_ruh_rainbow',
+  s: 's_says_sss_sun', t: 't_says_tuh_turtle', u: 'u_says_uh_umbrella', v: 'v_says_vuh_van',
+  w: 'w_says_wuh_wagon', y: 'y_says_yuh_yarn', z: 'z_says_zzz_zebra',
+};
+const DIGRAPH_CLIPS = {
+  sh: 's_h_says_shh_ship', ch: 'c_h_says_chh_chair', th: 't_h_says_thh_three',
+  wh: 'w_h_says_wuh_wheel', ck: 'c_k_says_kuh_clock', ng: 'n_g_says_ing_ring',
+};
+export const BELLE_CLIPS = [...Object.values(LETTER_CLIPS), ...Object.values(DIGRAPH_CLIPS)].map((c) => c + '.mp3');
+
+// Clip file for the letter the hint points at, or undefined when none fits
+// (or when the clip's example word would give the answer away).
+export function _belleSound(w, distractors) {
+  const i = _hintPos(w, distractors);
+  if (i < 0) return undefined;
+  let clip;
+  for (const at of [i - 1, i]) {
+    const dg = at >= 0 && at + 1 < w.length ? DIGRAPH_CLIPS[w[at] + w[at + 1]] : undefined;
+    if (dg) { clip = dg; break; }
+  }
+  if (!clip) clip = LETTER_CLIPS[w[i]];
+  if (!clip) return undefined;
+  const example = clip.split('_').pop();
+  if (example === w || distractors.includes(example)) return undefined;
+  return clip + '.mp3';
 }
 
 // ============================================================================
@@ -429,22 +475,32 @@ const SENTENCES = [
 ];
 
 function _wordRound(w, d) {
-  return { prompt: `Which word says '${w}'?`, choices: [w, ...d], answer: w, hint: _belleHint(w, d) };
+  const r = { prompt: `Which word says '${w}'?`, choices: [w, ...d], answer: w, hint: _belleHint(w, d) };
+  const sound = _belleSound(w, d);
+  if (sound) r.sound = sound;
+  return r;
 }
 function _sightRound(w, pool, rng) {
   const others = pool.filter((x) => x !== w);
   const close = _shuffle(others.filter((x) => x[0] === w[0] || x.length === w.length), rng);
   const d = [...new Set([...close, ..._shuffle(others, rng)])].slice(0, 2);
-  return _wordRound(w, d);
+  // Sight words are not decodable (know, give, here), so no letter-sound clip.
+  const { sound, ...r } = _wordRound(w, d);
+  return r;
 }
 function _cvcRound(set) {
   const w = set[0];
-  const sounds = w.split('').join(' - ');
-  return {
-    prompt: `Sound it out: ${sounds}. Which word is it?`,
+  const d = set.slice(1);
+  // `say` skips the letters: text-to-speech would read them as names (see, ay, tee).
+  const r = {
+    prompt: `Sound it out: ${w.split('').join(' - ')}. Which word is it?`,
+    say: 'Sound it out. Which word is it?',
     choices: set.slice(), answer: w,
-    hint: `Good try! Say it slow with me: ${sounds}. Which one is it?`,
+    hint: _belleHint(w, d),
   };
+  const sound = _belleSound(w, d);
+  if (sound) r.sound = sound;
+  return r;
 }
 function _sentenceRound([text, ans, d1, d2, answerSay]) {
   return {
