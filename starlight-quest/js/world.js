@@ -868,6 +868,91 @@ export function createWorld(container, hooks) {
     scene.add(propShadows);
   }
 
+  // --- Butterflies (W15) -----------------------------------------------------
+  // 5 pastel butterflies (2 wing planes each, 3 shared materials). Decorative only:
+  // not in npcHitMeshes and raycast is a no-op, so taps pass through; no colliders.
+  // Calm motion: perched on meadow flowers with a tiny, slow flap and no drifting.
+  const butterflies = [];
+  const butterflyFlutter = (() => {
+    const wingTex = makeCanvasSprite((ctx, s) => {
+      // Wing hinged at the left edge, extending right: soft upper and lower lobes + a light spot.
+      ctx.fillStyle = 'rgba(232,232,232,0.96)';
+      ctx.beginPath();
+      ctx.ellipse(s * 0.5, s * 0.34, s * 0.46, s * 0.3, -0.35, 0, Math.PI * 2);
+      ctx.ellipse(s * 0.4, s * 0.68, s * 0.32, s * 0.24, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,1)';
+      ctx.beginPath(); ctx.arc(s * 0.6, s * 0.3, s * 0.1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(s * 0.42, s * 0.7, s * 0.06, 0, Math.PI * 2); ctx.fill();
+    }, 64);
+    const wingMats = [0xffb3d1, 0xcdb4f6, 0xfff09a].map((hex) => new THREE.MeshBasicMaterial({
+      map: wingTex, color: hex, transparent: true, side: THREE.DoubleSide, depthWrite: false,
+    }));
+    // Flat in XZ, hinge at the origin, wing extends along +X.
+    const wingGeo = new THREE.PlaneGeometry(0.35, 0.3);
+    wingGeo.rotateX(-Math.PI / 2);
+    wingGeo.translate(0.175, 0, 0);
+    // Flower tops for perching (calm motion): read the meadow's petal discs, skip any near an NPC pad.
+    const perch = [];
+    scene.traverse((o) => {
+      if (o.isInstancedMesh && o.count === 42 && o.geometry.parameters && o.geometry.parameters.radiusTop === 0.32) {
+        const m = new THREE.Matrix4(), v = new THREE.Vector3();
+        for (let i = 0; i < o.count; i++) {
+          o.getMatrixAt(i, m); v.setFromMatrixPosition(m);
+          let ok = true;
+          for (const p of Object.values(landPads)) if (Math.hypot(v.x - p.x, v.z - p.z) < 3.5) ok = false;
+          if (ok) perch.push(v.clone());
+        }
+      }
+    });
+    const mc = landCenters.meadow;
+    // cx, cz, ax, az: loop center + radii on the ground; clear of the castle (-11.5,-8.5) and NPC pads.
+    const routes = [
+      [6, 25, 3.5, 2.5], [-6, 28, 3, 3], [1, 31, 4, 2], [6, 6, 3.5, 3], [-5, 5, 3, 3.5],
+    ];
+    routes.forEach((r, i) => {
+      const group = new THREE.Group();
+      const mat = wingMats[i % 3];
+      const wl = new THREE.Group(), wr = new THREE.Group();
+      const ml = new THREE.Mesh(wingGeo, mat), mr = new THREE.Mesh(wingGeo, mat);
+      ml.scale.x = -1;
+      ml.raycast = mr.raycast = () => {};
+      wl.add(ml); wr.add(mr);
+      group.add(wl, wr);
+      group.scale.setScalar(2); // 0.35 x 0.3 wings were specks at phone camera distance
+      const pk = perch.length ? perch[Math.floor((i + 0.5) * perch.length / 5) % perch.length] : null;
+      butterflies.push({
+        group, wl, wr, r,
+        ph: i * 1.7, fx: 0.17 + i * 0.019, fz: 0.13 + i * 0.023, fy: 0.4 + i * 0.07,
+        // Perch spot: just above a flower top (fallback: low over the meadow floor).
+        px: pk ? pk.x : mc.x - 4 + i * 2, py: (pk ? pk.y + 0.16 : 1.3), pz: pk ? pk.z : mc.z + 2,
+        pyaw: i * 1.3,
+      });
+      scene.add(group);
+    });
+    return (t) => {
+      for (let i = 0; i < butterflies.length; i++) {
+        const b = butterflies[i], r = b.r;
+        let a;
+        if (calmMotion) {
+          b.group.position.set(b.px, b.py, b.pz);
+          b.group.rotation.y = b.pyaw;
+          a = 0.55 + Math.sin(t * 1.2 + b.ph) * 0.15;
+        } else {
+          const u = t * b.fx + b.ph, w = t * b.fz + b.ph * 1.3;
+          b.group.position.set(
+            r[0] + Math.sin(u) * r[2],
+            1.8 + Math.sin(t * b.fy + b.ph) * 0.45,
+            r[1] + Math.sin(w) * r[3]
+          );
+          b.group.rotation.y = Math.atan2(Math.cos(u) * r[2] * b.fx, Math.cos(w) * r[3] * b.fz);
+          a = 0.35 + Math.sin(t * 9 + b.ph) * 0.8;
+        }
+        b.wl.rotation.z = a; b.wr.rotation.z = -a;
+      }
+    };
+  })();
+
   // --- Sparkle sprites (shared texture for markers/effects) ------------------
   const softDot = makeCanvasSprite((ctx, s) => {
     const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
@@ -1250,6 +1335,9 @@ export function createWorld(container, hooks) {
       }
       p.needsUpdate = true;
     }
+
+    // ---- Butterflies ----
+    butterflyFlutter(t);
 
     // ---- Celebration bursts ----
     for (let i = bursts.length - 1; i >= 0; i--) {
