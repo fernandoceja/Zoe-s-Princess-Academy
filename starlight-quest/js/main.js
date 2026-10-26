@@ -12,7 +12,7 @@ import { UI } from './ui.js?v=20261026w1';
 import { Save, checkMilestones } from './save.js?v=20261026w1';
 import { Input } from './input.js?v=20261026w1';
 import { startPadNav } from './padnav.js?v=20261026w1';
-import { landState, recordQuest, today } from './ladder.js?v=20261026w1';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261026w1';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
@@ -113,6 +113,7 @@ export async function main(container) {
   UI.updateStars(Save.data.stars);
   world.setOutfit(Save.data.outfit);
   refreshPill();
+  refreshTodayStar();
 
   UI.showTitle(() => {
     Save.data.started = true;
@@ -459,9 +460,14 @@ export async function main(container) {
       () => { Narrator.stop(); next(); });
   }
 
+  function refreshTodayStar() {
+    try { world.setTodayStar(pickTodayStar(Save.data, today())); } catch (e) { /* decoration only */ }
+  }
+
   function completeQuest(npcId) {
     Save.data.ladder[npcId] = recordQuest(landState(Save.data.ladder[npcId]), results);
     Save.data.lastPlay[npcId] = today();
+    refreshTodayStar();
     if (Save.data.done.includes(npcId)) {
       // Practice replay: no new shard, straight to the soft stop.
       Save.save();
