@@ -390,7 +390,7 @@ export async function main(container) {
           // Wrong letter: it wiggles and is not placed; count it like a wrong pick, never reveal.
           misses++;
           SoundFX.pop();
-          Narrator.speakExact(npcId, round.hint);
+          Narrator.speakExact(npcId, round.hintSay || round.hint);
         } else if (pickedId === '__sortwrong') {
           // Wrong bin: the item stays; count it for the ladder but never reveal.
           misses++;
@@ -424,7 +424,8 @@ export async function main(container) {
           // Speak exactly the on-screen text ('Good try!' + hint) in her voice,
           // so the words heard always match the words shown.
           // Belle phonics: then play the letter's sound clip (not its name).
-          Narrator.speakExact(npcId, round.hint, round.sound
+          // Spelling rounds speak the word (hintSay) but never show it.
+          Narrator.speakExact(npcId, round.hintSay || round.hint, round.sound
             ? () => Narrator.playClip(BELLE_CLIP_DIR + round.sound)
             : undefined);
           UI.revealAnswer({ correctId: null, pickedId, message: round.hint }, () => startRound());

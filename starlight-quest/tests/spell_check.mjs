@@ -49,7 +49,9 @@ function sweep(label, spelling, vowels) {
           if (r.spell.tiles.join('') === w) fail(label + ': tiles not shuffled', r);
           if (r.choices.filter((c) => c !== w).some((c) => c === w)) fail(label + ': misspelling = word', r);
         }
-        for (const t of [r.say, r.hint, r.replay]) if (t && (/\b[a-z]( [a-z]){2,}\b/.test(t) || /\b[a-z]-[a-z]-[a-z]/.test(t))) fail(label + ': letter-by-letter speech', t);
+        // The shown hint must not spell out the word (the spoken hintSay may say it).
+        if (r.hintSay && [...WEEK.spelling, ...WEEK.vowels].some((x) => new RegExp(`\\b${x}\\b`, 'i').test(r.hint))) fail(label + ': shown hint gives the word away', r.hint);
+        for (const t of [r.say, r.hint, r.hintSay, r.replay]) if (t && (/\b[a-z]( [a-z]){2,}\b/.test(t) || /\b[a-z]-[a-z]-[a-z]/.test(t))) fail(label + ': letter-by-letter speech', t);
       }
     }
   }

@@ -12,7 +12,7 @@ for (const npc of ['belle','elsa','cinderella','rapunzel']) for (const T of [1,2
       L.forEach((l) => { if (!l) chk(`${npc} T${T} choice`, l); });
       v += ' Is it ' + L.slice(0, -1).join(', ') + ', or ' + L[L.length - 1] + '?'; }
     chk(`${npc} T${T} open`, v); if (r.replay) chk(`${npc} T${T} replay`, r.replay);
-    chk(`${npc} T${T} hint`, r.hint); chk(`${npc} T${T} reveal`, q.revealLines(r).say);
+    chk(`${npc} T${T} hint`, r.hint); if (r.hintSay) chk(`${npc} T${T} hintSay`, r.hintSay); chk(`${npc} T${T} reveal`, q.revealLines(r).say);
   }
 console.log('spoken lines checked', n, 'problems', bad.size); for (const k of [...bad.keys()].slice(0, 25)) console.log(' ', k);
 if (bad.size) process.exit(1);

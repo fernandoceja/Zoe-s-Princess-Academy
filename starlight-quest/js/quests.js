@@ -628,7 +628,9 @@ function _vowelRound(w, rng) {
     say: `Listen: ${w}. Which letter is missing?`,
     show: w.split('').map((c, k) => (k === i ? '_' : c)).join(' '),
     choices: [v, ...others], answer: v,
-    hint: `Good try! Say it slowly: ${w}. What sound do you hear ${where}?`,
+    // Shown hint never spells the word; the spoken hint (hintSay) can say it.
+    hint: `Good try! Listen again and say it slowly. What sound do you hear ${where}?`,
+    hintSay: `Good try! Say it slowly: ${w}. What sound do you hear ${where}?`,
   };
   if (v !== 'o') r.sound = LETTER_CLIPS[v] + '.mp3'; // the 'o' clip says the long sound
   return r;
@@ -645,7 +647,8 @@ function _endingRound(w, rng) {
     say: `Listen: ${w}. Which ending finishes the word?`,
     show: `${start.split('').join(' ')} _ _`,
     choices: [end, ...d], answer: end,
-    hint: `Good try! Say it slowly: ${w}. Which letters do you hear at the end?`,
+    hint: 'Good try! Listen again and say it slowly. Which letters do you hear at the end?',
+    hintSay: `Good try! Say it slowly: ${w}. Which letters do you hear at the end?`,
   };
 }
 const _LOOKALIKE = { b: 'd', d: 'b', p: 'q', m: 'n', n: 'm', e: 'a', a: 'e', i: 'e', o: 'u', u: 'o', s: 'c', t: 'd' };
@@ -675,7 +678,8 @@ function _spellRound(w, rng) {
     say: `Listen: ${w}. Tap the letters to build the word.`,
     replay: `Listen: ${w}. Tap the letters to build the word.`,
     choices: [w, ..._misspellings(w, rng)], answer: w,
-    hint: `Good try! Say it slowly: ${w}. What sound comes next?`,
+    hint: 'Good try! Listen again and say it slowly. What sound comes next?',
+    hintSay: `Good try! Say it slowly: ${w}. What sound comes next?`,
     spell: { word: w, tiles },
   };
 }
