@@ -502,7 +502,7 @@ function _weekList(input) {
 }
 function _weekSentence(input) {
   const t = String(input == null ? '' : input).trim().replace(/\s+/g, ' ');
-  return t.length <= 60 && /^[A-Z][A-Za-z' ]*[.?!]$/.test(t) && /[a-z]/.test(t) ? t : '';
+  return t.length <= 60 && /^[A-Z][A-Za-z', ]*[.?!]$/.test(t) && /[a-z]/.test(t) ? t : '';
 }
 /** Clean a pack: bad or empty fields fall back to the default. Returns a fresh object. */
 export function cleanWeek(raw) {
@@ -828,7 +828,9 @@ const TIERS = {
       if (rng() < 0.5) { const dg = _pick(DIGRAPH_SETS, rng); return _wordRound(dg[0], dg.slice(1)); }
       // The week's sight words are always in the pool, with the class list or built-in list.
       const sight = [...new Set([...WEEK.sight, ...(SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS : SIGHT_1ST)])];
-      return _sightRound(_pick(sight, rng), [...new Set([...sight, ...DOLCH_1ST])], rng);
+      // Half of these rounds practice this week's sight words, so they come up often.
+      const w = WEEK.sight.length && rng() < 0.5 ? _pick(WEEK.sight, rng) : _pick(sight, rng);
+      return _sightRound(w, [...new Set([...sight, ...DOLCH_1ST])], rng);
     },
     3: (rng) => {
       if (rng() < 0.5) { const bl = _pick(BLEND_SETS, rng); return _wordRound(bl[0], bl.slice(1)); }
