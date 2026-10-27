@@ -12,6 +12,7 @@ import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
 import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, TREASURE_LANDS, TREASURE_LAND_NAMES, awardRowStar, SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine } from './treasures.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
+import { builtSlotIds, shouldShowNewKingdoms } from './worldmap.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
@@ -112,6 +113,11 @@ export async function main(container) {
       if (state !== 'roam' || paused) return;
       SoundFX.chime();
     },
+    onGateTap() {
+      if (state !== 'roam' || paused) return;
+      SoundFX.chime();
+      UI.toast('A new kingdom will open here soon! ✨');
+    },
     onSecretTap(part) {
       if (state !== 'roam' || paused) return;
       const id = secretTracker.tap(part, Date.now());
@@ -171,6 +177,10 @@ export async function main(container) {
       world.setInputEnabled(true);
       UI.setRoamUI(true);
       UI.toast('Walk to a princess and say hello! 👑');
+      // One-time card, only once a new kingdom has been built (never with zero built slots).
+      if (shouldShowNewKingdoms(builtSlotIds().length, Save.data.seenNewKingdoms)) {
+        UI.showNewKingdoms(() => { Save.data.seenNewKingdoms = true; Save.save(); });
+      }
       if (isIOS() && !canBypassSilentSwitch()) {
         setTimeout(() => UI.toast('🔔 No sound? Flip the silent switch off and turn the volume up.'), 2500);
       }
