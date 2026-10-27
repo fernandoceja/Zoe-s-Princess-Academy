@@ -1127,7 +1127,7 @@ export const UI = {
       sh.setAttribute('aria-live', 'polite');
       modal.appendChild(tileBuilder({
         tiles: data.spell.tiles, target: word.split(''),
-        speak: (l) => { SoundFX.pop(); const s = tileSound(l); if (s && !s.tts && s.url) Narrator.playClip(s.url, undefined, s.stopAt); },
+        speak: (l) => { SoundFX.pop(); const s = tileSound(l); if (!s) return; if (s.tts) Narrator.speakExact(data.princessId, s.tts); else if (s.url) Narrator.playClip(s.url, undefined, s.stopAt); },
         onWrong: (info) => { sh.textContent = data.spell.hint || ''; if (typeof onChoose === 'function') onChoose('__spellwrong', info); },
         onDone: () => { sh.textContent = ''; if (typeof onChoose === 'function') onChoose('__spelldone'); },
       }));
