@@ -1,5 +1,6 @@
 // Today's star: deterministic pick of the land Zoe should visit.
 import { pickTodayStar } from '../js/ladder.js';
+import { NPC_ORDER } from '../js/quests.js';
 const bad = [];
 const expect = (n, got, want) => { if (got !== want) bad.push(`${n}: got "${got}" want "${want}"`); };
 const T = '2026-10-26';
@@ -14,7 +15,7 @@ expect('belle today, elsa review', pickTodayStar({ done: ['belle'], lastPlay: { 
 expect('review but played today', pickTodayStar({ done: [], lastPlay: { rapunzel: T }, ladder: { rapunzel: rev } }, T), 'belle');
 expect('new land before done land', pickTodayStar({ done: ['belle', 'elsa'], lastPlay: {}, ladder: {} }, T), 'rapunzel');
 expect('stable', pickTodayStar({ done: ['belle'], lastPlay: {}, ladder: {} }, T), pickTodayStar({ done: ['belle'], lastPlay: {}, ladder: {} }, T));
-const all = { belle: T, elsa: T, rapunzel: T, cinderella: T };
+const all = Object.fromEntries(NPC_ORDER.map((id) => [id, T]));
 expect('all today', String(pickTodayStar({ done: [], lastPlay: all, ladder: { elsa: rev } }, T)), 'null');
 
 if (bad.length) { console.error('FAIL\n' + bad.join('\n')); process.exit(1); }

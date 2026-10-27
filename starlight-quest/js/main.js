@@ -6,7 +6,7 @@
  */
 
 import { createWorld } from './world.js?v=20261027e2';
-import { PRINCESSES, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027e2';
+import { PRINCESSES, NPC_ORDER, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027e2';
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027e2';
 import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
@@ -15,7 +15,7 @@ import { Input } from './input.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
-const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+const NPC_IDS = NPC_ORDER;
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
@@ -591,7 +591,7 @@ export async function main(container) {
       () => {
         dlg(npcId, P.name, P.color, P.portrait, quest.complete, 'praise', () => {
           afterQuest(npcId, () => {
-            if (Save.data.done.length >= NPC_IDS.length) runFinale();
+            if (NPC_IDS.every((id) => Save.data.done.includes(id))) runFinale();
             else showRest(npcId);
           });
         });

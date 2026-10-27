@@ -5,7 +5,7 @@
  * - Review: a missed round comes back in later plays; it leaves the queue after
  *   it has been answered right on the first try twice.
  */
-import { roundKey } from './quests.js?v=20261027e2';
+import { roundKey, NPC_ORDER } from './quests.js?v=20261027e2';
 
 export const MAX_REVIEW = 6;
 
@@ -55,7 +55,7 @@ export function today(d = new Date()) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-export const LAND_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+export const LAND_ORDER = NPC_ORDER;
 
 /**
  * Which land should Zoe visit today? Pure and deterministic (land order breaks ties).

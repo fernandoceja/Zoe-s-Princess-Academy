@@ -7,7 +7,7 @@
 
 import { Narrator, SoundFX } from './audio.js?v=20261027e2';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261027e2';
-import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, WEEK, WEEK_DEFAULT, cleanWeek, setWeek, tileSound } from './quests.js?v=20261027e2';
+import { PARENT_CORNER_HTML, PRINCESSES, NPC_ORDER, SCHOOL_WORDS, cleanWordList, setSchoolWords, WEEK, WEEK_DEFAULT, cleanWeek, setWeek, tileSound } from './quests.js?v=20261027e2';
 import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261027e2';
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
@@ -1377,14 +1377,14 @@ export const UI = {
       if (iso === today(t)) return 'Yesterday';
       return `${MON[+iso.slice(5, 7) - 1] || '?'} ${+iso.slice(8, 10)}`;
     };
-    const rows = ['belle', 'elsa', 'rapunzel', 'cinderella'].map((id) => {
+    const rows = NPC_ORDER.map((id) => {
       const p = PRINCESSES[id] || { name: id, landName: '' };
       const st = landState(d.ladder && d.ladder[id]);
       return `<tr><td><b>${esc(p.name)}</b>${done.includes(id) ? ' ✓' : ''}<small>${esc(p.landName)}</small></td>`
         + `<td>${tiers[st.tier]}</td><td>${st.review.length}</td><td>${esc(day(d.lastPlay && d.lastPlay[id]))}</td></tr>`;
     }).join('');
     return '<div class="zsq-prog"><h3>Zoe\'s progress</h3>'
-      + `<p>⭐ ${(d.stars | 0)} stars &nbsp;·&nbsp; 🏰 ${done.length} of 4 lands restored</p>`
+      + `<p>⭐ ${(d.stars | 0)} stars &nbsp;·&nbsp; 🏰 ${done.length} of ${NPC_ORDER.length} lands restored</p>`
       + '<table><tr><th>Land</th><th>Level</th><th>Review</th><th>Last played</th></tr>'
       + `${rows}</table></div>`;
   },
