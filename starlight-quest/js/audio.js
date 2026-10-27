@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES } from './quests.js?v=20261027e2';
+import { PRINCESSES, NO_CLIP_IDS } from './quests.js?v=20261027e2';
 
 export let LANG = 'EN';
 export function setLang(l) {
@@ -227,6 +227,12 @@ function _speakPrincess(princessId, kind, text, onDone) {
   const done = _once(onDone);
   if (_muted) return;
   const textStr = String(text || '');
+
+  // Princesses without recorded clips: no MP3 lookup, speak right away.
+  if (NO_CLIP_IDS.includes(princessId)) {
+    _speakTTS(textStr, _voiceParams(princessId), done);
+    return;
+  }
 
   // NOTE: when deployed as starlight-quest/ inside Zoe's Princess Academy repo,
   // the voice MP3s live in the repo-root assets/audio/ folder (shared with the Academy).

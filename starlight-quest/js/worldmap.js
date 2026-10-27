@@ -44,6 +44,25 @@ export const NEW_LAND_SLOTS = [
 // The slot reserved for Anna (see above).
 export const ANNA_SLOT = 'ese';
 
+// PLANNED_SLOTS — which new-kingdom slot each new princess will get (princess id -> slot id).
+// Nothing is built from this yet: it only records the plan so each kingdom PR knows where to
+// put her land, and so no two of them pick the same slot. Anna is fixed at 'ese' (beside her
+// sister Elsa's Frostfall Peaks).
+//   anna    ese  east-south-east   Sunny Fjord Harbor     (next to Frostfall, sister's land)
+//   ariel   sse  south-south-east  Seashell Cove          (south side, nearest the water theme)
+//   moana   ssw  south-south-west  Wayfinder Isle         (south side, sand and sea)
+//   tiana   wsw  west-south-west   Firefly Bayou          (west, near Glass Slipper Village)
+//   aurora  ene  east-north-east   Rosewood Glen          (north-east, away from the castle)
+//   jasmine nne  north-north-east  Moonlit Palace Garden  (north, near the Library at night)
+export const PLANNED_SLOTS = {
+  anna: 'ese',
+  ariel: 'sse',
+  moana: 'ssw',
+  tiana: 'wsw',
+  aurora: 'ene',
+  jasmine: 'nne',
+};
+
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
 export const BUILT_SLOTS = {};

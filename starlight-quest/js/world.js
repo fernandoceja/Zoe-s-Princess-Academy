@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { Input } from './input.js?v=20261027e2';
 import { OUTFIT } from './save.js?v=20261027e2';
+import { NPC_ORDER } from './quests.js?v=20261027e2';
 import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
@@ -33,10 +34,19 @@ const LANDS = {
 };
 
 const NPC_DEFS = {
+  // Spawned ones are listed in NPC_ORDER (quests.js). The six below the first four are the
+  // upcoming-kingdom princesses (K3): defined, but not spawned until her kingdom PR adds her to NPC_ORDER.
   belle:     { land: 'library',   dress: 0x5b8def, accent: 0xffd76a, hair: 0x6b4226, hairStyle: 'bun',   name: 'Belle' },
   elsa:      { land: 'frostfall', dress: 0x9fd8f0, accent: 0xffffff, hair: 0xf5ecd7, hairStyle: 'braid', name: 'Elsa' },
   rapunzel:  { land: 'meadow',    dress: 0x9fe6a8, accent: 0xff9ec6, hair: 0xffd34d, hairStyle: 'long',  name: 'Rapunzel' },
   cinderella:{ land: 'village',   dress: 0xa9d3f5, accent: 0xfff2b0, hair: 0xd9a05b, hairStyle: 'bun',   name: 'Cinderella' },
+  // Original looks (not film outfits): skin tones vary, colors follow each princess's own land.
+  ariel:     { land: 'cove',      dress: 0xff8a65, accent: 0xfff1d6, hair: 0xe8b96a, hairStyle: 'long',  skin: 0xf1c49c, name: 'Ariel' },
+  moana:     { land: 'isle',      dress: 0xf2d49b, accent: 0x2b8fb3, hair: 0x3b2417, hairStyle: 'curls', skin: 0xb97a4f, name: 'Moana' },
+  jasmine:   { land: 'garden',    dress: 0x2a8f94, accent: 0xdfe8f5, hair: 0x2b1b2e, hairStyle: 'bun',   skin: 0xc98f63, name: 'Jasmine', tiara: false },
+  anna:      { land: 'harbor',    dress: 0xe0463c, accent: 0xffd84a, hair: 0xa8743f, hairStyle: 'wavy',  skin: 0xf6d3b5, name: 'Anna' },
+  tiana:     { land: 'bayou',     dress: 0x8e44ad, accent: 0xf5b942, hair: 0x2a1a14, hairStyle: 'curls', skin: 0x8a5a3c, name: 'Tiana' },
+  aurora:    { land: 'glen',      dress: 0xa3315b, accent: 0xf6e3c8, hair: 0x5a2d3a, hairStyle: 'braid', skin: 0xdba57a, name: 'Aurora', tiara: false },
 };
 
 // ---------------------------------------------------------------------------
@@ -95,14 +105,15 @@ function M(key, make) {
 
 /**
  * Build a stylized low-poly princess.
- * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid', tiara: bool, tiaraColor?: 'silver', fancy?: bool (Zoe only: overskirt, hem trim, gem tiara, earrings, bodice gem) }
+ * opts: { dress, accent, hair, hairStyle: 'wavy'|'long'|'bun'|'braid'|'curls', skin?: hex, tiara: bool, tiaraColor?: 'silver', fancy?: bool (Zoe only: overskirt, hem trim, gem tiara, earrings, bodice gem) }
  * Returns { group, hitMeshes } — hitMeshes tagged for raycasting.
  */
 function buildPrincess(opts, tagId) {
   const group = new THREE.Group();
   const hitMeshes = [];
   let tiaraGemMat = null;
-  const skin = M('skin', () => new THREE.MeshStandardMaterial({ color: 0xf6cfa8, roughness: 0.8 }));
+  const skinHex = opts.skin || 0xf6cfa8;
+  const skin = M(opts.skin ? 'skin' + skinHex : 'skin', () => new THREE.MeshStandardMaterial({ color: skinHex, roughness: 0.8 }));
   const dressMat = new THREE.MeshStandardMaterial({ color: opts.dress, roughness: 0.7 });
   const accentMat = new THREE.MeshStandardMaterial({ color: opts.accent, roughness: 0.6 });
   const hairMat = new THREE.MeshStandardMaterial({ color: opts.hair, roughness: 0.85 });
@@ -178,6 +189,13 @@ function buildPrincess(opts, tagId) {
       const b = add(new THREE.Mesh(braidGeo, hairMat), 0.22 - i * 0.02, 1.5 - i * 0.28, -0.32 - i * 0.03);
       b.scale.set(1, 1.4, 1);
     }
+  } else if (opts.hairStyle === 'curls') {
+    // Soft ring of round curls framing the face (back and sides), plus a cap on top
+    add(new THREE.Mesh(G('hairCap', () => new THREE.SphereGeometry(0.335, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairMat), 0, 1.88, -0.02);
+    const curlGeo = G('curl', () => new THREE.SphereGeometry(0.16, 10, 8));
+    const ring = [[-0.34, 1.98, 0], [0.34, 1.98, 0], [0, 2.1, -0.12], [-0.2, 2.06, -0.1], [0.2, 2.06, -0.1],
+      [-0.4, 1.76, -0.08], [0.4, 1.76, -0.08], [-0.3, 1.58, -0.14], [0.3, 1.58, -0.14], [0, 1.82, -0.32]];
+    ring.forEach(([x, y, z]) => add(new THREE.Mesh(curlGeo, hairMat), x, y, z));
   } else { // 'bun'
     add(new THREE.Mesh(G('hairCap', () => new THREE.SphereGeometry(0.335, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55)), hairMat), 0, 1.88, -0.02);
     add(new THREE.Mesh(G('bun', () => new THREE.SphereGeometry(0.18, 10, 8)), hairMat), 0, 2.22, -0.18);
@@ -1211,10 +1229,10 @@ export function createWorld(container, hooks) {
   const npcHitMeshes = [];
   const starGeoShared = starGeometry(0.5, 0.21);
 
-  Object.entries(NPC_DEFS).forEach(([id, def], i) => {
+  NPC_ORDER.map((id) => [id, NPC_DEFS[id]]).forEach(([id, def], i) => {
     const padPos = landPads[def.land];
     const { group, hitMeshes } = buildPrincess(
-      { dress: def.dress, accent: def.accent, hair: def.hair, hairStyle: def.hairStyle, tiara: true },
+      { dress: def.dress, accent: def.accent, hair: def.hair, hairStyle: def.hairStyle, skin: def.skin, tiara: def.tiara !== false },
       id
     );
     // Stand on pad, facing the hub
@@ -1799,7 +1817,7 @@ export function createWorld(container, hooks) {
   const bursts = []; // { points, vel, life, maxLife }
 
   function celebrate(landId) {
-    const def = Object.keys(NPC_DEFS).find((id) => NPC_DEFS[id].land === landId);
+    const def = NPC_ORDER.find((id) => NPC_DEFS[id].land === landId);
     if (!def) return;
     const npc = npcs[def];
     const origin = npc.star.position.clone();
