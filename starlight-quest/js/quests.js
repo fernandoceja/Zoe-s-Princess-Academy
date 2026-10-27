@@ -624,7 +624,7 @@ function _vowelRound(w, rng) {
   const others = _shuffle(_VOWELS.filter((x) => x !== v), rng).slice(0, 2);
   const where = i === 0 ? 'at the start' : i === w.length - 1 ? 'at the end' : 'in the middle';
   const r = {
-    prompt: `Which letter is missing in ${w}?`,
+    prompt: 'Listen. Which letter is missing?', // the word is spoken, not shown (showing it gives the answer away)
     say: `Listen: ${w}. Which letter is missing?`,
     show: w.split('').map((c, k) => (k === i ? '_' : c)).join(' '),
     choices: [v, ...others], answer: v,
@@ -641,7 +641,7 @@ function _endingRound(w, rng) {
   pool = [...notWords, ...pool.filter((e) => !notWords.includes(e))];
   const d = pool.slice(0, 2);
   return {
-    prompt: `Which ending finishes ${w}?`,
+    prompt: 'Listen. Which ending finishes the word?',
     say: `Listen: ${w}. Which ending finishes the word?`,
     show: `${start.split('').join(' ')} _ _`,
     choices: [end, ...d], answer: end,
@@ -967,7 +967,8 @@ for (const t of [1, 2, 3]) {
 export function roundKey(r) {
   const v = r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : '';
   const s = r.sort && r.sort.items ? `|sort:${r.sort.items.map((i) => i.name).join(',')}` : '';
-  return `${r.prompt}|${r.answer}${v}${s}`;
+  const w = r.show ? `|show:${r.show}` : ''; // spelling rounds share prompts; the partial word tells them apart
+  return `${r.prompt}|${r.answer}${v}${s}${w}`;
 }
 
 function _tagged(npcId, tier, rng) {

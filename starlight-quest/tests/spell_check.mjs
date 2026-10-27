@@ -25,14 +25,14 @@ function sweep(label, spelling, vowels) {
         if (t === 2 && k !== 'ending') fail(label + ': tier 2 kind', r);
         if (t === 3 && k !== 'spell') fail(label + ': tier 3 kind', r);
         if (k === 'vowel') {
-          const w = vowels.find((x) => r.prompt === `Which letter is missing in ${x}?`);
+          const w = vowels.find((x) => r.say === `Listen: ${x}. Which letter is missing?`);
           if (!w) { fail(label + ': vowel word not in pack', r); continue; }
           used.vowel.add(w);
           if (!/^[aeiou]$/.test(r.answer) || !w.includes(r.answer)) fail(label + ': vowel answer', r);
           if (!r.choices.every((c) => /^[aeiou]$/.test(c))) fail(label + ': vowel choices', r);
           if (w.split('').map((c, i) => (c === r.answer && r.show.split(' ')[i] === '_' ? r.answer : c)).join('') !== w) fail(label + ': show', r);
         } else if (k === 'ending') {
-          const w = spelling.find((x) => r.prompt === `Which ending finishes ${x}?`);
+          const w = spelling.find((x) => r.say === `Listen: ${x}. Which ending finishes the word?`);
           if (!w) { fail(label + ': ending word not in pack', r); continue; }
           used.ending.add(w);
           if (r.answer !== w.slice(-2)) fail(label + ': ending answer', r);
