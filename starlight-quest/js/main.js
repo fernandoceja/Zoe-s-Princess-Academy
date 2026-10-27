@@ -87,6 +87,10 @@ export async function main(container) {
       startQuest(npcId);
     },
     onPauseRequest() { togglePause(); },
+    onWorldTap() {
+      if (state !== 'roam' || paused) return;
+      SoundFX.chime();
+    },
   });
   // Title screen is up: no roaming input until the adventure starts.
   world.setInputEnabled(false);

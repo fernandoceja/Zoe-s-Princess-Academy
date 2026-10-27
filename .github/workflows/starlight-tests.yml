@@ -46,3 +46,5 @@ jobs:
         run: node starlight-quest/tests/blend_check.mjs
       - name: Sorting bins check
         run: node starlight-quest/tests/sort_check.mjs
+      - name: Tap the world check
+        run: node starlight-quest/tests/tap_check.mjs
