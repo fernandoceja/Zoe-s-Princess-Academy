@@ -5,12 +5,12 @@
  * ES module, no external assets (fonts loaded by the integrator).
  */
 
-import { Narrator, SoundFX } from './audio.js?v=20261026s1';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026s1';
-import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, WEEK, WEEK_DEFAULT, cleanWeek, setWeek, tileSound } from './quests.js?v=20261026s1';
-import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026s1';
-import { landState, today } from './ladder.js?v=20261026s1';
-import { Input } from './input.js?v=20261026s1';
+import { Narrator, SoundFX } from './audio.js?v=20261027p1';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261027p1';
+import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, WEEK, WEEK_DEFAULT, cleanWeek, setWeek, tileSound } from './quests.js?v=20261027p1';
+import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261027p1';
+import { landState, today } from './ladder.js?v=20261027p1';
+import { Input } from './input.js?v=20261027p1';
 
 const GOLD = '#ebd373';
 
