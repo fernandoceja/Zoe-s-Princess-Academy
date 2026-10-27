@@ -595,6 +595,100 @@ function _sentenceRound([text, ans, d1, d2, answerSay]) {
   };
 }
 
+// ---- Spelling and short-vowel rounds (S2). They read WEEK when a round is made, so Parent Corner edits apply. ----
+const _VOWELS = ['a', 'e', 'i', 'o', 'u'];
+const _ENDINGS = ['nd', 'nt', 'st', 'nk', 'sk', 'mp', 'ft', 'lt', 'ld', 'lp', 'ng'];
+const _MORE_WORDS = ['lent', 'lest', 'left', 'lift', 'list', 'lens', 'lint', 'link', 'sent', 'sand', 'band', 'bend', 'best',
+  'bent', 'bust', 'dust', 'fist', 'fest', 'test', 'tent', 'tend', 'mend', 'mask', 'mast', 'must', 'nest', 'next', 'pant',
+  'pest', 'pink', 'pond', 'rank', 'rent', 'rest', 'rust', 'sank', 'sunk', 'silk', 'sick', 'task', 'talk', 'wink', 'wind',
+  'went', 'west', 'jump', 'just', 'lamp', 'lump', 'limp', 'hump', 'help', 'held', 'hold', 'hand', 'land', 'last', 'lust',
+  'loft', 'soft', 'felt', 'fend', 'find', 'fund', 'kind', 'mind', 'fond', 'cast', 'cost', 'fact', 'fans', 'sing', 'song',
+  'long', 'lung', 'sink', 'send', 'lend', 'fast', 'past', 'pasta', 'sit', 'set', 'sat', 'sap', 'sip', 'sup'];
+let _known = null;
+// Real words we already know, so a wrong choice is not accidentally also a word.
+function _isRealWord(w) {
+  if (!_known) {
+    _known = new Set([..._MORE_WORDS, ...SIGHT_1ST, ...DOLCH_PREPRIMER, ...DOLCH_PRIMER, ...DOLCH_1ST,
+      ...DIGRAPH_SETS.flat(), ...BLEND_SETS.flat(), ...CVC_SETS.flat()]);
+  }
+  return _known.has(w);
+}
+function _vowelIndex(w) {
+  const at = [];
+  for (let i = 0; i < w.length; i++) if (_VOWELS.includes(w[i])) at.push(i);
+  return at.length === 1 ? at[0] : -1; // one clear vowel only, so the blank has one answer
+}
+function _vowelRound(w, rng) {
+  const i = _vowelIndex(w);
+  const v = w[i];
+  const others = _shuffle(_VOWELS.filter((x) => x !== v), rng).slice(0, 2);
+  const where = i === 0 ? 'at the start' : i === w.length - 1 ? 'at the end' : 'in the middle';
+  const r = {
+    prompt: `Which letter is missing in ${w}?`,
+    say: `Listen: ${w}. Which letter is missing?`,
+    show: w.split('').map((c, k) => (k === i ? '_' : c)).join(' '),
+    choices: [v, ...others], answer: v,
+    hint: `Good try! Say it slowly: ${w}. What sound do you hear ${where}?`,
+  };
+  if (v !== 'o') r.sound = LETTER_CLIPS[v] + '.mp3'; // the 'o' clip says the long sound
+  return r;
+}
+function _endingRound(w, rng) {
+  const end = w.slice(-2);
+  const start = w.slice(0, -2);
+  let pool = _shuffle(_ENDINGS.filter((e) => e !== end), rng);
+  const notWords = pool.filter((e) => !_isRealWord(start + e));
+  pool = [...notWords, ...pool.filter((e) => !notWords.includes(e))];
+  const d = pool.slice(0, 2);
+  return {
+    prompt: `Which ending finishes ${w}?`,
+    say: `Listen: ${w}. Which ending finishes the word?`,
+    show: `${start.split('').join(' ')} _ _`,
+    choices: [end, ...d], answer: end,
+    hint: `Good try! Say it slowly: ${w}. Which letters do you hear at the end?`,
+  };
+}
+const _LOOKALIKE = { b: 'd', d: 'b', p: 'q', m: 'n', n: 'm', e: 'a', a: 'e', i: 'e', o: 'u', u: 'o', s: 'c', t: 'd' };
+function _misspellings(w, rng) {
+  const main = new Set(), drops = new Set(), last = [w + w[w.length - 1], 'x' + w];
+  for (let i = 0; i + 1 < w.length; i++) main.add(w.slice(0, i) + w[i + 1] + w[i] + w.slice(i + 2)); // swapped neighbors
+  for (let i = 0; i < w.length; i++) if (_LOOKALIKE[w[i]]) main.add(w.slice(0, i) + _LOOKALIKE[w[i]] + w.slice(i + 1));
+  if (w.length > 3) for (let i = 1; i < w.length; i++) drops.add(w.slice(0, i) + w.slice(i + 1)); // a letter missing
+  const ok = (x) => x !== w;
+  const tiers = [[...main], [...drops], last].map((a) => a.filter(ok));
+  const out = [];
+  // Made-up spellings first, then ones that happen to be real words, so no wrong choice is a different word if avoidable.
+  for (const real of [false, true]) {
+    for (const t of tiers) {
+      for (const x of _shuffle(t.filter((y) => _isRealWord(y) === real), rng)) if (!out.includes(x)) out.push(x);
+    }
+  }
+  return out.slice(0, 2);
+}
+const _ALPHA = 'abcdefghijklmnopqrstuvwxyz'.split('');
+function _spellRound(w, rng) {
+  const spare = _shuffle(_ALPHA.filter((l) => !w.includes(l)), rng).slice(0, 2);
+  let tiles = _shuffle([...w.split(''), ...spare], rng);
+  for (let k = 0; k < 6 && tiles.join('').startsWith(w); k++) tiles = _shuffle(tiles, rng);
+  return {
+    prompt: 'Listen and build the word.',
+    say: `Listen: ${w}. Tap the letters to build the word.`,
+    replay: `Listen: ${w}. Tap the letters to build the word.`,
+    choices: [w, ..._misspellings(w, rng)], answer: w,
+    hint: `Good try! Say it slowly: ${w}. What sound comes next?`,
+    spell: { word: w, tiles },
+  };
+}
+/** A spelling round for this tier from the live WEEK pack, or null when the pack has no fitting word. */
+function _spellKind(tier, rng) {
+  const list = tier === 1 ? WEEK.vowels.filter((w) => _vowelIndex(w) >= 0)
+    : tier === 2 ? WEEK.spelling.filter((w) => w.length >= 3)
+    : WEEK.spelling.filter((w) => w.length >= 2);
+  if (!list.length) return null;
+  const w = _pick(list, rng);
+  return tier === 1 ? _vowelRound(w, rng) : tier === 2 ? _endingRound(w, rng) : _spellRound(w, rng);
+}
+
 
 // Number choices: the answer plus specific mistakes first, then near misses.
 function _numChoices(ans, rng, max = 20, mistakes = []) {
@@ -861,6 +955,12 @@ const TIERS = {
     3: _sciOr(3, SCI_T3),
   },
 };
+
+// About 1 round in 3 of Belle's library is a spelling kind (S2); the rest are unchanged.
+for (const t of [1, 2, 3]) {
+  const base = TIERS.belle[t];
+  TIERS.belle[t] = (rng) => (rng() < 1 / 3 && _spellKind(t, rng)) || base(rng);
+}
 
 /** Stable id for a round, used by the review queue. */
 // Measuring rounds share prompts, so their picture is part of the id.
