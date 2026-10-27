@@ -29,11 +29,11 @@ ok(BUILT_SLOTS.ssw === 'moana' && builtSlotIds().includes('ssw'), 'ssw is built 
 ok(isIsleOpen() && isIsleOpen('') && isIsleOpen('?x=1') && isIsleOpen('?preview=cove') && isIsleOpen('?preview=moana'), 'isle is open by default (built, no flag needed)');
 ok(isIsleOpen('?preview=isle') && isIsleOpen('?preview=all') && isIsleOpen('?a=1&preview=Isle') && isIsleOpen('?preview=cove,isle'), 'preview=isle / all / cove,isle still parse and keep the isle open');
 ok(isCoveOpen() && isCoveOpen('?preview=isle') && isCoveOpen('?preview=cove'), 'the cove stays open (and ?preview=cove stays harmless)');
-ok(same(openLandIds(''), ['cove', 'isle']) && same(openLandIds('?preview=isle'), ['cove', 'isle']) && same(openLandIds('?preview=all'), ['cove', 'isle']), 'open lands: cove and isle, with or without a preview flag');
-ok(same(openSlotIds(''), openSlotIds('?preview=isle')) && same([...openSlotIds('')].sort(), ['sse', 'ssw']), 'open slots: the two built lands (flags change nothing)');
+ok(same(openLandIds(''), ['cove', 'isle']) && same(openLandIds('?preview=isle'), ['cove', 'isle']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden']), 'open lands: cove and isle by default; preview=all also opens the garden (K8)');
+ok(same(openSlotIds(''), openSlotIds('?preview=isle')) && same([...openSlotIds('')].sort(), ['sse', 'ssw']), 'open slots: the two built lands (the isle flag changes nothing)');
 ok(closedSlots('').length === 4 && !closedSlots('').some((s) => s.slot === 'ssw'), 'default: the isle gate is gone (4 gates left)');
 ok(closedSlots('?preview=isle').length === 4 && !closedSlots('?preview=isle').some((s) => s.slot === 'ssw'), 'open isle has no gate, the other four stay');
-ok(closedSlots('?preview=all').length === 4, 'preview=all opens the two built-ahead lands only; the other four gates stay');
+ok(closedSlots('?preview=all').length === 3, 'preview=all also opens the garden (K8): the other three gates stay');
 ok(!isSlotOpen('ese', '?preview=all') && !isSlotOpen('wsw', '?preview=all'), 'other lands are not built yet');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 
@@ -92,7 +92,7 @@ ok(same(treasureLandsFor(false), ['library', 'frostfall', 'meadow', 'village']) 
 ok(findsTotal(false) === 20 && findsTotal([]) === 20, 'finds total is 20 with no new land');
 ok(findsTotal(openLandIds('')) === 30, 'finds total is 30 today (4 inner lands + cove + isle)');
 ok(findsTotal(['cove']) === 25, 'finds total is 25 with only the cove open');
-ok(findsTotal(openLandIds('?preview=isle')) === 30 && findsTotal(openLandIds('?preview=all')) === 30, 'finds total is 30 when the isle is open too');
+ok(findsTotal(openLandIds('?preview=isle')) === 30 && findsTotal(openLandIds('?preview=all')) === 35, 'finds total is 30 with the isle open, 35 when the garden is previewed too');
 {
   const save = {};
   for (let i = 0; i < 5; i++) ok(collectTreasure(save, `isle-${i}`, 'blossom', day), `collect isle-${i}`);
@@ -116,7 +116,7 @@ ok(findsTotal(openLandIds('?preview=isle')) === 30 && findsTotal(openLandIds('?p
 }
 
 // --- Secret: three shaped stones, fewest corners to most, then a shape fact ----------------------------------------------
-ok(SECRETS.length === 4 && COVE_SECRETS.length === 1 && ISLE_SECRETS.length === 1 && same(ALL_SECRETS, [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS]), 'inner + cove secrets unchanged, one isle secret after them');
+ok(SECRETS.length === 4 && COVE_SECRETS.length === 1 && ISLE_SECRETS.length === 1 && same(ALL_SECRETS.slice(0, 6), [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS]), 'inner + cove secrets unchanged, one isle secret after them');
 ok(ISLE_SECRETS[0].id === 'shapestones' && ISLE_SECRETS[0].npc === 'moana' && ISLE_SECRETS[0].emoji && ISLE_SECRETS[0].label, 'isle secret has a sticker, an owner and a label');
 ok(same(sanitizeSecrets(['shapestones', 'x', 'clock']), ['clock', 'shapestones']), 'sticker id is a known id');
 { const s = {}; ok(foundSecret(s, 'shapestones') && !foundSecret(s, 'shapestones'), 'sticker is earned once'); }
@@ -279,7 +279,7 @@ ok(/id === 'shapestones'\) line = shapeLine\(\)\.say/.test(main) && /Narrator\.s
 ok(/coveOpen: isCoveOpen\(\), isleOpen: isIsleOpen\(\)/.test(ui), 'Treasure Book asks for the isle only when open');
 ok(/zsq-tb-seven/.test(ui) && /zsq-tb-many/.test(ui), 'Treasure Book has the compact 7-tile / 6-sticker layout');
 ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse: ariel and ssw: moana in source');
-ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle)');
+ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw'(,\s*garden:\s*'nne')?\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle)');
 // Six surprises
 for (const k of ['palm', 'canoe', 'conch', 'steps', 'bird', 'compass']) ok(new RegExp(`items\\.${k} = addTappable\\(`).test(isle), `surprise: ${k}`);
 ok(/'shape-' \+ \(i \+ 1\)/.test(isle), 'the three shape stones report shape-1..3');

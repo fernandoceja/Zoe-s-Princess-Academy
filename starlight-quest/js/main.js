@@ -10,7 +10,7 @@ import { PRINCESSES, NPC_ORDER, QUESTS, WEEK, FINALE_LINES, buildRounds, setScho
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027e2';
 import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
-import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine, shapeLine } from './treasures.js?v=20261027e2';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine, shapeLine, storyLine } from './treasures.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { builtSlotIds, unseenKingdomSlots, shouldRunFinale, openLandIds, BUILT_SLOTS } from './worldmap.js?v=20261027e2';
 import { shapeSVG } from './shapes.js?v=20261027e2';
@@ -49,6 +49,7 @@ export async function main(container) {
     else if (id === 'icetwins') line = doublesLine().say;
     else if (id === 'shellrhyme') line = rhymeLine().say;
     else if (id === 'shapestones') line = shapeLine().say;
+    else if (id === 'storylanterns') line = storyLine().say;
     else if (id === 'bookstack') { const sp = spellLine(WEEK.spelling); line = sp.say; UI.toast(`📚 ${sp.show}`); }
     else line = plantLine().say;
     SoundFX.chime();

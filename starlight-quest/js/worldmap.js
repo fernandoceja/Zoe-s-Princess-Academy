@@ -74,8 +74,8 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5 and the isle since K7, so their flags are harmless now.)
-export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw' };
+// (cove is built for real since K5 and the isle since K7, so their flags are harmless now. garden (K8) is preview-only until Jasmine's quests land.)
+export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
 export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
@@ -115,11 +115,18 @@ export const ISLE = { slot: 'ssw', land: 'isle', princess: 'moana', discR: LAND_
 export const isIsleOpen = (search) => isSlotOpen(ISLE.slot, search);
 export function isleGeometry() { return slotLandGeometry(ISLE); }
 
-/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'] or ['cove', 'isle']. */
+// Moonlit Palace Garden (K8) sits at the 'nne' slot (the slot planned for Jasmine), north-north-east, past the Library. Drawn only
+// when 'nne' is open: in BUILT_SLOTS (K9, with Jasmine's quests) or ?preview=garden (or ?preview=all). Jasmine is NOT spawned until K9.
+export const GARDEN = { slot: 'nne', land: 'garden', princess: 'jasmine', discR: LAND_DISC_R, padDist: 6.5 };
+export const isGardenOpen = (search) => isSlotOpen(GARDEN.slot, search);
+export function gardenGeometry() { return slotLandGeometry(GARDEN); }
+
+/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle'] or ['cove', 'isle', 'garden']. */
 export function openLandIds(search) {
   const out = [];
   if (isCoveOpen(search)) out.push(COVE.land);
   if (isIsleOpen(search)) out.push(ISLE.land);
+  if (isGardenOpen(search)) out.push(GARDEN.land);
   return out;
 }
 
