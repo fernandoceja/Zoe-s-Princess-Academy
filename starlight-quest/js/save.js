@@ -80,6 +80,7 @@ function defaults() {
     started: false,
     ladder: {},   // per land: { tier, review } (see ladder.js)
     lastPlay: {}, // per land: local day of the last finished quest
+    week: null,     // this week's school pack (Parent Corner); null = defaults
     schoolWords: [] // teacher's sight words (Parent Corner); [] = built-in list
   };
 }
@@ -130,6 +131,14 @@ function merge(raw) {
       if (seen.length >= 30) break;
     }
     out.schoolWords = seen;
+  }
+
+  if (raw.week && typeof raw.week === 'object') {
+    const list = (v) => (Array.isArray(v) ? v.filter((w) => typeof w === 'string' && /^[a-z]{1,12}$/.test(w)).slice(0, 15) : []);
+    out.week = {
+      spelling: list(raw.week.spelling), sight: list(raw.week.sight), vowels: list(raw.week.vowels),
+      dictation: typeof raw.week.dictation === 'string' ? raw.week.dictation.slice(0, 60) : ''
+    };
   }
 
   return out;
