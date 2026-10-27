@@ -52,6 +52,102 @@ function _blendTiles(letters, pid) {
   wrap.append(box, blend);
   return wrap;
 }
+/**
+ * Reusable tap-to-build tiles (S2 spelling; S3 reuses it for sentence word tiles).
+ *   tileBuilder({ tiles, target, pid, onWrong, onDone, speak })
+ *     tiles   array of strings, the tiles on offer (letters or words). Duplicates are fine.
+ *     target  array of strings, the sequence to build, in order. Each must appear in `tiles`.
+ *     onWrong({ tile, index, wrongs }) a tile that is not the next one wiggles and is NOT placed.
+ *     onDone(placed) every slot filled correctly; placed = array of strings (= target).
+ *     speak   optional (label) => say the tile when it is placed (default: no sound).
+ *   Returns a DOM element (slot row, tile bank, Undo and Clear buttons) with .undo(), .clear(),
+ *   .placed() and .wrongs(). After two wrong taps in a row on the same slot the right tile glows.
+ */
+export function tileBuilder({ tiles, target, onWrong, onDone, speak }) {
+  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const box = el('div', 'zsq-build');
+  const slotRow = el('div', 'zsq-slots');
+  const bank = el('div', 'zsq-bank');
+  const slots = target.map(() => el('div', 'zsq-slot'));
+  slots.forEach((sl, i) => sl.setAttribute('aria-label', `Slot ${i + 1} of ${target.length}`));
+  slotRow.append(...slots);
+  const btns = tiles.map((label) => {
+    const b = el('button', 'zsq-btile', label);
+    b.dataset.label = label;
+    b.addEventListener('animationend', () => b.classList.remove('zsq-wiggle'));
+    return b;
+  });
+  bank.append(...btns);
+  const undoBtn = el('button', 'zsq-bundo', '↶ Undo');
+  const clearBtn = el('button', 'zsq-bundo', '✖ Clear');
+  const ctl = el('div', 'zsq-bctl');
+  ctl.append(undoBtn, clearBtn);
+  box.append(slotRow, bank, ctl);
+  const placed = []; // { label, btn }
+  let wrongs = 0, streak = 0, finished = false;
+  const glow = () => {
+    btns.forEach((b) => b.classList.remove('zsq-hintglow'));
+    if (streak < 2 || finished) return;
+    const want = target[placed.length];
+    const b = btns.find((x) => !x.disabled && x.dataset.label === want);
+    if (b) b.classList.add('zsq-hintglow');
+  };
+  const paint = () => {
+    slots.forEach((sl, i) => {
+      sl.textContent = placed[i] ? placed[i].label : '';
+      sl.classList.toggle('zsq-filled', !!placed[i]);
+      sl.classList.toggle('zsq-next', !finished && i === placed.length);
+    });
+    undoBtn.disabled = clearBtn.disabled = finished || !placed.length;
+    glow();
+  };
+  btns.forEach((b) => {
+    b.onclick = () => {
+      if (finished || b.disabled) return;
+      const label = b.dataset.label;
+      if (label !== target[placed.length]) {
+        wrongs++; streak++;
+        SoundFX.pop();
+        if (!calm) { b.classList.remove('zsq-wiggle'); void b.offsetWidth; b.classList.add('zsq-wiggle'); }
+        glow();
+        if (typeof onWrong === 'function') onWrong({ tile: label, index: placed.length, wrongs });
+        return;
+      }
+      streak = 0;
+      b.disabled = true;
+      placed.push({ label, btn: b });
+      if (typeof speak === 'function') speak(label);
+      else SoundFX.pop();
+      if (placed.length === target.length) {
+        finished = true;
+        btns.forEach((x) => { x.disabled = true; x.classList.remove('zsq-hintglow'); });
+        paint();
+        if (typeof onDone === 'function') onDone(placed.map((p) => p.label));
+        return;
+      }
+      paint();
+    };
+  });
+  const undo = () => {
+    if (finished || !placed.length) return;
+    placed.pop().btn.disabled = false;
+    streak = 0;
+    paint();
+  };
+  const clear = () => {
+    if (finished) return;
+    while (placed.length) placed.pop().btn.disabled = false;
+    streak = 0;
+    paint();
+  };
+  undoBtn.onclick = () => { SoundFX.pop(); undo(); };
+  clearBtn.onclick = () => { SoundFX.pop(); clear(); };
+  box.undo = undo; box.clear = clear;
+  box.placed = () => placed.map((p) => p.label);
+  box.wrongs = () => wrongs;
+  paint();
+  return box;
+}
 // Sorting bins (Rapunzel): one picture at a time into Living / Not living. Wrong bin = gentle hint,
 // the item stays; onEvent('__sortwrong', hint) per wrong tap, '__sortdone' when all are sorted.
 const _an = (n) => (/^[aeiou]/.test(n) ? 'an' : 'a');
@@ -266,6 +362,27 @@ function injectCSS() {
     border-color: #34c779; color: #065f46; animation: zsq-rise .25s ease-out; }
   .zsq-choice.zsq-wrong-pick { border-color: #f9a8d4; background: #fdf2f8; color: #9d174d;
     animation: zsq-soft-miss .3s ease-out forwards; }
+  .zsq-bigword { font-size: 56px; font-weight: 900; color: #5b21b6; letter-spacing: 6px; margin: 6px 0 2px; line-height: 1.1; }
+  .zsq-build { margin-top: 10px; }
+  .zsq-slots { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .zsq-slot { min-width: 52px; height: 64px; padding: 0 6px; box-sizing: border-box; border-radius: 16px; border: 4px dashed #c4b5fd;
+    background: #faf8ff; font-size: 40px; font-weight: 900; color: #5b21b6; display: flex; align-items: center; justify-content: center; }
+  .zsq-slot.zsq-next { border-color: ${GOLD}; background: #fffbea; }
+  .zsq-slot.zsq-filled { border-style: solid; border-color: #34c779; background: #ecfdf5; color: #065f46; }
+  .zsq-bank { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+  .zsq-btile { min-width: 64px; min-height: 68px; padding: 0 10px; border-radius: 20px; border: 4px solid #c4b5fd; background: #f5f3ff;
+    font-size: 40px; font-weight: 900; color: #5b21b6; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
+  .zsq-btile:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+  .zsq-btile:disabled { opacity: .25; cursor: default; box-shadow: none; }
+  .zsq-btile.zsq-hintglow { border-color: ${GOLD}; background: #fde68a; animation: zsq-glow 1s ease-in-out infinite; }
+  .zsq-btile.zsq-wiggle { animation: zsq-wiggle .4s ease-in-out; border-color: #f9a8d4; background: #fdf2f8; }
+  .zsq-bctl { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+  .zsq-bundo { min-height: 56px; min-width: 110px; padding: 8px 18px; border-radius: 20px; border: 4px solid #f9a8d4; background: #fdf2f8;
+    font-size: 22px; font-weight: 900; color: #9d174d; cursor: pointer; }
+  .zsq-bundo:disabled { opacity: .4; cursor: default; }
+  @keyframes zsq-wiggle { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); }
+    60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+  @keyframes zsq-glow { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
   .zsq-tiles { display: flex; justify-content: center; gap: 14px; margin-top: 12px; }
   .zsq-tile { width: 76px; min-height: 76px; border-radius: 20px; border: 4px solid #c4b5fd; background: #f5f3ff;
     font-size: 44px; font-weight: 900; color: #5b21b6; cursor: pointer; padding: 0;
@@ -1002,6 +1119,19 @@ export const UI = {
       const vis = el('div', 'zsq-visual');
       vis.innerHTML = data.visualHtml;
       modal.appendChild(vis);
+    }
+    if (data.bigWord) modal.appendChild(el('div', 'zsq-bigword', data.bigWord));
+    if (data.spell && data.spell.tiles && data.spell.tiles.length) {
+      const word = data.spell.word;
+      const sh = el('div', 'zsq-sort-hint');
+      sh.setAttribute('aria-live', 'polite');
+      modal.appendChild(tileBuilder({
+        tiles: data.spell.tiles, target: word.split(''),
+        speak: (l) => { SoundFX.pop(); const s = tileSound(l); if (!s) return; if (s.tts) Narrator.speakExact(data.princessId, s.tts); else if (s.url) Narrator.playClip(s.url, undefined, s.stopAt); },
+        onWrong: (info) => { sh.textContent = data.spell.hint || ''; if (typeof onChoose === 'function') onChoose('__spellwrong', info); },
+        onDone: () => { sh.textContent = ''; if (typeof onChoose === 'function') onChoose('__spelldone'); },
+      }));
+      modal.appendChild(sh);
     }
     if (data.tiles && data.tiles.length) {
       modal.appendChild(_blendTiles(data.tiles, data.princessId));
