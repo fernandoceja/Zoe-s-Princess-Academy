@@ -72,9 +72,10 @@ export function builtSlotIds() {
 }
 
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
-// with  ?preview=cove  (or  ?preview=all  /  ?preview=cove,other). In normal play (no flag) nothing changes.
+// with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-export const PREVIEW_LANDS = { cove: 'sse' };
+// (cove is built for real since K5, so its flag is harmless.) K6: Wayfinder Isle is preview-only until K7.
+export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
 export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
@@ -98,13 +99,28 @@ export function isSlotOpen(slot, search) { return openSlotIds(search).includes(s
 // Seashell Cove (K4) sits at the 'sse' slot. The branch path runs on into the middle of the land.
 export const COVE = { slot: 'sse', land: 'cove', princess: 'ariel', discR: LAND_DISC_R, padDist: 6.5 };
 export const isCoveOpen = (search) => isSlotOpen(COVE.slot, search);
-/** Cove centre and Ariel's pad (not spawned yet): near the entrance, on the hub side, like the inner lands' pads. */
-export function coveGeometry() {
-  const slot = NEW_LAND_SLOTS.find((s) => s.slot === COVE.slot);
+/** Land centre and the princess's pad for a new-kingdom slot: the pad is near the entrance, on the hub side, like the inner lands' pads. */
+function slotLandGeometry(land) {
+  const slot = NEW_LAND_SLOTS.find((s) => s.slot === land.slot);
   const center = slotPos(slot);
-  const branch = pathSegments().find((sg) => sg.kind === 'branch' && sg.slot === COVE.slot);
+  const branch = pathSegments().find((sg) => sg.kind === 'branch' && sg.slot === land.slot);
   const dx = branch.from.x - center.x, dz = branch.from.z - center.z, len = Math.hypot(dx, dz) || 1;
-  return { center, pad: { x: center.x + (dx / len) * COVE.padDist, z: center.z + (dz / len) * COVE.padDist } };
+  return { center, pad: { x: center.x + (dx / len) * land.padDist, z: center.z + (dz / len) * land.padDist } };
+}
+export function coveGeometry() { return slotLandGeometry(COVE); }
+
+// Wayfinder Isle (K6) sits at the 'ssw' slot (the slot planned for Moana). Drawn only when the slot is open: built for real
+// (K7 adds 'ssw' to BUILT_SLOTS) or ?preview=isle. Her pad is stored, but she is not spawned until K7 adds her to NPC_ORDER.
+export const ISLE = { slot: 'ssw', land: 'isle', princess: 'moana', discR: LAND_DISC_R, padDist: 6.5 };
+export const isIsleOpen = (search) => isSlotOpen(ISLE.slot, search);
+export function isleGeometry() { return slotLandGeometry(ISLE); }
+
+/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'] or ['cove', 'isle']. */
+export function openLandIds(search) {
+  const out = [];
+  if (isCoveOpen(search)) out.push(COVE.land);
+  if (isIsleOpen(search)) out.push(ISLE.land);
+  return out;
 }
 
 /** Closed gates: slots that are neither built nor previewed open. */

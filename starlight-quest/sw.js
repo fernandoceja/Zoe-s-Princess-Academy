@@ -19,6 +19,7 @@ const PRECACHE_URLS = [
   './js/audio.js?v=20261027e2',
   './js/cove.js?v=20261027e2',
   './js/input.js?v=20261027e2',
+  './js/isle.js?v=20261027e2',
   './js/ladder.js?v=20261027e2',
   './js/main.js?v=20261027e2',
   './js/padnav.js?v=20261027e2',

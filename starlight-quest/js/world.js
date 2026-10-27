@@ -11,9 +11,10 @@ import { OUTFIT } from './save.js?v=20261027e2';
 import { NPC_ORDER } from './quests.js?v=20261027e2';
 import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
 import { buildCove } from './cove.js?v=20261027e2';
+import { buildIsle } from './isle.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -459,6 +460,15 @@ export function createWorld(container, hooks) {
     const cg = coveGeometry();
     landCenters[COVE.land] = new THREE.Vector3(cg.center.x, 0, cg.center.z);
     landPads[COVE.land] = new THREE.Vector3(cg.pad.x, 0, cg.pad.z);
+  }
+  // Wayfinder Isle (K6): only when its slot is open (really built, or ?preview=isle). Its centre and the princess's pad are stored
+  // here so the scatter and every spot check stay clear of them; Moana is NOT spawned (she is not in NPC_ORDER until K7).
+  const isleOpen = isIsleOpen();
+  const openLands = openLandIds();   // ['cove'], ['cove', 'isle'] ...: the lands that hide treasures today
+  if (isleOpen) {
+    const ig = isleGeometry();
+    landCenters[ISLE.land] = new THREE.Vector3(ig.center.x, 0, ig.center.z);
+    landPads[ISLE.land] = new THREE.Vector3(ig.pad.x, 0, ig.pad.z);
   }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
@@ -1480,6 +1490,13 @@ export function createWorld(container, hooks) {
       THREE, scene, center: landCenters[COVE.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
     });
   }
+  // Wayfinder Isle (K6): scenery + six tap surprises + the shape-stones secret, only when the slot is open.
+  let isle = null;
+  if (isleOpen) {
+    isle = buildIsle({
+      THREE, scene, center: landCenters[ISLE.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
+    });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
@@ -1525,7 +1542,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1546,6 +1563,15 @@ export function createWorld(container, hooks) {
     seaglass(g) { // cove only: a frosted teal pebble of sea glass
       tapPart(g, G('trSeaGlass', () => new THREE.IcosahedronGeometry(0.28, 0)), tapStd('trSeaGlass', 0x8fe3d0, 0x4fc1b0), 0, 0, 0, 1.2, 0.8, 1);
     },
+    blossom(g) { // isle only: a hibiscus-style lei flower (five petals round a golden middle)
+      const petal = G('trPetal', () => new THREE.SphereGeometry(0.17, 6, 5));
+      const m = tapStd('trBlossom', 0xff6f91);
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        tapPart(g, petal, m, Math.cos(a) * 0.18, 0, Math.sin(a) * 0.18, 1, 0.45, 1);
+      }
+      tapPart(g, G('trBlossomMid', () => new THREE.SphereGeometry(0.09, 6, 5)), tapStd('trBlossomMid', 0xffd24d), 0, 0.05, 0);
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1561,14 +1587,15 @@ export function createWorld(container, hooks) {
   };
   {
     const gotToday = new Set(treasuresGot());
-    for (const landId of treasureLandsFor(coveOpen)) {
+    for (const landId of treasureLandsFor(openLands)) {
       const c = landCenters[landId];
       if (!c) continue;
       for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND)) {
         const wx = c.x + sp.x, wz = c.z + sp.z;
         let px = wx, pz = wz;
         const dry = (x, z) => !(cove && landId === COVE.land) || (!cove.wet(x, z) && Math.hypot(x - c.x, z - c.z) < 9.6); // cove: keep finds on dry sand
-        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
+        const dryIsle = (x, z) => !(isle && landId === ISLE.land) || !isle.wet(x, z);                                        // isle: keep finds off the lagoon
+        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();
         group.position.set(px, 0, pz);
         const body = new THREE.Group();
@@ -2097,6 +2124,7 @@ export function createWorld(container, hooks) {
     // ---- Tapped scenery reactions (only the few playing; nothing runs at rest) ----
     for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
     if (cove) cove.update(t, dt);
+    if (isle) isle.update(t, dt);
     updateTreasures(dt, t);
     updateGates(dt, t);
 

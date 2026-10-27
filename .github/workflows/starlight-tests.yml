@@ -64,3 +64,5 @@ jobs:
         run: node starlight-quest/tests/cove_check.mjs
       - name: Ariel rhyming quests check
         run: node starlight-quest/tests/ariel_check.mjs
+      - name: Wayfinder Isle check
+        run: node starlight-quest/tests/isle_check.mjs

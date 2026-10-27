@@ -12,7 +12,7 @@ import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { todayKey, treasureBookModel } from './treasures.js?v=20261027e2';
-import { isCoveOpen } from './worldmap.js?v=20261027e2';
+import { isCoveOpen, isIsleOpen } from './worldmap.js?v=20261027e2';
 
 const GOLD = '#ebd373';
 
@@ -562,7 +562,18 @@ function injectCSS() {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
   .zsq-tb-tile:nth-child(4) { grid-column: 2 / span 2; }
   .zsq-tb-six .zsq-tb-tile:nth-child(4) { grid-column: span 2; }
-  /* Seashell Cove open: 6 tiles, 5 land rows and 5 stickers still fit a 390x844 phone without scrolling */
+  /* Seashell Cove open: 6 tiles, 5 land rows and 5 stickers still fit a 390x844 phone without scrolling.
+     Wayfinder Isle open too: 7 tiles (4 + 3 on an 8-column grid), 6 land rows and 6 smaller stickers, still no scrolling. */
+  .zsq-tb-seven { grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .zsq-tb-seven .zsq-tb-tile, .zsq-tb-seven .zsq-tb-tile:nth-child(4) { grid-column: span 2; }
+  .zsq-tb-seven .zsq-tb-tile:nth-child(5) { grid-column: 2 / span 2; }
+  .zsq-tb-card .zsq-tb-seven .zsq-tb-tile { min-height: 66px; padding: 3px 1px; }
+  .zsq-tb-seven .zsq-tb-emoji { font-size: 28px !important; }
+  .zsq-tb-seven .zsq-tb-name { font-size: 12px; line-height: 1.15; }
+  .zsq-tb-seven .zsq-tb-unfound .zsq-tb-name { font-size: 18px; }
+  .zsq-tb-stickers.zsq-tb-many { gap: 6px; }
+  .zsq-tb-many .zsq-tb-sticker { width: 46px; height: 46px; font-size: 24px; border-radius: 14px; }
+  .zsq-tb-many .zsq-tb-sticker.zsq-tb-unfound { font-size: 22px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-tile { min-height: 76px; padding: 4px 2px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-emoji { font-size: 34px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-land { min-height: 32px; }
@@ -992,10 +1003,10 @@ export const UI = {
   showTreasureBook({ onClose } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
-    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen() });
+    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen() });
     const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : ''));
     card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
-    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : ''));
+    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : ''));
     for (const k of m.kinds) {
       const tile = el('div', 'zsq-tb-tile' + (k.found ? '' : ' zsq-tb-unfound'));
       tile.append(el('div', 'zsq-tb-emoji', k.emoji), el('div', 'zsq-tb-name', k.found ? `${k.label}: ${k.count}` : '?'));
@@ -1013,7 +1024,7 @@ export const UI = {
       card.appendChild(r);
     }
     card.appendChild(el('div', 'zsq-tb-h', 'Stickers'));
-    const srow = el('div', 'zsq-tb-stickers');
+    const srow = el('div', 'zsq-tb-stickers' + (m.stickers.length > 5 ? ' zsq-tb-many' : ''));
     for (const st of m.stickers) {
       const slot = el('div', 'zsq-tb-sticker' + (st.found ? '' : ' zsq-tb-unfound'), st.found ? st.emoji : '?');
       slot.setAttribute('aria-label', st.found ? st.label : 'Secret sticker, not found yet');
