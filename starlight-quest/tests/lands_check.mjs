@@ -4,16 +4,17 @@ import { readFileSync } from 'node:fs';
 import { NPC_ORDER, PRINCESSES } from '../js/quests.js?v=20261027e2';
 import { LAND_ORDER } from '../js/ladder.js?v=20261027e2';
 import { merge } from '../js/save.js?v=20261027e2';
+import { shouldRunFinale, shouldShowNewKingdoms, builtSlotIds, NEW_LAND_SLOTS } from '../js/worldmap.js?v=20261027e2';
 
 const bad = [];
 const expect = (n, got, want) => { if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`${n}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`); };
 
-expect('canonical list', NPC_ORDER, ['belle', 'elsa', 'rapunzel', 'cinderella']);
+expect('canonical list', NPC_ORDER, ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel']);
 expect('LAND_ORDER reads the list', LAND_ORDER, NPC_ORDER);
 expect('every land has a princess entry', NPC_ORDER.filter((id) => !PRINCESSES[id]), []);
 expect('zoe is not a land', NPC_ORDER.includes('zoe'), false);
 
-const LITERAL = "'belle', 'elsa', 'rapunzel', 'cinderella'";
+const LITERAL = "'belle', 'elsa', 'rapunzel', 'cinderella'"; // any hard-coded copy of the list (four or five ids)
 for (const f of ['ui.js', 'main.js', 'save.js']) {
   const src = readFileSync(new URL(`../js/${f}`, import.meta.url), 'utf8');
   if (src.includes(LITERAL)) bad.push(`${f} still hard-codes the four land ids`);
@@ -29,11 +30,12 @@ const old = merge({
   lastPlay: { belle: '2026-10-20' },
 });
 expect('old stars kept', old.stars, 12);
-expect('old shards kept', old.shards, { belle: 2, elsa: 1, rapunzel: 0, cinderella: 3 });
+expect('old shards kept, new land starts at 0', old.shards, { belle: 2, elsa: 1, rapunzel: 0, cinderella: 3, ariel: 0 });
 expect('old done kept', old.done, ['belle']);
 expect('old ladder kept', old.ladder.belle, { tier: 2, review: [] });
 expect('old lastPlay kept', old.lastPlay, { belle: '2026-10-20' });
-expect('fresh save shards', merge(null).shards, { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0 });
+expect('fresh save shards', merge(null).shards, { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0, ariel: 0 });
+expect('old ladder has no ariel entry yet', old.ladder.ariel, undefined);
 
 // A future princess: added to the list, she starts fresh and nothing else moves.
 NPC_ORDER.push('olaf'); // test-only: this process exits after the checks
@@ -43,6 +45,20 @@ expect('future id without saved shard starts at 0', merge({ stars: 1 }).shards.o
 expect('future id has no ladder yet', merge({}).ladder.olaf, undefined);
 expect('existing progress intact with new id', future.shards.belle, 1);
 expect('existing ladder intact with new id', future.ladder.belle, { tier: 1, review: [] });
+
+// Zoe finished the original four before Ariel's land opened: nothing is wiped, Ariel starts fresh, no finale on load.
+const FOUR = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+const veteran = merge({ stars: 40, shards: { belle: 5, elsa: 5, rapunzel: 5, cinderella: 5 }, done: FOUR, seenNewKingdoms: false });
+expect('veteran done list kept', veteran.done, FOUR);
+expect('veteran: Ariel not done', veteran.done.includes('ariel'), false);
+expect('veteran: Ariel shard starts at 0', veteran.shards.ariel, 0);
+expect('veteran: new-kingdoms card is due once', shouldShowNewKingdoms(builtSlotIds().length, veteran.seenNewKingdoms), true);
+expect('veteran: not due again after seen', shouldShowNewKingdoms(builtSlotIds().length, true), false);
+// Finale gate: only when every list princess is done AND every kingdom slot is built.
+expect('finale: four done + Ariel pending -> no finale', shouldRunFinale(FOUR, NPC_ORDER, builtSlotIds().length), false);
+expect('finale: Ariel done but other kingdoms closed -> land celebration only', shouldRunFinale([...FOUR, 'ariel'], NPC_ORDER, builtSlotIds().length), false);
+expect('finale: everything open and done -> finale', shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), true);
+expect('finale: everything open, one missing -> no finale', shouldRunFinale(FOUR, NPC_ORDER, NEW_LAND_SLOTS.length), false);
 
 if (bad.length) { console.error('FAIL\n' + bad.join('\n')); process.exit(1); }
 console.log('lands_check: ok');

@@ -62,3 +62,5 @@ jobs:
         run: node starlight-quest/tests/roster_check.mjs
       - name: Seashell Cove check
         run: node starlight-quest/tests/cove_check.mjs
+      - name: Ariel rhyming quests check
+        run: node starlight-quest/tests/ariel_check.mjs

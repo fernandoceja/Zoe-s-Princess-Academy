@@ -68,8 +68,8 @@ const trunk = segs.find((x) => x.kind === 'trunk');
 ok(Math.hypot(trunk.from.x, trunk.from.z) > PLAZA_R, 'trunks start outside the plaza');
 
 // Built-slot map: empty for now, and closed gates shrink as slots are built
-ok(Object.keys(BUILT_SLOTS).length === 0 && builtSlotIds().length === 0, 'no slot is built yet');
-ok(closedSlots().length === 6, 'all 6 gates are closed');
+ok(Object.keys(BUILT_SLOTS).length === 1 && builtSlotIds().length === 1 && BUILT_SLOTS.sse === 'ariel', 'one slot is built (the cove, K5)');
+ok(closedSlots().length === 5, 'the other 5 gates are still closed');
 
 // Gates: tappable after the princess raycast (and after treasures and props), with a chime + toast hook, collider, and calm motion
 const iNpc = w.indexOf('intersectObjects(npcHitMeshes');

@@ -35,7 +35,7 @@ const LANDS = {
 };
 
 const NPC_DEFS = {
-  // Spawned ones are listed in NPC_ORDER (quests.js). The six below the first four are the
+  // Spawned ones are listed in NPC_ORDER (quests.js). Ariel (K5) is spawned; the five below her are the
   // upcoming-kingdom princesses (K3): defined, but not spawned until her kingdom PR adds her to NPC_ORDER.
   belle:     { land: 'library',   dress: 0x5b8def, accent: 0xffd76a, hair: 0x6b4226, hairStyle: 'bun',   name: 'Belle' },
   elsa:      { land: 'frostfall', dress: 0x9fd8f0, accent: 0xffffff, hair: 0xf5ecd7, hairStyle: 'braid', name: 'Elsa' },
@@ -451,9 +451,9 @@ export function createWorld(container, hooks) {
     const pz = Math.sin(land.angle) * PAD_DIST;
     landPads[id] = new THREE.Vector3(px, 0, pz);
   });
-  // Seashell Cove (K4): only when its slot is open (really built, or ?preview=cove). Registering the centre and Ariel's
-  // pad here keeps the scatter below (bushes, grass) and every spot check clear of it. Ariel is not spawned until
-  // her quests land (K5 adds 'ariel' to NPC_ORDER; NPC_DEFS.ariel.land === 'cove' then finds this pad).
+  // Seashell Cove (K4/K5): only when its slot is open (built since K5; ?preview=cove stays harmless). Registering the
+  // centre and Ariel's pad here keeps the scatter below (bushes, grass) and every spot check clear of it. Ariel is in
+  // NPC_ORDER, so the spawn loop below finds this pad through NPC_DEFS.ariel.land === 'cove'.
   const coveOpen = isCoveOpen();
   if (coveOpen) {
     const cg = coveGeometry();

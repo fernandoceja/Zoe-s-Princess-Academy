@@ -12,13 +12,13 @@ import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
 import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine } from './treasures.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
-import { builtSlotIds, shouldShowNewKingdoms, isCoveOpen } from './worldmap.js?v=20261027e2';
+import { builtSlotIds, shouldShowNewKingdoms, shouldRunFinale, isCoveOpen } from './worldmap.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
 const NPC_IDS = NPC_ORDER;
 const COVE_OPEN = isCoveOpen(); // Seashell Cove is drawn only when built or previewed (?preview=cove); today's finds count only open lands
-const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
+const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
 const CELEBRATE_VIEW_MS = 1800;
@@ -372,7 +372,7 @@ export async function main(container) {
       return clockSVG(round.clock.hour, round.clock.minute);
     }
     if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
-    if (round.pic && (npcId === 'rapunzel' || npcId === 'belle')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
+    if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
   }
 
@@ -447,7 +447,7 @@ export async function main(container) {
     const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : tileRound ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
-    if ((npcId === 'cinderella' || npcId === 'rapunzel') && !round.sort) {
+    if ((npcId === 'cinderella' || npcId === 'rapunzel' || (npcId === 'ariel' && !round.noChoiceSay)) && !round.sort) {
       // Read the words only, not the picture emoji in front of them.
       const labels = arr.map((c) => c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';
@@ -603,7 +603,10 @@ export async function main(container) {
       () => {
         dlg(npcId, P.name, P.color, P.portrait, quest.complete, 'praise', () => {
           afterQuest(npcId, () => {
-            if (NPC_IDS.every((id) => Save.data.done.includes(id))) runFinale();
+            // The big finale waits until every kingdom is open and restored (K16 builds the 10-land one).
+            // Until then each new land just gets its own "land is glowing" celebration (above) and a rest.
+            // It only ever runs from here, never on load, so opening a land never replays or wipes anything.
+            if (shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)) runFinale();
             else showRest(npcId);
           });
         });

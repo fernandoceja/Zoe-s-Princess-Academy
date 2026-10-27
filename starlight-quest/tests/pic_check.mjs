@@ -1,7 +1,7 @@
-// Every Rapunzel/Belle round: a pic must not match any choice, nor (Belle) the target word.
+// Every Rapunzel/Belle/Ariel round: a pic must not match any choice, nor (Belle) the target word.
 import { QUESTS, buildRounds } from '../js/quests.js';
 const strip = (t) => String(t).replace(/[\p{Extended_Pictographic}️‍]/gu, '').trim();
-const WORD = { '🐱': 'cat', '🐷': 'pig', '🐸': 'frog', '🐟': 'fish', '🚢': 'ship', '🦆': 'duck', '🦀': 'crab', '🎩': 'hat', '🌿': 'leaf', '🪴': 'plant', '💡': 'light' };
+const WORD = { '🐱': 'cat', '🐷': 'pig', '🐸': 'frog', '🐟': 'fish', '🚢': 'ship', '🦆': 'duck', '🦀': 'crab', '🎩': 'hat', '🌿': 'leaf', '🪴': 'plant', '💡': 'light', '🦇': 'bat', '🐀': 'rat', '🚐': 'van', '☀️': 'sun', '🐛': 'bug', '🐔': 'hen', '🖊️': 'pen', '✈️': 'jet', '🐶': 'dog', '🪵': 'log', '🗺️': 'map', '🧢': 'cap', '📌': 'pin', '🗑️': 'bin', '🔟': 'ten' };
 let n = 0, pics = 0; const bad = [];
 function check(npc, r) {
   n++;
@@ -15,7 +15,7 @@ function check(npc, r) {
     if (!w || r.prompt.toLowerCase().includes(w) || String(r.answer).toLowerCase() === w) bad.push([npc, r.prompt, r.pic, 'word']);
   }
 }
-for (const npc of ['rapunzel', 'belle']) {
+for (const npc of ['rapunzel', 'belle', 'ariel']) {
   for (const r of QUESTS[npc].rounds) check(npc, r);
   for (let tier = 1; tier <= 3; tier++) {
     for (let seed = 1; seed <= 3000; seed++) {

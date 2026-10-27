@@ -54,7 +54,7 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
-  // --- New-kingdom princesses (K3). Defined here but NOT in NPC_ORDER yet: each kingdom PR
+  // --- New-kingdom princesses (K3). Ariel (K5) is in NPC_ORDER now; the rest are NOT yet: each kingdom PR
   // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
   // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
   ariel: {
@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -189,6 +189,58 @@ export const QUESTS = {
     complete: [
       'You did it! My storybook is whole again.',
       'Every page is home, thanks to you.',
+    ],
+  },
+
+  // ---- ARIEL: "The Seashell Songs" — ELA / rhyming and word families -------
+  // (Original story. Static rounds below are only the fallback; buildRounds uses TIERS.ariel.)
+  ariel: {
+    title: 'The Seashell Songs',
+    questName: 'The Seashell Songs',
+    intro: [
+      'Hello! Welcome to Seashell Cove.',
+      'My seashells love to sing, but their songs got mixed up.',
+      'Can you find the words that sound the same? Then the shells can sing again!',
+    ],
+    rounds: [
+      {
+        prompt: 'Which word rhymes with cat?',
+        show: 'cat',
+        choices: ['hat', 'dog', 'sun'],
+        answer: 'hat',
+        hint: 'Good try! Say cat, then say each word. Which one ends with the same sound?',
+      },
+      {
+        prompt: 'Which word rhymes with pig?',
+        show: 'pig',
+        choices: ['wig', 'pan', 'bug'],
+        answer: 'wig',
+        hint: 'Good try! Say pig, then say each word. Which one ends with the same sound?',
+      },
+      {
+        prompt: 'Which pair of words rhymes?',
+        choices: ['sun and fun', 'sun and hen', 'sun and dog'],
+        answer: 'sun and fun',
+        hint: 'Good try! Say each pair out loud. Which pair ends with the same sound?',
+      },
+      {
+        prompt: 'Which word rhymes with hop?',
+        show: 'hop',
+        choices: ['mop', 'hen', 'pig'],
+        answer: 'mop',
+        hint: 'Good try! Say hop, then say each word. Which one ends with the same sound?',
+      },
+      {
+        prompt: 'Which word does not rhyme with bug?',
+        show: 'bug',
+        choices: ['hug', 'rug', 'pan'],
+        answer: 'pan',
+        hint: 'Good try! Say bug, then say each word. Which one sounds different at the end?',
+      },
+    ],
+    complete: [
+      'You did it! The shells are singing again.',
+      'Every word found its friend, thanks to you.',
     ],
   },
 
@@ -385,9 +437,14 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math: telling time &mdash; CA CCSS 1.MD.3</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Reading an analog clock to the hour and half-hour.</div>
 </div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#ecfeff;">
+<div style="font-weight:700;font-size:15px;">&#128026; Ariel &mdash; The Seashell Songs</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Reading Foundations &mdash; CA CCSS RF.1.2 / RF.1.3</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Rhyming and word families: hearing which short words end with the same sound (cat, hat), then changing the first letter to build new words in a family (-at, -ig, -op).</div>
+</div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
-<div style="font-size:13px;margin-top:2px;color:#374151;">Finishing all four quests restores the Starlight Crown and celebrates persistence &mdash; no fail states, ever.</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Finishing every land's quest restores the Starlight Crown (the big celebration plays once all the kingdoms are open) and celebrates persistence &mdash; no fail states, ever.</div>
 </div>
 </div>
 <p style="margin:12px 0 0;font-size:13px;color:#374151;"><b>Tip:</b> for a clearer voice on iPhone or iPad, open Settings &rarr; Accessibility &rarr; Spoken Content &rarr; Voices &rarr; English, and download an Enhanced voice (for example Samantha). The game uses it automatically.</p>
@@ -1169,6 +1226,133 @@ const _sciOr = (tier, set) => (rng) => {
   return x < 0.25 ? _measureRound(tier, rng) : x < 0.45 ? _sortRound(tier, rng) : _pick(set, rng);
 };
 
+// ---- Ariel: rhyming and word families (K5). Original rounds; every word is a short, kid-safe CVC word. ----
+// A word family is the ending from the first vowel on (-at, -ig ...). Words that share it rhyme.
+export const RHYME_FAMILIES = {
+  at: ['bat', 'cat', 'hat', 'mat', 'rat', 'sat'],
+  an: ['can', 'fan', 'man', 'pan', 'ran', 'van'],
+  ap: ['cap', 'lap', 'map', 'nap', 'tap'],
+  en: ['den', 'hen', 'men', 'pen', 'ten'],
+  et: ['get', 'jet', 'let', 'net', 'pet', 'set', 'wet'],
+  ig: ['big', 'dig', 'fig', 'pig', 'wig'],
+  in: ['bin', 'fin', 'pin', 'tin', 'win'],
+  it: ['bit', 'fit', 'kit', 'sit'],
+  og: ['dog', 'fog', 'hog', 'jog', 'log'],
+  op: ['hop', 'mop', 'pop', 'top'],
+  ot: ['cot', 'dot', 'hot', 'lot', 'not', 'pot'],
+  ug: ['bug', 'dug', 'hug', 'jug', 'mug', 'rug', 'tug'],
+  un: ['bun', 'fun', 'run', 'sun'],
+};
+/** Rime: from the first vowel to the end of a CVC word ('cat' -> 'at'). */
+export function rimeOf(w) {
+  const i = [...w].findIndex((c) => _VOWELS.includes(c));
+  return i < 0 ? '' : w.slice(i);
+}
+// Letters that do NOT make a word when put in front of the ending (hand-checked, no names or rude words).
+const FAMILY_FAKE = {
+  at: 'jknwzgd', an: 'ghkwzjl', ap: 'fkvw', en: 'fkvzcl', et: 'cfhkzd', ig: 'chkmvn',
+  in: 'cghjlrvz', it: 'cdjmvzr', og: 'kvwzr', op: 'fkvwz', ot: 'fkvz', ug: 'cfkswz', un: 'cklmvwz',
+};
+// Word clues for tier 3: [word, clue, picture or ''] (the clue never says the word).
+const FAMILY_CLUES = [
+  ['cat', 'a pet that says meow', '🐱'], ['hat', 'something you wear on your head', '🎩'],
+  ['bat', 'a small animal that flies at night', '🦇'], ['rat', 'a little animal with a long tail', '🐀'],
+  ['mat', 'a small rug by the door', ''], ['van', 'a big car that carries things', '🚐'],
+  ['pan', 'you cook eggs in it', ''], ['fan', 'it blows cool air', ''],
+  ['cap', 'a soft hat with a peak in front', '🧢'], ['map', 'it shows you the way to go', '🗺️'],
+  ['hen', 'a mama chicken', '🐔'], ['pen', 'you write with it', '🖊️'],
+  ['ten', 'the number after nine', '🔟'], ['den', 'a cozy home for a bear', ''],
+  ['jet', 'a very fast plane', '✈️'], ['net', 'it catches butterflies', ''],
+  ['pig', 'a pink farm animal that oinks', '🐷'], ['wig', 'fake hair you can wear', ''],
+  ['bin', 'you put trash in it', '🗑️'], ['pin', 'a little thing that holds cloth together', '📌'],
+  ['kit', 'a box of things you need for a job', ''],
+  ['dog', 'a pet that barks', '🐶'], ['log', 'a big piece of a tree', '🪵'],
+  ['mop', 'you clean the floor with it', ''], ['pot', 'you cook soup in it', ''],
+  ['dot', 'a tiny round spot', ''],
+  ['bug', 'a little crawly insect', '🐛'], ['hug', 'a warm squeeze from someone you love', ''],
+  ['jug', 'it holds milk or juice', ''], ['sun', 'it shines in the sky', '☀️'],
+];
+const _RIME_OF_FAMILY = (w) => Object.keys(RHYME_FAMILIES).find((k) => RHYME_FAMILIES[k].includes(w));
+const _ARIEL_PIC = { cat: '🐱', hat: '🎩', bat: '🦇', rat: '🐀', pig: '🐷', van: '🚐', sun: '☀️', bug: '🐛', hen: '🐔', pen: '🖊️', jet: '✈️', dog: '🐶', log: '🪵', map: '🗺️', cap: '🧢', pin: '📌', bin: '🗑️' };
+
+/** A target word, one word that rhymes with it, and distractors; `near` = how many share only the vowel. */
+function _rhymeSet(rng, near) {
+  const fams = Object.keys(RHYME_FAMILIES);
+  const fam = _pick(fams, rng);
+  const [target, ans] = _shuffle(RHYME_FAMILIES[fam], rng);
+  const sameV = fams.filter((f) => f !== fam && f[0] === fam[0]);
+  const diffV = fams.filter((f) => f[0] !== fam[0]);
+  const d = [];
+  const take = (famList) => { const f = _pick(famList, rng); const w = _pick(RHYME_FAMILIES[f], rng); if (!d.includes(w)) d.push(w); };
+  if (near && sameV.length) take(sameV);
+  let guard = 0;
+  while (d.length < 2 && guard++ < 50) take(diffV);
+  return { target, ans, d: d.slice(0, 2) };
+}
+function _rhymeHint(target) { return `Good try! Say ${target}, then say each word. Which one ends with the same sound?`; }
+function _arielRhymePick(rng, near) {
+  const { target, ans, d } = _rhymeSet(rng, near);
+  const r = {
+    kind: 'rhyme', target,
+    prompt: `Which word rhymes with ${target}?`,
+    show: target,
+    choices: [ans, ...d], answer: ans,
+    hint: _rhymeHint(target),
+  };
+  if (_ARIEL_PIC[target]) r.pic = _ARIEL_PIC[target];
+  return r;
+}
+function _arielPair(rng) {
+  const fams = _shuffle(Object.keys(RHYME_FAMILIES), rng);
+  const [a, b] = _shuffle(RHYME_FAMILIES[fams[0]], rng);
+  const pair = (x, y) => `${x} and ${y}`;
+  // Wrong pairs: words from two other families (different vowels, so they clearly do not rhyme).
+  const others = fams.slice(1).filter((f) => f[0] !== fams[0][0]);
+  const w = (f) => _pick(RHYME_FAMILIES[f], rng);
+  const p2 = pair(a, w(others[0]));
+  const p3 = pair(w(others[1]), w(others[2]));
+  return {
+    kind: 'pair',
+    prompt: 'Which pair of words rhymes?',
+    choices: [pair(a, b), p2, p3], answer: pair(a, b),
+    hint: 'Good try! Say each pair out loud. Which pair ends with the same sound?',
+  };
+}
+function _arielOdd(rng) {
+  const fams = Object.keys(RHYME_FAMILIES);
+  const fam = _pick(fams.filter((f) => RHYME_FAMILIES[f].length >= 3), rng);
+  const [target, x, y] = _shuffle(RHYME_FAMILIES[fam], rng);
+  const odd = _pick(_shuffle(fams.filter((f) => f !== fam && f[0] !== fam[0]), rng).map((f) => _pick(RHYME_FAMILIES[f], rng)), rng);
+  const r = {
+    kind: 'odd', target,
+    prompt: `Which word does not rhyme with ${target}?`,
+    show: target,
+    choices: [x, y, odd], answer: odd,
+    hint: `Good try! Say ${target}, then say each word. Which one sounds different at the end?`,
+  };
+  if (_ARIEL_PIC[target]) r.pic = _ARIEL_PIC[target];
+  return r;
+}
+function _arielFamily(rng) {
+  const [w, clue, pic] = _pick(FAMILY_CLUES, rng);
+  const fam = _RIME_OF_FAMILY(w);
+  const letter = w[0];
+  const wrong = _shuffle([...FAMILY_FAKE[fam]], rng).slice(0, 2);
+  const r = {
+    kind: 'family', family: fam, word: w,
+    prompt: `Add a letter to make a new word. ${clue[0].toUpperCase()}${clue.slice(1)}.`,
+    say: `Add a letter in front of ${fam}, to make a new word. ${clue[0].toUpperCase()}${clue.slice(1)}.`,
+    show: `_ ${[...fam].join(' ')}`,
+    noChoiceSay: true, // single letters are not read aloud as a list
+    choices: [letter, ...wrong], answer: letter,
+    answerSay: `${letter}, as in ${w}`,
+    hint: `Good try! Put each letter in front of ${fam} and say it. Which one makes a real word that fits the clue?`,
+    hintSay: `Good try! The word is ${w}. Say it slowly and listen to the first sound. Which letter says it?`,
+  };
+  if (pic) r.pic = pic;
+  return r;
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -1207,6 +1391,11 @@ const TIERS = {
       const hours = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12]; // 6:30 held back: the hands overlap
       return _cinderellaRound(_pick(hours, rng), 30, rng() < 0.5);
     },
+  },
+  ariel: {
+    1: (rng) => (rng() < 0.5 ? _arielRhymePick(rng, false) : _arielPair(rng)),
+    2: (rng) => (rng() < 0.75 ? _arielRhymePick(rng, true) : _arielOdd(rng)),
+    3: (rng) => _arielFamily(rng),
   },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
