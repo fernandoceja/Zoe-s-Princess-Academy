@@ -5,15 +5,15 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261027p1';
-import { PRINCESSES, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027p1';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027p1';
-import { UI } from './ui.js?v=20261027p1';
-import { Save, checkMilestones } from './save.js?v=20261027p1';
-import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, TREASURE_LANDS, TREASURE_LAND_NAMES, awardRowStar, SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine } from './treasures.js?v=20261027p1';
-import { Input } from './input.js?v=20261027p1';
-import { startPadNav } from './padnav.js?v=20261027p1';
-import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027p1';
+import { createWorld } from './world.js?v=20261027e2';
+import { PRINCESSES, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027e2';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027e2';
+import { UI } from './ui.js?v=20261027e2';
+import { Save, checkMilestones } from './save.js?v=20261027e2';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, TREASURE_LANDS, TREASURE_LAND_NAMES, awardRowStar, SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine } from './treasures.js?v=20261027e2';
+import { Input } from './input.js?v=20261027e2';
+import { startPadNav } from './padnav.js?v=20261027e2';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
 const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
