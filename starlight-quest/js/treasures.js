@@ -55,7 +55,7 @@ const ID_RE = /^[a-z]{1,12}-\d{1,2}$/;
 
 /** Heal anything into { day, got: [ids], total: { kind: count } }. Never throws. */
 export function sanitizeTreasures(raw) {
-  const out = { day: '', got: [], total: {} };
+  const out = { day: '', got: [], total: {}, stars: [] };
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
   if (typeof raw.day === 'string' && DAY_RE.test(raw.day)) out.day = raw.day;
   if (Array.isArray(raw.got)) {
@@ -70,14 +70,17 @@ export function sanitizeTreasures(raw) {
       if (typeof v === 'number' && Number.isFinite(v) && v > 0) out.total[k] = Math.min(Math.floor(v), 99999);
     }
   }
-  if (!out.day) out.got = []; // finds with no known day cannot be trusted
+  if (Array.isArray(raw.stars)) {
+    for (const id of raw.stars) if (TREASURE_LANDS.includes(id) && !out.stars.includes(id)) out.stars.push(id);
+  }
+  if (!out.day) { out.got = []; out.stars = []; } // finds with no known day cannot be trusted
   return out;
 }
 
 /** New day: forget today's finds, keep lifetime totals. Mutates and returns save.treasures. */
 export function rolloverTreasures(save, dayKey) {
   const t = (save.treasures = sanitizeTreasures(save.treasures));
-  if (t.day !== dayKey) { t.day = dayKey; t.got = []; }
+  if (t.day !== dayKey) { t.day = dayKey; t.got = []; t.stars = []; }
   return t;
 }
 
@@ -103,6 +106,118 @@ export function collectTreasure(save, id, kind, dayKey) {
   return true;
 }
 
+/** Row star (E4): 1 star the first time all 5 treasures of one land are found on a day.
+ * Returns true exactly once per land per day (and marks it); false otherwise. Caller adds the star. */
+export function awardRowStar(save, landId, dayKey) {
+  if (!TREASURE_LANDS.includes(landId)) return false;
+  if (landTreasureCount(save, landId, dayKey) < TREASURES_PER_LAND) return false;
+  const t = rolloverTreasures(save, dayKey);
+  if (t.stars.includes(landId)) return false;
+  t.stars.push(landId);
+  return true;
+}
+
+/** Secret surprises (E4): one hidden spot per land. Each has a sticker. */
+export const SECRETS = [
+  { id: 'clock',     land: 'village',   npc: 'cinderella', label: 'Village clock', emoji: '🕰️' },
+  { id: 'icetwins',  land: 'frostfall', npc: 'elsa',       label: 'Ice twins',     emoji: '❄️' },
+  { id: 'bookstack', land: 'library',   npc: 'belle',      label: 'Book stack',    emoji: '📚' },
+  { id: 'sunflower', land: 'meadow',    npc: 'rapunzel',   label: 'Super sunflower', emoji: '🌻' },
+];
+const SECRET_IDS = SECRETS.map((s) => s.id);
+
+/** Heal anything into a list of known sticker ids (in SECRETS order). Never throws. */
+export function sanitizeSecrets(raw) {
+  if (!Array.isArray(raw)) return [];
+  return SECRET_IDS.filter((id) => raw.includes(id));
+}
+
+/** Record a sticker. Returns true only the first time. */
+export function foundSecret(save, id) {
+  if (!SECRET_IDS.includes(id)) return false;
+  save.secrets = sanitizeSecrets(save.secrets);
+  if (save.secrets.includes(id)) return false;
+  save.secrets.push(id);
+  save.secrets = sanitizeSecrets(save.secrets);
+  return true;
+}
+
+const SECRET_WINDOW_MS = 3000; // clock: 3 taps / ice twins: both crystals, within this long
+const SECRET_COOL_MS = 3500;   // after a secret fires, ignore it for a moment (no speech spam)
+
+/** Tap tracker. tap(part, nowMs) -> a secret id when that tap completes one, else null.
+ * parts: 'clock', 'ice-a', 'ice-b', 'bookstack', 'sunflower'. */
+export function createSecretTracker() {
+  let clock = [];
+  const ice = { a: -Infinity, b: -Infinity };
+  const cool = {};
+  const fire = (id, now) => { if (now < (cool[id] ?? -Infinity) + SECRET_COOL_MS) return null; cool[id] = now; return id; };
+  return {
+    tap(part, now) {
+      if (part === 'clock') {
+        clock = clock.filter((t) => now - t <= SECRET_WINDOW_MS); clock.push(now);
+        if (clock.length >= 3) { const r = fire('clock', now); if (r) clock = []; return r; }
+        return null;
+      }
+      if (part === 'ice-a' || part === 'ice-b') {
+        ice[part === 'ice-a' ? 'a' : 'b'] = now;
+        if (now - ice.a <= SECRET_WINDOW_MS && now - ice.b <= SECRET_WINDOW_MS) {
+          const r = fire('icetwins', now);
+          if (r) { ice.a = ice.b = -Infinity; }
+          return r;
+        }
+        return null;
+      }
+      if (part === 'bookstack' || part === 'sunflower') return fire(part, now);
+      return null;
+    },
+  };
+}
+
+/** Doubles line for Elsa: n + n make 2n, n from 1 to 5. */
+export function doublesLine(rand = Math.random) {
+  const n = 1 + Math.floor(rand() * 5);
+  return { n, sum: n * 2, say: `${n} and ${n} make ${n * 2}!` };
+}
+
+/** Clock time for Cinderella: o'clock or half past. h is 1 to 12, m is 0 or 30. */
+export function clockLine(rand = Math.random) {
+  const h = 1 + Math.floor(rand() * 12);
+  const m = rand() < 0.5 ? 0 : 30;
+  return { h, m, say: m === 0 ? `It is ${h} o'clock!` : `It is half past ${h}!` };
+}
+
+const LETTER_SPEECH = { a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff', g: 'jee', h: 'aitch', i: 'eye', j: 'jay',
+  k: 'kay', l: 'ell', m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'are', s: 'ess', t: 'tee', u: 'you', v: 'vee',
+  w: 'double you', x: 'ex', y: 'why', z: 'zee' };
+
+/** Belle spells a word from the week pack: shown text "l - e - n - d" and spoken text with letter names. */
+export function spellLine(words, rand = Math.random) {
+  const list = (Array.isArray(words) ? words : []).filter((w) => typeof w === 'string' && /^[a-z]{1,12}$/.test(w));
+  const word = list.length ? list[Math.floor(rand() * list.length)] : 'star';
+  const letters = word.split('');
+  return {
+    word,
+    show: `${letters.join(' - ')}... ${word}!`,
+    say: `${letters.map((c) => LETTER_SPEECH[c]).join(', ')}... ${word}!`,
+  };
+}
+
+/** Rapunzel's short science lines (count by 2s, or a plant fact). */
+export function plantLine(rand = Math.random) {
+  const facts = [
+    'Sunflowers love to face the sun!',
+    'A sunflower seed can grow into a new sunflower!',
+    'Plants drink water with their roots!',
+    'Plants make food from sunlight. That is science!',
+  ];
+  const i = Math.floor(rand() * (facts.length + 2));
+  if (i < facts.length) return { say: facts[i] };
+  const top = i === facts.length ? 10 : 12;
+  const nums = []; for (let k = 2; k <= top; k += 2) nums.push(k);
+  return { say: `Let us count the petals by twos: ${nums.join(', ')}!`, nums };
+}
+
 /** Kid-facing names + emoji for the Treasure Book (original emoji art). */
 export const TREASURE_INFO = {
   shell:   { label: 'Shells',   emoji: '🐚' },
@@ -126,6 +241,9 @@ export function treasureBookModel(save, dayKey) {
   const lands = TREASURE_LANDS.map((id) => ({
     id, name: TREASURE_LAND_NAMES[id], count: landTreasureCount({ treasures: t }, id, dayKey), of: TREASURES_PER_LAND,
   }));
+  for (const l of lands) l.star = t.day === dayKey && t.stars.includes(l.id);
+  const have = sanitizeSecrets(save && save.secrets);
+  const stickers = SECRETS.map((s) => ({ id: s.id, label: s.label, emoji: s.emoji, found: have.includes(s.id) }));
   const total = kinds.reduce((n, k) => n + k.count, 0);
-  return { kinds, lands, total };
+  return { kinds, lands, stickers, total };
 }

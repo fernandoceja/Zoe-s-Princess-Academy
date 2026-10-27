@@ -292,12 +292,16 @@ function injectCSS() {
   .zsq-shards { display: inline-flex; gap: 6px; align-items: center; }
   .zsq-shard { font-size: 22px; line-height: 1; color: #d9a400; }
   .zsq-shard.zsq-off { color: #94a3b8; opacity: .5; }
-  .zsq-topright { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
+  .zsq-topright { display: flex; gap: 10px; align-items: center; pointer-events: auto; align-self: flex-start; }
   .zsq-stars { background: rgba(255,255,255,.92); border: 3px solid ${GOLD};
     border-radius: 999px; padding: 10px 18px; font-weight: 900; font-size: 22px;
     color: #92400e; min-height: 56px; display: flex; align-items: center; gap: 6px;
     white-space: nowrap; box-shadow: 0 4px 14px rgba(31,41,55,.12); transition: transform .25s ease; }
   .zsq-stars.zsq-bump { transform: scale(1.18); }
+  .zsq-topleft { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; align-self: flex-start; }
+  .zsq-finds { pointer-events: none; background: rgba(255,255,255,.92); border: 3px solid ${GOLD}; border-radius: 999px;
+    padding: 2px 10px; font-weight: 800; font-size: 15px; color: #92400e; white-space: nowrap; min-height: 30px;
+    display: flex; align-items: center; box-shadow: 0 4px 14px rgba(31,41,55,.12); box-sizing: border-box; }
   .zsq-iconbtn { width: 56px; height: 56px; border-radius: 50%; border: 3px solid ${GOLD};
     background: rgba(255,255,255,.94); font-size: 26px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
@@ -567,6 +571,10 @@ function injectCSS() {
   .zsq-tb-dots { display: flex; gap: 5px; flex-shrink: 0; }
   .zsq-tb-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid ${GOLD}; background: #fff; box-sizing: border-box; }
   .zsq-tb-dot.zsq-on { background: ${GOLD}; }
+  .zsq-tb-stickers { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+  .zsq-tb-sticker { width: 56px; height: 56px; border-radius: 16px; border: 3px solid ${GOLD}; background: #fff7e0; display: flex;
+    align-items: center; justify-content: center; font-size: 30px; font-weight: 900; box-sizing: border-box; }
+  .zsq-tb-sticker.zsq-tb-unfound { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; font-size: 26px; }
   .zsq-tb-total { font-size: 22px; font-weight: 900; color: #1e40af; margin-top: 10px; }
   .zsq-tb-card .zsq-tut-row { margin-top: 12px; }
 
@@ -591,6 +599,7 @@ function injectCSS() {
     .zsq-shards { gap: 2px; }
     .zsq-shard { font-size: 14px; }
     .zsq-stars { font-size: 17px; padding: 6px 8px; min-height: 48px; }
+    .zsq-finds { font-size: 13px; padding: 1px 8px; border-width: 2px; min-height: 26px; }
     .zsq-iconbtn { width: 44px; height: 44px; font-size: 21px; }
     .zsq-toasts { top: 70px; }
     .zsq-toast { padding: 10px 20px; }
@@ -801,7 +810,11 @@ export const UI = {
     parentBtn.onclick = () => { SoundFX.pop(); this.showParentGate(); };
     pauseBtn.onclick = () => { SoundFX.pop(); if (typeof _hooks.onPause === 'function') _hooks.onPause(); };
     right.append(stars, muteBtn, parentBtn, pauseBtn);
-    topbar.append(pill, right);
+    const finds = el('div', 'zsq-finds', '🧺 0/20');
+    finds.setAttribute('aria-label', 'Treasures found today');
+    const left = el('div', 'zsq-topleft');
+    left.append(pill, finds);
+    topbar.append(left, right);
     _root.appendChild(topbar);
 
     // ---- dialogue sheet ----
@@ -834,7 +847,7 @@ export const UI = {
     const pauseWrap = el('div', 'zsq-pause-wrap zsq-hidden');
     _root.appendChild(pauseWrap);
 
-    _els = { topbar, pill, stars, muteBtn, sheet, challengeWrap, interact, toasts, celebrate, finale, parentWrap, title, tutorial, pauseWrap };
+    _els = { topbar, pill, finds, stars, muteBtn, sheet, challengeWrap, interact, toasts, celebrate, finale, parentWrap, title, tutorial, pauseWrap };
     this.setMuteUI(Narrator.muted, null);
   },
 
@@ -988,9 +1001,18 @@ export const UI = {
       r.setAttribute('aria-label', `${l.name}: ${l.count} of ${l.of} today`);
       const dots = el('div', 'zsq-tb-dots');
       for (let i = 0; i < l.of; i++) dots.appendChild(el('span', 'zsq-tb-dot' + (i < l.count ? ' zsq-on' : '')));
-      r.append(el('span', '', l.name), dots);
+      r.append(el('span', '', l.count >= l.of ? `${l.name} ⭐` : l.name), dots);
       card.appendChild(r);
     }
+    card.appendChild(el('div', 'zsq-tb-h', 'Stickers'));
+    const srow = el('div', 'zsq-tb-stickers');
+    for (const st of m.stickers) {
+      const slot = el('div', 'zsq-tb-sticker' + (st.found ? '' : ' zsq-tb-unfound'), st.found ? st.emoji : '?');
+      slot.setAttribute('aria-label', st.found ? st.label : 'Secret sticker, not found yet');
+      slot.title = st.found ? st.label : '';
+      srow.appendChild(slot);
+    }
+    card.appendChild(srow);
     const line = m.total === 1 ? 'You have found 1 treasure!' : `You have found ${m.total} treasures!`;
     card.appendChild(el('div', 'zsq-tb-total', line));
     const crow = el('div', 'zsq-tut-row');
@@ -1308,6 +1330,13 @@ export const UI = {
     s.classList.remove('zsq-bump');
     void s.offsetWidth; // restart the animation
     s.classList.add('zsq-bump');
+  },
+
+  /** Update the 🧺 today's-finds pill (found of total). */
+  updateFinds(n, total) {
+    if (!_els.finds) return;
+    _els.finds.textContent = `🧺 ${Number(n || 0)}/${Number(total || 20)}`;
+    _els.finds.setAttribute('aria-label', `Treasures found today: ${Number(n || 0)} of ${Number(total || 20)}`);
   },
 
   /** Set the quest-pill HTML on the left of the top bar. */

@@ -52,3 +52,5 @@ jobs:
         run: node starlight-quest/tests/treasure_check.mjs
       - name: Treasure Book check
         run: node starlight-quest/tests/treasurebook_check.mjs
+      - name: Secret surprises check
+        run: node starlight-quest/tests/secret_check.mjs
