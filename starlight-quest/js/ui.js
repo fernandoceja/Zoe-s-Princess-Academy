@@ -1625,7 +1625,12 @@ export const UI = {
   },
 
   /** One-time card for when the first new kingdoms open (main.js only calls it with at least one built slot). */
-  showNewKingdoms(onDone) {
+  showNewKingdoms(onDone, landNames) {
+    // First time: the big announcement. Later (a land opened after she saw it): a short card naming the new land(s).
+    if (Array.isArray(landNames) && landNames.length) {
+      UI.showMilestone({ title: landNames.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!', sub: `${landNames.join(' and ')} ${landNames.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`, emoji: '🌟🏝️🌟' }, onDone);
+      return;
+    }
     UI.showMilestone({ title: 'New kingdoms appeared beyond the Starlight Hub!', sub: 'Follow the sparkly paths to find them.', emoji: '🌟🏰🌟' }, onDone);
   },
 

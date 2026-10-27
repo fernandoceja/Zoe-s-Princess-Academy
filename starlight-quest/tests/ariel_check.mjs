@@ -88,7 +88,7 @@ for (const r of QUESTS.ariel.rounds) {
 ok(QUESTS.ariel.rounds.length === 5, 'five fallback rounds');
 
 // Wiring and story lines
-ok(NPC_ORDER.includes('ariel') && NPC_ORDER[NPC_ORDER.length - 1] === 'ariel', 'ariel is last in NPC_ORDER');
+ok(NPC_ORDER.includes('ariel') && NPC_ORDER.indexOf('ariel') === 4, 'ariel is fifth in NPC_ORDER (Moana follows in K7)');
 ok(NO_CLIP_IDS.includes('ariel'), 'ariel uses the speech voice (no clips)');
 ok(PRINCESSES.ariel.landName === 'Seashell Cove', 'land name');
 const lines = [...QUESTS.ariel.intro, ...QUESTS.ariel.complete, QUESTS.ariel.title, QUESTS.ariel.questName];

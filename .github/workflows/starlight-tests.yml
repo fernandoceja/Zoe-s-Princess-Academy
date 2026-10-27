@@ -66,3 +66,5 @@ jobs:
         run: node starlight-quest/tests/ariel_check.mjs
       - name: Wayfinder Isle check
         run: node starlight-quest/tests/isle_check.mjs
+      - name: Moana shape quests check
+        run: node starlight-quest/tests/moana_check.mjs

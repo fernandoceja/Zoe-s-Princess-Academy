@@ -51,6 +51,14 @@
   Core: pick the rhyme, find the word that does not rhyme. Stretch: add a letter to a family ending to make a new word.
 - **Example round:** *"Which word rhymes with pig?"* — choices: `wig`, `pan`, `bug`.
 
+## 🏝️ Moana — "The Shape Stones" · Wayfinder Isle
+
+- **Standard:** Math Geometry — CA CCSS **1.G.A.1 / 1.G.A.2** (and K.G)
+- **What the child practices:** Defining attributes, not color, size or turn. Easy: name a shape picture (circle, triangle, square, rectangle, hexagon; cube, sphere, cone, cylinder).
+  Core: count sides and corners of flat shapes, find the shape with no corners or a given count (pentagon joins in).
+  Stretch: solid shapes and real things (a ball, a dice, a can), flat faces of solids, which thing can roll.
+- **Example round:** *"How many sides does a triangle have?"* — choices: `3`, `4`, `5`.
+
 ## 👑 Starlight Finale
 
 - Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates

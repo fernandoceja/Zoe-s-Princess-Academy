@@ -12,13 +12,14 @@ import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
 import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine, shapeLine } from './treasures.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
-import { builtSlotIds, shouldShowNewKingdoms, shouldRunFinale, openLandIds } from './worldmap.js?v=20261027e2';
+import { builtSlotIds, unseenKingdomSlots, shouldRunFinale, openLandIds, BUILT_SLOTS } from './worldmap.js?v=20261027e2';
+import { shapeSVG } from './shapes.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
 const NPC_IDS = NPC_ORDER;
 const OPEN_LANDS = openLandIds(); // new lands are drawn only when built or previewed (Wayfinder Isle: ?preview=isle); today's finds count only open lands
-const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove' };
+const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
 const CELEBRATE_VIEW_MS = 1800;
@@ -180,9 +181,16 @@ export async function main(container) {
       world.setInputEnabled(true);
       UI.setRoamUI(true);
       UI.toast('Walk to a princess and say hello! 👑');
-      // One-time card, only once a new kingdom has been built (never with zero built slots).
-      if (shouldShowNewKingdoms(builtSlotIds().length, Save.data.seenNewKingdoms)) {
-        UI.showNewKingdoms(() => { Save.data.seenNewKingdoms = true; Save.save(); });
+      // Card when a built kingdom is new to her (never with zero built slots). The first time it is the big announcement;
+      // when a kingdom opens later (Wayfinder Isle after Seashell Cove) it is a short card naming the new land.
+      const newSlots = unseenKingdomSlots(builtSlotIds(), Save.data.seenKingdoms);
+      if (newSlots.length) {
+        const first = !Save.data.seenNewKingdoms;
+        UI.showNewKingdoms(() => {
+          Save.data.seenNewKingdoms = true;
+          Save.data.seenKingdoms = [...new Set([...(Save.data.seenKingdoms || []), ...builtSlotIds()])];
+          Save.save();
+        }, first ? null : newSlots.map((s) => PRINCESSES[BUILT_SLOTS[s]] && PRINCESSES[BUILT_SLOTS[s]].landName).filter(Boolean));
       }
       if (isIOS() && !canBypassSilentSwitch()) {
         setTimeout(() => UI.toast('🔔 No sound? Flip the silent switch off and turn the volume up.'), 2500);
@@ -372,8 +380,9 @@ export async function main(container) {
     if (npcId === 'cinderella' && round.clock) {
       return clockSVG(round.clock.hour, round.clock.minute);
     }
+    if (npcId === 'moana' && round.visual && round.visual.kind === 'shape') return shapeSVG(round.visual);
     if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
-    if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
+    if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel' || npcId === 'moana')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
   }
 
@@ -448,7 +457,7 @@ export async function main(container) {
     const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : tileRound ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
-    if ((npcId === 'cinderella' || npcId === 'rapunzel' || (npcId === 'ariel' && !round.noChoiceSay)) && !round.sort) {
+    if ((npcId === 'cinderella' || npcId === 'rapunzel' || ((npcId === 'ariel' || npcId === 'moana') && !round.noChoiceSay)) && !round.sort) {
       // Read the words only, not the picture emoji in front of them.
       const labels = arr.map((c) => c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';
