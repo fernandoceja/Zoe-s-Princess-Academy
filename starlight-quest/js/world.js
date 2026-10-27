@@ -6,9 +6,9 @@
 // ============================================================================
 
 import * as THREE from 'three';
-import { Input } from './input.js?v=20261027p1';
-import { OUTFIT } from './save.js?v=20261027p1';
-import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027p1';
+import { Input } from './input.js?v=20261027e2';
+import { OUTFIT } from './save.js?v=20261027e2';
+import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
 // Config
