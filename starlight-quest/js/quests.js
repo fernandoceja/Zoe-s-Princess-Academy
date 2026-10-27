@@ -19,6 +19,7 @@ import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261027e2';
 import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261027e2';
 import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261027e2';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261027e2';
+import { PORTRAIT_ARIEL, PORTRAIT_MOANA, PORTRAIT_JASMINE, PORTRAIT_ANNA, PORTRAIT_TIANA, PORTRAIT_AURORA } from './portraits-new.js?v=20261027e2';
 
 export const PRINCESSES = {
   belle: {
@@ -53,6 +54,57 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
+  // --- New-kingdom princesses (K3). Defined here but NOT in NPC_ORDER yet: each kingdom PR
+  // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
+  // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
+  ariel: {
+    name: 'Ariel',
+    landId: 'seashell-cove',
+    landName: 'Seashell Cove',
+    portrait: PORTRAIT_ARIEL,
+    color: '#14b8a6',
+    voice: { pitch: 1.2, rate: 0.92 },
+  },
+  moana: {
+    name: 'Moana',
+    landId: 'wayfinder-isle',
+    landName: 'Wayfinder Isle',
+    portrait: PORTRAIT_MOANA,
+    color: '#d4a373',
+    voice: { pitch: 1.0, rate: 0.96 },
+  },
+  jasmine: {
+    name: 'Jasmine',
+    landId: 'moonlit-palace-garden',
+    landName: 'Moonlit Palace Garden',
+    portrait: PORTRAIT_JASMINE,
+    color: '#4f46e5',
+    voice: { pitch: 1.08, rate: 0.86 },
+  },
+  anna: {
+    name: 'Anna',
+    landId: 'sunny-fjord-harbor',
+    landName: 'Sunny Fjord Harbor',
+    portrait: PORTRAIT_ANNA,
+    color: '#ef4444',
+    voice: { pitch: 1.18, rate: 1.0 },
+  },
+  tiana: {
+    name: 'Tiana',
+    landId: 'firefly-bayou',
+    landName: 'Firefly Bayou',
+    portrait: PORTRAIT_TIANA,
+    color: '#9333ea',
+    voice: { pitch: 1.02, rate: 0.88 },
+  },
+  aurora: {
+    name: 'Aurora',
+    landId: 'rosewood-glen',
+    landName: 'Rosewood Glen',
+    portrait: PORTRAIT_AURORA,
+    color: '#be185d',
+    voice: { pitch: 1.28, rate: 0.87 },
+  },
   zoe: {
     name: 'Zoe',
     landId: 'starlight-hub',
@@ -67,6 +119,10 @@ export const PRINCESSES = {
 // Everything that used to hard-code the four lands reads this list. To add a
 // princess: add her to PRINCESSES above and append her id here. Zoe is not a
 // land, so she stays out of this list.
+// NO_CLIP_IDS — princesses with no recorded MP3 clips: the narrator skips the clip lookup and
+// speaks right away with the speech voice. Remove an id once her clips are recorded.
+export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
+
 export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella'];
 
 // ----------------------------------------------------------------------------

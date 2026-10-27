@@ -26,6 +26,7 @@ const PRECACHE_URLS = [
   './js/portrait-elsa.js?v=20261027e2',
   './js/portrait-rapunzel.js?v=20261027e2',
   './js/portrait-zoe.js?v=20261027e2',
+  './js/portraits-new.js?v=20261027e2',
   './js/quests.js?v=20261027e2',
   './js/save.js?v=20261027e2',
   './js/treasures.js?v=20261027e2',

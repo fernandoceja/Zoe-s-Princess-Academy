@@ -58,3 +58,5 @@ jobs:
         run: node starlight-quest/tests/lands_check.mjs
       - name: Bigger world check
         run: node starlight-quest/tests/world_check.mjs
+      - name: New princess roster check
+        run: node starlight-quest/tests/roster_check.mjs
