@@ -263,6 +263,33 @@ export async function main(container) {
       const aria = label || `ten-frame showing ${n}${gone ? `, ${gone} crossed out` : ''}`;
       return `<span role="img" aria-label="${aria}" style="display:inline-flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:100%;margin:3px">${out}</span>`;
     };
+    if (npcId === 'elsa' && round.visual && round.visual.kind === 'counton') {
+      // Ice number line: start number highlighted, a hop arc per count-on, "?" where the last hop lands.
+      const { start, hop } = round.visual;
+      const lo = Math.max(0, Math.min(start - 1, 13)), W = 43, X = (n) => 22 + (n - lo) * W;
+      let svg = `<svg viewBox="0 0 352 140" width="100%" style="max-width:352px;display:block;margin:0 auto" role="img" aria-label="number line: start at ${start}, count on ${hop}">` +
+        `<rect x="4" y="88" width="344" height="12" rx="6" fill="#bae6fd" stroke="#38bdf8" stroke-width="2"/>`;
+      for (let n = lo; n <= lo + 7; n++) {
+        const x = X(n), isStart = n === start, isEnd = n === start + hop;
+        svg += `<line x1="${x}" y1="86" x2="${x}" y2="102" stroke="#0284c7" stroke-width="2"/>`;
+        if (isStart) svg += `<circle cx="${x}" cy="94" r="17" fill="#0284c7" stroke="#fff" stroke-width="2"/><text x="${x}" y="101" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">${n}</text>`;
+        else if (isEnd) svg += `<circle cx="${x}" cy="94" r="17" fill="#fde68a" stroke="#f59e0b" stroke-width="3"/><text x="${x}" y="102" text-anchor="middle" font-size="22" font-weight="800" fill="#92400e">?</text>`;
+        else svg += `<text x="${x}" y="126" text-anchor="middle" font-size="19" font-weight="700" fill="#0c4a6e">${n}</text>`;
+      }
+      for (let i = 0; i < hop; i++) {
+        const x1 = X(start + i) + (i === 0 ? 14 : 3), x2 = X(start + i + 1) - 3, mx = (x1 + x2) / 2;
+        svg += `<path d="M${x1} 82 Q${mx} 28 ${x2} 80" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round"/>` +
+          `<path d="M${x2 - 8} 66 L${x2} 80 L${x2 + 5} 65" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>` +
+          `<text x="${mx}" y="38" text-anchor="middle" font-size="17" font-weight="800" fill="#e11d48">+1</text>`;
+      }
+      return svg + '</svg>';
+    }
+    if (npcId === 'elsa' && round.visual && round.visual.kind === 'doubles') {
+      const { n, style } = round.visual;
+      if (style === 'frames') return `<div style="text-align:center;line-height:1.6">${frames(n, 0, 26)}<div style="font-size:30px">➕</div>${frames(n, 0, 26)}</div>`;
+      const side = `<span style="display:inline-flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;min-width:104px;max-width:128px;padding:8px;border:3px solid #7dd3fc;border-radius:16px;background:#f0f9ff;font-size:34px;line-height:1.1">${'<span>❄️</span>'.repeat(n)}</span>`;
+      return `<div role="img" aria-label="${n} snowflakes on each side" style="display:flex;align-items:center;justify-content:center;gap:8px">${side}<span style="font-size:30px">➕</span>${side}</div>`;
+    }
     if (npcId === 'elsa' && round.visual && round.visual.tens != null) {
       // Tens and ones: each ten is one full frame, ones in one partial frame; smaller cells, frames wrap.
       const { tens, ones } = round.visual;

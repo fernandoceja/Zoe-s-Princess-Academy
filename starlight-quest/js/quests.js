@@ -311,6 +311,7 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#10052;&#65039; Elsa &mdash; The Frozen Bridge</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math Operations within 20 &mdash; CA CCSS 1.OA</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Adding and subtracting within 20 using countable snowflakes as visual supports.</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Counting on from the bigger number (CA CCSS 1.OA.5 and 1.OA.6) and doubles 1+1 to 5+5 (1.OA.6).</div>
 </div>
 <div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#f0fdf4;">
 <div style="font-weight:700;font-size:15px;">&#127803; Rapunzel &mdash; The Sleepy Garden</div>
@@ -627,6 +628,65 @@ function _elsaWithin(rng, max) {
     visual: { a, b, op: '-' },
   };
 }
+
+// ---- Count on (CA 1.OA.5 / 1.OA.6) and doubles (1.OA.6): about half of Elsa's rounds ----
+const _nz = (list, ans) => (list.includes('0') ? [...list.filter((x) => x !== '0'), String(ans + 3)] : list);
+function _countOnHint(big, s) {
+  const seq = [];
+  for (let i = 1; i < s; i++) seq.push(big + i);
+  const tail = s === 1 ? 'What number comes right after?' : `${seq.join(', ')}, then one more.`;
+  return `Good try! Start with the bigger number, ${big}. Count on ${s}: ${tail}`;
+}
+function _countOnRound(tier, rng) {
+  const sm = 1 + Math.floor(rng() * 3);
+  const big = (sm + 1) + Math.floor(rng() * (20 - sm - sm));   // big in [sm+1, 20-sm]
+  const sum = big + sm;
+  const flip = tier >= 2 && rng() < 0.5;                        // tier 1 always bigger first
+  const [x, y] = flip ? [sm, big] : [big, sm];
+  if (tier === 3 && rng() < 0.5) {
+    const other = _shuffle([big - 1, big + 1, sum].filter((n) => n !== sm && n !== big && n >= 1), rng)[0];
+    return {
+      prompt: `Which number do you start with for ${x} + ${y}?`,
+      say: `Which number do you start with for ${x} plus ${y}?`,
+      choices: _shuffle([String(big), String(sm), String(other)], rng), answer: String(big),
+      hint: `Good try! Start with the bigger number. Which is bigger, ${sm} or ${big}?`,
+    };
+  }
+  const r = {
+    choices: _nz(_numChoices(sum, rng, 20, [sum + 1, sum - 1]), sum), answer: String(sum),
+    hint: _countOnHint(big, sm),
+  };
+  if (tier === 1) {
+    r.prompt = `Start at ${big} and count on ${sm}. What is ${big} + ${sm}?`;
+    r.say = `Start at ${big} and count on ${sm}. What is ${big} plus ${sm}?`;
+  } else {
+    r.prompt = `What is ${x} + ${y}?`;
+    r.say = `What is ${x} plus ${y}?`;
+  }
+  if (tier <= 2) r.visual = { kind: 'counton', start: big, hop: sm };
+  return r;
+}
+function _doublesRound(tier, rng) {
+  const n = 1 + Math.floor(rng() * 5), sum = 2 * n;
+  if (tier === 3 && rng() < 0.5) {
+    const others = _shuffle([1, 2, 3, 4, 5].filter((k) => k !== n), rng).slice(0, 2);
+    return {
+      prompt: `Which double makes ${sum}?`,
+      choices: _shuffle([n, ...others].map((k) => `${k} + ${k}`), rng), answer: `${n} + ${n}`,
+      hint: `Good try! A double is the same number twice. Which number, added to itself, makes ${sum}?`,
+    };
+  }
+  const r = {
+    prompt: `What is ${n} + ${n}?`, say: `What is ${n} plus ${n}?`,
+    choices: _nz(_numChoices(sum, rng, 10, [sum + 1, sum - 1, n]), sum), answer: String(sum),
+    hint: `Good try! A double is the same number twice. Count ${n} and ${n} more.`,
+  };
+  if (tier <= 2) r.visual = { kind: 'doubles', n, style: tier === 1 ? 'flakes' : 'frames' };
+  return r;
+}
+function _elsaNew(tier, rng) {
+  return rng() < 0.5 ? _countOnRound(tier, rng) : _doublesRound(tier, rng);
+}
 const MISSING = [[8, '+', 10], [6, '+', 9], [3, '+', 7, true], [10, '-', 6], [7, '+', 12], [9, '+', 15]];
 function _missingRound([a, op, total, first], rng) {
   if (op === '-') {
@@ -838,9 +898,10 @@ const TIERS = {
     },
   },
   elsa: {
-    1: (rng) => _elsaWithin(rng, 10),
-    2: (rng) => (rng() < 0.5 ? _elsaWithin(rng, 20) : _missingRound(_pick(MISSING, rng), rng)),
+    1: (rng) => (rng() < 0.5 ? _elsaNew(1, rng) : _elsaWithin(rng, 10)),
+    2: (rng) => (rng() < 0.5 ? _elsaNew(2, rng) : rng() < 0.5 ? _elsaWithin(rng, 20) : _missingRound(_pick(MISSING, rng), rng)),
     3: (rng) => {
+      if (rng() < 0.5) return _elsaNew(3, rng);
       const k = Math.floor(rng() * 3);
       if (k === 0) return _tensRound(_pick(TENS, rng), rng);
       if (k === 1) return _moreRound(_pick(MORE, rng), rng);
