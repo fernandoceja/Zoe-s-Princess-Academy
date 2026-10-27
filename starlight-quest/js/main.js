@@ -378,13 +378,14 @@ export async function main(container) {
     const P = PRINCESSES[npcId];
     const round = rounds[roundIdx];
     // After 2 misses, narrow to the answer plus one other choice.
-    let choices = round.sort || round.spell ? [] : round.choices;
-    if (misses >= 2 && !round.sort && !round.spell) {
+    const tileRound = round.spell || round.build; // letter or word tiles instead of choice buttons
+    let choices = round.sort || tileRound ? [] : round.choices;
+    if (misses >= 2 && !round.sort && !tileRound) {
       const other = round.choices.find((c) => c !== round.answer);
       choices = other ? [round.answer, other] : [round.answer];
     }
     // Sort rounds have no choice buttons; they finish via the bins ('__sortdone').
-    const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : round.spell ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
+    const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : tileRound ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
     if ((npcId === 'cinderella' || npcId === 'rapunzel') && !round.sort) {
@@ -406,6 +407,7 @@ export async function main(container) {
         tiles: round.tiles,
         bigWord: round.show || null, // Belle spelling: the word with its blanks
         spell: round.spell ? { ...round.spell, hint: round.hint } : null, // Belle spelling: letter-tile builder instead of choice buttons
+        build: round.build ? { ...round.build, hint: round.hint } : null, // Belle dictation: word-tile builder
         sort: round.sort,
         princessId: npcId,
         voiceText,
@@ -417,7 +419,7 @@ export async function main(container) {
           // Wrong letter: it wiggles and is not placed; count it like a wrong pick, never reveal.
           misses++;
           SoundFX.pop();
-          Narrator.speakExact(npcId, round.hintSay || round.hint);
+          Narrator.speakExact(npcId, (sortHint && sortHint.say) || round.hintSay || round.hint); // dictation tier 3 names the capital / end-mark rule
         } else if (pickedId === '__sortwrong') {
           // Wrong bin: the item stays; count it for the ladder but never reveal.
           misses++;

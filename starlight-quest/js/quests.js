@@ -694,6 +694,138 @@ function _spellKind(tier, rng) {
   return tier === 1 ? _vowelRound(w, rng) : tier === 2 ? _endingRound(w, rng) : _spellRound(w, rng);
 }
 
+// ---- Dictation sentence rounds (S3). They read WEEK.dictation when a round is made. ----
+// Extra practice sentences (sight words "of" and "he", plus short-vowel words), each 8 words or fewer.
+export const DICTATION_PRACTICE = [
+  'He has a box of pens.',
+  'He can sit on top of the log.',
+  'Did he get a bag of nuts?',
+];
+const _SWAP_EXTRA = ['he', 'she', 'we', 'me', 'be', 'ten', 'tan', 'tin', 'ran', 'run', 'rug', 'rub', 'bun', 'pan', 'pen', 'pin', 'pig', 'peg',
+  'pat', 'pit', 'pot', 'put', 'cat', 'cut', 'cot', 'can', 'cap', 'cup', 'big', 'bag', 'beg', 'bug', 'box', 'fox', 'fix', 'hen', 'hat', 'hit',
+  'hut', 'hot', 'hop', 'hip', 'has', 'his', 'had', 'hid', 'sad', 'sit', 'set', 'sat', 'sap', 'sip', 'mat', 'met', 'map', 'mop', 'mud', 'net',
+  'nut', 'not', 'nap', 'log', 'leg', 'lag', 'lip', 'lap', 'top', 'tip', 'tap', 'tub', 'tug', 'dog', 'dig', 'dug', 'den', 'did', 'dip', 'jet',
+  'jam', 'job', 'win', 'wet', 'web', 'wig', 'yes', 'yet', 'zip', 'got', 'get', 'gum', 'gas', 'bat', 'bit', 'bet', 'bad', 'bed', 'bud', 'red',
+  'rat', 'rot', 'run', 'rim', 'ram', 'van', 'vet', 'fan', 'fun', 'fat', 'fit', 'fig', 'fin', 'lot', 'lid', 'kid', 'kit', 'sun', 'sum', 'sob',
+  'pest', 'tent', 'test', 'tend', 'past', 'pass', 'fast', 'last', 'mast', 'mist', 'must', 'mask', 'task', 'hand', 'band', 'land', 'sand'];
+let _swapPool = null;
+function _swapWords() {
+  if (!_swapPool) {
+    _swapPool = [...new Set([..._SWAP_EXTRA, ..._MORE_WORDS, ...CVC_SETS.flat(), ...BLEND_SETS.flat()])]
+      .filter((w) => /^[a-z]{2,5}$/.test(w));
+  }
+  return _swapPool;
+}
+// True when a and b are one letter apart (swap, add or drop one letter).
+function _oneEdit(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
+  const [lo, hi] = a.length < b.length ? [a, b] : [b, a];
+  return lo.slice(i) === hi.slice(i + 1);
+}
+/** Split a sentence into { words (no commas), toks (comma kept), end }. */
+function _parseSentence(text) {
+  const t = String(text).trim().replace(/\s+/g, ' ');
+  const end = t.slice(-1);
+  const toks = t.slice(0, -1).trim().split(' ').filter(Boolean);
+  const words = toks.map((x) => x.replace(/,/g, ''));
+  return { toks, words, end };
+}
+function _capFirst(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+/** Two other versions of the sentence, each with exactly one word swapped. Never equals the sentence. */
+export function dictationVariants(text, rng) {
+  const { toks, words, end } = _parseSentence(text);
+  const lower = words.map((w) => w.toLowerCase());
+  const pool = _swapWords();
+  const cands = [];
+  words.forEach((w, i) => {
+    const lw = lower[i];
+    for (const alt of pool) {
+      if (alt !== lw && _oneEdit(lw, alt) && !lower.includes(alt)) cands.push({ i, alt, big: lw.length >= 3 });
+    }
+  });
+  const pickFrom = (list, used) => {
+    const fresh = list.filter((c) => !used.some((u) => u.i === c.i)); // different spot each time when possible
+    const src = fresh.length ? fresh : list.filter((c) => !used.some((u) => u.i === c.i && u.alt === c.alt));
+    return src.length ? _pick(src, rng) : null;
+  };
+  const out = [];
+  for (const group of [cands.filter((c) => c.big), cands]) {
+    while (out.length < 2) {
+      const c = pickFrom(group, out);
+      if (!c) break;
+      out.push(c);
+    }
+  }
+  // No near word fits (an unusual sentence): swap in any short word that is not in it.
+  for (let k = 0; out.length < 2 && k < 60; k++) {
+    const i = Math.floor(rng() * words.length);
+    const alt = _pick(pool, rng);
+    if (!lower.includes(alt) && !out.some((u) => u.i === i && u.alt === alt)) out.push({ i, alt });
+  }
+  const build = (c) => {
+    const t2 = toks.slice();
+    const comma = /,$/.test(toks[c.i]) ? ',' : '';
+    t2[c.i] = (c.i === 0 ? _capFirst(c.alt) : c.alt) + comma;
+    return t2.join(' ') + end;
+  };
+  return out.slice(0, 2).map(build);
+}
+const _END_SAY = { '?': 'question mark', '.': 'period', '!': 'exclamation mark' };
+const _END_HINT = {
+  '?': 'Is it asking something? Then it ends with a question mark.',
+  '.': 'Is it telling something? Then it ends with a period.',
+  '!': 'Is it a big, excited sentence? Then it ends with an exclamation mark.',
+};
+function _dictRound(tier, rng) {
+  const useWeek = rng() < 0.5;
+  const text = useWeek ? WEEK.dictation : _pick(DICTATION_PRACTICE, rng);
+  const { words, end } = _parseSentence(text);
+  const variants = dictationVariants(text, rng);
+  const answer = String(text).trim().replace(/\s+/g, ' ');
+  const spoken = answer;
+  const r = { choices: [answer, ...variants], answer };
+  if (tier === 1) {
+    return {
+      ...r,
+      prompt: 'Which sentence did you hear?',
+      say: `Listen. ${spoken} Which sentence did you hear?`,
+      replay: spoken,
+      hint: 'Good try! Listen again. Which words did you hear?',
+      hintSay: `Good try! Listen again. ${spoken}`,
+    };
+  }
+  const target = words.map((w, i) => (i === 0 ? w : /^I(['’].*)?$/.test(w) ? w : w.toLowerCase()));
+  const spare = [];
+  if (tier === 2) {
+    const extra = ['of', ...WEEK.sight, 'he', 'at'].find((w) => !target.some((t) => t.toLowerCase() === w));
+    if (extra) spare.push(extra);
+  } else {
+    if (target[0] !== target[0].toLowerCase()) spare.push(target[0].toLowerCase());
+    else spare.push(_capFirst(target[0]));
+    for (const m of ['.', '?', '!']) if (m !== end) spare.push(m);
+  }
+  const full = tier === 3 ? [...target, end] : target;
+  let tiles = _shuffle([...full, ...spare], rng);
+  for (let k = 0; k < 8 && (tiles.slice(0, full.length).join('|') === full.join('|')); k++) tiles = _shuffle(tiles, rng);
+  const more = `Good try! Listen again. ${spoken}`;
+  return {
+    ...r,
+    prompt: tier === 2 ? 'Listen and build the sentence.' : 'Listen. Build the sentence with a capital and an end mark.',
+    say: `Listen. ${spoken} ${tier === 2 ? 'Tap the words to build the sentence.' : 'Tap the words to build it. Start with a capital letter and finish with the right end mark.'}`,
+    replay: spoken,
+    hint: 'Good try! Listen again. Which word comes next?',
+    hintSay: more,
+    build: tier === 2
+      ? { tiles, target, end, sentence: true }
+      : { tiles, target: full, sentence: true,
+          hints: { first: 'Good try! A sentence starts with a capital letter.', last: `Good try! ${_END_HINT[end]}` } },
+  };
+}
+export const END_MARK_SAY = _END_SAY;
+
 
 // Number choices: the answer plus specific mistakes first, then near misses.
 function _numChoices(ans, rng, max = 20, mistakes = []) {
@@ -1021,10 +1153,15 @@ const TIERS = {
   },
 };
 
-// About 1 round in 3 of Belle's library is a spelling kind (S2); the rest are unchanged.
+// About 1 round in 3 of Belle's library is a spelling kind (S2) and 1 in 5 a dictation sentence (S3); the rest are unchanged.
 for (const t of [1, 2, 3]) {
   const base = TIERS.belle[t];
-  TIERS.belle[t] = (rng) => (rng() < 1 / 3 && _spellKind(t, rng)) || base(rng);
+  TIERS.belle[t] = (rng) => {
+    const x = rng();
+    if (x < 1 / 3) { const sp = _spellKind(t, rng); if (sp) return sp; } // spelling (S2): about 1 in 3
+    else if (x < 1 / 3 + 0.2) return _dictRound(t, rng); // dictation sentence (S3): about 1 in 5
+    return base(rng);
+  };
 }
 
 /** Stable id for a round, used by the review queue. */
