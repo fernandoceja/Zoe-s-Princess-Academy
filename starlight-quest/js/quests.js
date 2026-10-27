@@ -63,6 +63,12 @@ export const PRINCESSES = {
   },
 };
 
+// NPC_ORDER — the single list of rescue princesses (lands), in play order.
+// Everything that used to hard-code the four lands reads this list. To add a
+// princess: add her to PRINCESSES above and append her id here. Zoe is not a
+// land, so she stays out of this list.
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
 // ----------------------------------------------------------------------------

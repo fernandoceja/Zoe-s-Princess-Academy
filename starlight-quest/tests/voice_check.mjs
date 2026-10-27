@@ -5,7 +5,7 @@ const bad = new Map(); let n = 0;
 const chk = (where, t) => { n++; t = String(t ?? '');
   const why = !t.trim() ? 'empty' : E.test(t) ? 'emoji' : / \.|\s[.?!,]/.test(t) ? "' .'" : /\bis\s*[.?!]/.test(t) ? 'dangling' : null;
   if (why) bad.set(why + ' | ' + where + ' | ' + t, 1); };
-for (const npc of ['belle','elsa','cinderella','rapunzel']) for (const T of [1,2,3]) for (let i = 0; i < 3000; i++)
+for (const npc of q.NPC_ORDER) for (const T of [1,2,3]) for (let i = 0; i < 3000; i++)
   for (const r of q.buildRounds(npc, Math.random, { tier: T, review: [] })) {
     let v = r.say || r.prompt;
     if (npc === 'cinderella' || npc === 'rapunzel') { const L = r.choices.map((c) => strip(String(c)));

@@ -54,3 +54,5 @@ jobs:
         run: node starlight-quest/tests/treasurebook_check.mjs
       - name: Secret surprises check
         run: node starlight-quest/tests/secret_check.mjs
+      - name: Lands and princess list check
+        run: node starlight-quest/tests/lands_check.mjs

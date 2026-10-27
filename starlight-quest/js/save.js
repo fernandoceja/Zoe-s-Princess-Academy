@@ -5,10 +5,11 @@
  */
 
 import { sanitizeTreasures, sanitizeSecrets } from './treasures.js?v=20261027e2';
+import { NPC_ORDER } from './quests.js?v=20261027e2';
 
 const KEY = 'zoe-starlight-quest-v1';
 
-const NPC_IDS = ['belle', 'elsa', 'rapunzel', 'cinderella'];
+const NPC_IDS = NPC_ORDER;
 
 /** Star milestones. N10 can use this list to show rewards on Zoe. */
 export const MILESTONES = [
@@ -73,7 +74,7 @@ export function sanitizeOutfit(raw, unlocked) {
 function defaults() {
   return {
     stars: 0,
-    shards: { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0 },
+    shards: Object.fromEntries(NPC_IDS.map((id) => [id, 0])),
     done: [],
     milestones: [], // unlocked milestone ids (see MILESTONES)
     outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
@@ -89,7 +90,7 @@ function defaults() {
   };
 }
 
-function merge(raw) {
+export function merge(raw) {
   const d = defaults();
   if (!raw || typeof raw !== 'object') return d;
   const out = { ...d };
