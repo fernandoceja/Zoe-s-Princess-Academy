@@ -9,10 +9,11 @@ import * as THREE from 'three';
 import { Input } from './input.js?v=20261027e2';
 import { OUTFIT } from './save.js?v=20261027e2';
 import { NPC_ORDER } from './quests.js?v=20261027e2';
-import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
+import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
+import { buildCove } from './cove.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -450,6 +451,15 @@ export function createWorld(container, hooks) {
     const pz = Math.sin(land.angle) * PAD_DIST;
     landPads[id] = new THREE.Vector3(px, 0, pz);
   });
+  // Seashell Cove (K4): only when its slot is open (really built, or ?preview=cove). Registering the centre and Ariel's
+  // pad here keeps the scatter below (bushes, grass) and every spot check clear of it. Ariel is not spawned until
+  // her quests land (K5 adds 'ariel' to NPC_ORDER; NPC_DEFS.ariel.land === 'cove' then finds this pad).
+  const coveOpen = isCoveOpen();
+  if (coveOpen) {
+    const cg = coveGeometry();
+    landCenters[COVE.land] = new THREE.Vector3(cg.center.x, 0, cg.center.z);
+    landPads[COVE.land] = new THREE.Vector3(cg.pad.x, 0, cg.pad.z);
+  }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
   {
@@ -1404,7 +1414,7 @@ export function createWorld(container, hooks) {
     group.position.set(px, 0, pz);
     group.rotation.y = (tapItems.length * 1.9) % 6.28;
     group.scale.setScalar(1.25);
-    const info = TAP_KINDS[kind](group, arg);
+    const info = (typeof kind === 'function' ? kind : TAP_KINDS[kind])(group, arg); // a builder function = a land's own prop (cove.js)
     const hit = new THREE.Mesh(tapHitGeo, tapHitMat);
     hit.position.y = info.glowY * 0.8; hit.scale.setScalar(info.hitR);
     group.add(hit);
@@ -1412,7 +1422,7 @@ export function createWorld(container, hooks) {
     glow.position.y = info.glowY; glow.visible = false; glow.raycast = () => {};
     group.add(glow);
     scene.add(group);
-    const item = { group, hit, glow, kind, baseY: 0, t: -1, secret: secret || null };
+    const item = { group, hit, glow, kind: typeof kind === 'function' ? 'cove' : kind, baseY: 0, t: -1, secret: secret || null };
     hit.userData.tapItem = item;
     tappables.push(hit);
     tapItems.push(item);
@@ -1463,14 +1473,22 @@ export function createWorld(container, hooks) {
     clockItem.group.rotation.y = 0; // face the camera
     setClockTime(3, 0);
   }
+  // Seashell Cove (K4): scenery + six tap surprises + the shell secret, only when the slot is open.
+  let cove = null;
+  if (coveOpen) {
+    cove = buildCove({
+      THREE, scene, center: landCenters[COVE.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
+    });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
   function tapReact(it, dt) {
     it.t += dt;
-    const p = it.t / TAP_DUR;
+    const p = it.t / (it.dur || TAP_DUR);   // it.dur / it.react / it.onTap: optional per-prop extras (the cove's props)
     if (p >= 1) {
       it.t = -1;
+      if (it.react) it.react(it, 1);
       it.group.position.y = it.baseY; it.group.rotation.z = 0;
       it.group.scale.setScalar(TAP_GROW);
       it.glow.visible = false; it.glow.material.opacity = 0;
@@ -1483,9 +1501,13 @@ export function createWorld(container, hooks) {
       it.glow.material.opacity = 0.85 * pulse;
     } else {
       const fall = 1 - p;
-      it.group.position.y = it.baseY + Math.abs(Math.sin(p * Math.PI * 2)) * 0.45 * fall;
-      it.group.rotation.z = Math.sin(p * Math.PI * 6) * 0.28 * fall;
-      it.group.scale.setScalar(TAP_GROW * (1 + 0.15 * pulse));
+      if (it.react) {
+        it.react(it, p);
+      } else {
+        it.group.position.y = it.baseY + Math.abs(Math.sin(p * Math.PI * 2)) * 0.45 * fall;
+        it.group.rotation.z = Math.sin(p * Math.PI * 6) * 0.28 * fall;
+        it.group.scale.setScalar(TAP_GROW * (1 + 0.15 * pulse));
+      }
       it.glow.scale.setScalar(1.2 + 2.4 * p);
       it.glow.material.opacity = 0.9 * fall;
     }
@@ -1494,6 +1516,7 @@ export function createWorld(container, hooks) {
     if (it.t >= 0) return false; // already playing: debounce
     it.t = 0;
     it.glow.visible = true;
+    if (it.onTap && !calmMotion) it.onTap(it);
     return true;
   }
 
@@ -1502,7 +1525,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1 };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1520,6 +1543,9 @@ export function createWorld(container, hooks) {
     star(g) {
       tapPart(g, G('trStar', () => starGeometry(0.34, 0.15)), M('trStar', () => new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide })), 0, 0, 0);
     },
+    seaglass(g) { // cove only: a frosted teal pebble of sea glass
+      tapPart(g, G('trSeaGlass', () => new THREE.IcosahedronGeometry(0.28, 0)), tapStd('trSeaGlass', 0x8fe3d0, 0x4fc1b0), 0, 0, 0, 1.2, 0.8, 1);
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1535,13 +1561,14 @@ export function createWorld(container, hooks) {
   };
   {
     const gotToday = new Set(treasuresGot());
-    for (const landId of TREASURE_LANDS) {
+    for (const landId of treasureLandsFor(coveOpen)) {
       const c = landCenters[landId];
       if (!c) continue;
       for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND)) {
         const wx = c.x + sp.x, wz = c.z + sp.z;
         let px = wx, pz = wz;
-        for (let k = 0; k < 60 && !treasureFree(px, pz); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
+        const dry = (x, z) => !(cove && landId === COVE.land) || (!cove.wet(x, z) && Math.hypot(x - c.x, z - c.z) < 9.6); // cove: keep finds on dry sand
+        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();
         group.position.set(px, 0, pz);
         const body = new THREE.Group();
@@ -2069,6 +2096,7 @@ export function createWorld(container, hooks) {
 
     // ---- Tapped scenery reactions (only the few playing; nothing runs at rest) ----
     for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
+    if (cove) cove.update(t, dt);
     updateTreasures(dt, t);
     updateGates(dt, t);
 

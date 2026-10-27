@@ -70,9 +70,47 @@ export const BUILT_SLOTS = {};
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));
 }
-export function closedSlots() {
-  const built = new Set(builtSlotIds());
-  return NEW_LAND_SLOTS.filter((s) => !built.has(s.slot));
+
+// Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
+// with  ?preview=cove  (or  ?preview=all  /  ?preview=cove,other). In normal play (no flag) nothing changes.
+// previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
+export const PREVIEW_LANDS = { cove: 'sse' };
+
+/** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
+export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
+  const out = new Set();
+  try {
+    const v = new URLSearchParams(String(search)).getAll('preview').join(',');
+    for (const f of v.split(',')) { const t = f.trim().toLowerCase(); if (t) out.add(t); }
+  } catch (e) { /* bad query string: no flags */ }
+  return out;
+}
+
+/** Slot ids that are "open": really built (BUILT_SLOTS) or switched on by a preview flag. Only open slots get a land. */
+export function openSlotIds(search) {
+  const open = new Set(builtSlotIds());
+  const flags = previewFlags(search);
+  for (const [flag, slot] of Object.entries(PREVIEW_LANDS)) if (flags.has(flag) || flags.has('all')) open.add(slot);
+  return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => open.has(id));
+}
+export function isSlotOpen(slot, search) { return openSlotIds(search).includes(slot); }
+
+// Seashell Cove (K4) sits at the 'sse' slot. The branch path runs on into the middle of the land.
+export const COVE = { slot: 'sse', land: 'cove', princess: 'ariel', discR: LAND_DISC_R, padDist: 6.5 };
+export const isCoveOpen = (search) => isSlotOpen(COVE.slot, search);
+/** Cove centre and Ariel's pad (not spawned yet): near the entrance, on the hub side, like the inner lands' pads. */
+export function coveGeometry() {
+  const slot = NEW_LAND_SLOTS.find((s) => s.slot === COVE.slot);
+  const center = slotPos(slot);
+  const branch = pathSegments().find((sg) => sg.kind === 'branch' && sg.slot === COVE.slot);
+  const dx = branch.from.x - center.x, dz = branch.from.z - center.z, len = Math.hypot(dx, dz) || 1;
+  return { center, pad: { x: center.x + (dx / len) * COVE.padDist, z: center.z + (dz / len) * COVE.padDist } };
+}
+
+/** Closed gates: slots that are neither built nor previewed open. */
+export function closedSlots(search) {
+  const open = new Set(openSlotIds(search));
+  return NEW_LAND_SLOTS.filter((s) => !open.has(s.slot));
 }
 
 export function slotPos(s) {

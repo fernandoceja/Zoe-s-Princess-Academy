@@ -12,6 +12,7 @@ import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { todayKey, treasureBookModel } from './treasures.js?v=20261027e2';
+import { isCoveOpen } from './worldmap.js?v=20261027e2';
 
 const GOLD = '#ebd373';
 
@@ -560,6 +561,13 @@ function injectCSS() {
   .zsq-tb-tile { grid-column: span 2; background: #fff7e0; border: 3px solid ${GOLD}; border-radius: 20px; padding: 8px 2px; min-height: 92px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
   .zsq-tb-tile:nth-child(4) { grid-column: 2 / span 2; }
+  .zsq-tb-six .zsq-tb-tile:nth-child(4) { grid-column: span 2; }
+  /* Seashell Cove open: 6 tiles, 5 land rows and 5 stickers still fit a 390x844 phone without scrolling */
+  .zsq-tb-card.zsq-tb-compact .zsq-tb-tile { min-height: 76px; padding: 4px 2px; }
+  .zsq-tb-card.zsq-tb-compact .zsq-tb-emoji { font-size: 34px; }
+  .zsq-tb-card.zsq-tb-compact .zsq-tb-land { min-height: 32px; }
+  .zsq-tb-card.zsq-tb-compact .zsq-tb-h { margin-top: 8px; }
+  .zsq-tb-card.zsq-tb-compact .zsq-tut-emoji { font-size: 38px; }
   .zsq-tb-emoji { font-size: 40px; line-height: 1.1; }
   .zsq-tb-name { font-size: 17px; font-weight: 900; color: #92400e; }
   .zsq-tb-unfound { background: #f1f5f9; border-color: #cbd5e1; }
@@ -984,10 +992,10 @@ export const UI = {
   showTreasureBook({ onClose } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
-    const card = el('div', 'zsq-pause-card zsq-tb-card');
-    const m = treasureBookModel(Save.data, todayKey());
+    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen() });
+    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : ''));
     card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
-    const grid = el('div', 'zsq-tb-grid');
+    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : ''));
     for (const k of m.kinds) {
       const tile = el('div', 'zsq-tb-tile' + (k.found ? '' : ' zsq-tb-unfound'));
       tile.append(el('div', 'zsq-tb-emoji', k.emoji), el('div', 'zsq-tb-name', k.found ? `${k.label}: ${k.count}` : '?'));
