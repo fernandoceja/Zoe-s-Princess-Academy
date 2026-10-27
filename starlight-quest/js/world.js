@@ -12,9 +12,10 @@ import { NPC_ORDER } from './quests.js?v=20261027e2';
 import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
 import { buildCove } from './cove.js?v=20261027e2';
 import { buildIsle } from './isle.js?v=20261027e2';
+import { buildGarden } from './garden.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -464,11 +465,19 @@ export function createWorld(container, hooks) {
   // Wayfinder Isle (K6): only when its slot is open (really built, or ?preview=isle). Its centre and the princess's pad are stored
   // here so the scatter and every spot check stay clear of them; Moana is NOT spawned (she is not in NPC_ORDER until K7).
   const isleOpen = isIsleOpen();
-  const openLands = openLandIds();   // ['cove'], ['cove', 'isle'] ...: the lands that hide treasures today
+  const openLands = openLandIds();   // ['cove'], ['cove', 'isle'], ['cove', 'isle', 'garden'] ...: the lands that hide treasures today
   if (isleOpen) {
     const ig = isleGeometry();
     landCenters[ISLE.land] = new THREE.Vector3(ig.center.x, 0, ig.center.z);
     landPads[ISLE.land] = new THREE.Vector3(ig.pad.x, 0, ig.pad.z);
+  }
+  // Moonlit Palace Garden (K8): only when its slot is open (really built in K9, or ?preview=garden). Centre and Jasmine's pad are
+  // stored like the isle's so the scatter and every spot check stay clear of them; Jasmine is NOT spawned (not in NPC_ORDER until K9).
+  const gardenOpen = isGardenOpen();
+  if (gardenOpen) {
+    const gg = gardenGeometry();
+    landCenters[GARDEN.land] = new THREE.Vector3(gg.center.x, 0, gg.center.z);
+    landPads[GARDEN.land] = new THREE.Vector3(gg.pad.x, 0, gg.pad.z);
   }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
@@ -1497,6 +1506,13 @@ export function createWorld(container, hooks) {
       THREE, scene, center: landCenters[ISLE.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
     });
   }
+  // Moonlit Palace Garden (K8): scenery + six tap surprises + the story-lanterns secret, only when the slot is open.
+  let garden = null;
+  if (gardenOpen) {
+    garden = buildGarden({
+      THREE, scene, center: landCenters[GARDEN.land], pad: landPads[GARDEN.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
+    });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
@@ -1542,7 +1558,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1572,6 +1588,10 @@ export function createWorld(container, hooks) {
       }
       tapPart(g, G('trBlossomMid', () => new THREE.SphereGeometry(0.09, 6, 5)), tapStd('trBlossomMid', 0xffd24d), 0, 0.05, 0);
     },
+    moonstone(g) { // garden only: a pale glowing pebble with a little crescent-shaped shine
+      tapPart(g, G('trMoonstone', () => new THREE.IcosahedronGeometry(0.27, 0)), tapStd('trMoonstone', 0xe6eeff, 0x9fb4ff), 0, 0, 0, 1.15, 0.85, 1);
+      tapPart(g, G('trMoonShine', () => new THREE.TorusGeometry(0.16, 0.035, 5, 10, Math.PI * 1.2)), tapStd('trMoonShine', 0xffffff, 0xdfe9ff), 0.02, 0.1, 0.2).rotation.set(0.5, 0, 0.6);
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1595,7 +1615,8 @@ export function createWorld(container, hooks) {
         let px = wx, pz = wz;
         const dry = (x, z) => !(cove && landId === COVE.land) || (!cove.wet(x, z) && Math.hypot(x - c.x, z - c.z) < 9.6); // cove: keep finds on dry sand
         const dryIsle = (x, z) => !(isle && landId === ISLE.land) || !isle.wet(x, z);                                        // isle: keep finds off the lagoon
-        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
+        const dryGarden = (x, z) => !(garden && landId === GARDEN.land) || garden.dry(x, z);                                // garden: keep finds out of the pool and off the beds
+        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz) && dryGarden(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();
         group.position.set(px, 0, pz);
         const body = new THREE.Group();
@@ -2125,6 +2146,7 @@ export function createWorld(container, hooks) {
     for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
     if (cove) cove.update(t, dt);
     if (isle) isle.update(t, dt);
+    if (garden) garden.update(t, dt);
     updateTreasures(dt, t);
     updateGates(dt, t);
 

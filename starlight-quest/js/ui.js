@@ -12,7 +12,7 @@ import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { todayKey, treasureBookModel } from './treasures.js?v=20261027e2';
-import { isCoveOpen, isIsleOpen } from './worldmap.js?v=20261027e2';
+import { isCoveOpen, isIsleOpen, isGardenOpen } from './worldmap.js?v=20261027e2';
 
 const GOLD = '#ebd373';
 
@@ -574,6 +574,14 @@ function injectCSS() {
   .zsq-tb-stickers.zsq-tb-many { gap: 6px; }
   .zsq-tb-many .zsq-tb-sticker { width: 46px; height: 46px; font-size: 24px; border-radius: 14px; }
   .zsq-tb-many .zsq-tb-sticker.zsq-tb-unfound { font-size: 22px; }
+  /* Moonlit Palace Garden open too: 8 tiles (4 + 4), 7 land rows and 7 stickers; the rows and headings tighten a little more. */
+  .zsq-tb-eight .zsq-tb-tile:nth-child(5) { grid-column: span 2; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tb-land { min-height: 28px; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tb-h { margin-top: 5px; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tut-emoji { font-size: 32px; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tut-title { font-size: 26px; margin-bottom: 0; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tb-total { margin-top: 6px; }
+  .zsq-tb-card.zsq-tb-tight .zsq-tut-row { margin-top: 8px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-tile { min-height: 76px; padding: 4px 2px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-emoji { font-size: 34px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-land { min-height: 32px; }
@@ -1003,10 +1011,10 @@ export const UI = {
   showTreasureBook({ onClose } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
-    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen() });
-    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : ''));
+    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen(), gardenOpen: isGardenOpen() });
+    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : '') + (m.lands.length > 6 ? ' zsq-tb-tight' : ''));
     card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
-    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : ''));
+    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : '') + (m.kinds.length > 7 ? ' zsq-tb-eight' : ''));
     for (const k of m.kinds) {
       const tile = el('div', 'zsq-tb-tile' + (k.found ? '' : ' zsq-tb-unfound'));
       tile.append(el('div', 'zsq-tb-emoji', k.emoji), el('div', 'zsq-tb-name', k.found ? `${k.label}: ${k.count}` : '?'));

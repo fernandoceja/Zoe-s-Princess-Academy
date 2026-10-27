@@ -18,6 +18,7 @@ const PRECACHE_URLS = [
   './icons/icon-512-maskable.png',
   './js/audio.js?v=20261027e2',
   './js/cove.js?v=20261027e2',
+  './js/garden.js?v=20261027e2',
   './js/input.js?v=20261027e2',
   './js/isle.js?v=20261027e2',
   './js/ladder.js?v=20261027e2',

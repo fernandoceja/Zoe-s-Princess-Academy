@@ -15,9 +15,12 @@ export const COVE_KIND = 'seaglass';
 // Wayfinder Isle (K6): blossoms (lei flowers), hidden only while the isle is open (worldmap.js isIsleOpen).
 export const ISLE_LAND = 'isle';
 export const ISLE_KIND = 'blossom';
-export const ALL_TREASURE_KINDS = [...TREASURE_KINDS, COVE_KIND, ISLE_KIND];
-export const ALL_TREASURE_LANDS = [...TREASURE_LANDS, COVE_LAND, ISLE_LAND];
-const LAND_OWN_KIND = { [COVE_LAND]: COVE_KIND, [ISLE_LAND]: ISLE_KIND };
+// Moonlit Palace Garden (K8): moonstones (pale glowing pebbles), hidden only while the garden is open (worldmap.js isGardenOpen).
+export const GARDEN_LAND = 'garden';
+export const GARDEN_KIND = 'moonstone';
+export const ALL_TREASURE_KINDS = [...TREASURE_KINDS, COVE_KIND, ISLE_KIND, GARDEN_KIND];
+export const ALL_TREASURE_LANDS = [...TREASURE_LANDS, COVE_LAND, ISLE_LAND, GARDEN_LAND];
+const LAND_OWN_KIND = { [COVE_LAND]: COVE_KIND, [ISLE_LAND]: ISLE_KIND, [GARDEN_LAND]: GARDEN_KIND };
 
 /** Lands that hide treasures today: the four inner lands plus every open new land.
  * `open` is a list of open land ids (['cove'], ['cove', 'isle'], see worldmap.js openLandIds); `true` still means just the cove. */
@@ -25,7 +28,7 @@ export function treasureLandsFor(open) {
   const extra = open === true ? [COVE_LAND] : Array.isArray(open) ? open : [];
   return ALL_TREASURE_LANDS.filter((l) => TREASURE_LANDS.includes(l) || extra.includes(l));
 }
-/** Treasures hidden in total today: 20 with no new land, 25 with the cove, 30 with the cove and the isle. */
+/** Treasures hidden in total today: 20 with no new land, 25 with the cove, 30 with the cove and the isle, 35 with the garden too. */
 export function findsTotal(open) { return treasureLandsFor(open).length * TREASURES_PER_LAND; }
 /** Ids found today that belong to a land that is open (a closed land never counts). */
 export function findsToday(save, dayKey, open) {
@@ -63,7 +66,7 @@ export function treasureSpots(dayKey, landId, count = TREASURES_PER_LAND, rngFac
   const spots = [];
   for (let i = 0; i < count; i++) {
     const kind = TREASURE_KINDS[Math.floor(rand() * TREASURE_KINDS.length)];
-    // (the cove and the isle draw the same random numbers, then swap in their own kind, so the spots stay date-seeded and stable)
+    // (the cove, the isle and the garden draw the same random numbers, then swap in their own kind, so the spots stay date-seeded and stable)
     let x = 0, z = 0;
     for (let tries = 0; tries < 12; tries++) {
       const a = rand() * Math.PI * 2;
@@ -160,7 +163,12 @@ export const COVE_SECRETS = [
 export const ISLE_SECRETS = [
   { id: 'shapestones', land: 'isle', npc: 'moana', label: 'Shape stones', emoji: '🔺' },
 ];
-export const ALL_SECRETS = [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS];
+// Moonlit Palace Garden's secret (K8): tap three story lanterns in order (seed, sprout, flower: first, next, last).
+// Jasmine says a story-order line (her skill is sequencing). Shown only while the garden is open.
+export const GARDEN_SECRETS = [
+  { id: 'storylanterns', land: 'garden', npc: 'jasmine', label: 'Story lanterns', emoji: '🌱' },
+];
+export const ALL_SECRETS = [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS, ...GARDEN_SECRETS];
 const SECRET_IDS = ALL_SECRETS.map((s) => s.id);
 
 /** Heal anything into a list of known sticker ids (in SECRETS order). Never throws. */
@@ -188,6 +196,7 @@ export function createSecretTracker() {
   let clock = [];
   let shells = []; // times of the in-order cove shell taps so far
   let shapes = []; // times of the in-order isle shape-stone taps so far
+  let story = [];  // times of the in-order garden story-lantern taps so far
   const ice = { a: -Infinity, b: -Infinity };
   const cool = {};
   const fire = (id, now) => { if (now < (cool[id] ?? -Infinity) + SECRET_COOL_MS) return null; cool[id] = now; return id; };
@@ -222,6 +231,14 @@ export function createSecretTracker() {
         if (shapes.length && now - shapes[0] > SECRET_WINDOW_MS) shapes = [];
         if (n === shapes.length + 1) shapes.push(now); else shapes = n === 1 ? [now] : [];
         if (shapes.length === 3) { shapes = []; return fire('shapestones', now); }
+        return null;
+      }
+      if (part === 'story-1' || part === 'story-2' || part === 'story-3') {
+        const n = Number(part.slice(-1));
+        // First (seed), next (sprout), last (flower), in order, all within the window. Same rules as the cove shells.
+        if (story.length && now - story[0] > SECRET_WINDOW_MS) story = [];
+        if (n === story.length + 1) story.push(now); else story = n === 1 ? [now] : [];
+        if (story.length === 3) { story = []; return fire('storylanterns', now); }
         return null;
       }
       return null;
@@ -288,6 +305,17 @@ export function shapeLine(rand = Math.random) {
   return extra[i - names.length];
 }
 
+// Story order for Jasmine: a seed, then a sprout, then a flower (first, next, last).
+export const STORY_STEPS = [
+  { word: 'First', thing: 'a seed', emoji: '🌱' },
+  { word: 'next', thing: 'a sprout', emoji: '🌿' },
+  { word: 'last', thing: 'a flower', emoji: '🌸' },
+];
+/** The sequencing line Jasmine says for the lantern secret: "First a seed, next a sprout, last a flower!" */
+export function storyLine() {
+  return { steps: STORY_STEPS.map((s) => s.thing), say: `${STORY_STEPS.map((s) => `${s.word} ${s.thing}`).join(', ')}!` };
+}
+
 /** Rapunzel's short science lines (count by 2s, or a plant fact). */
 export function plantLine(rand = Math.random) {
   const facts = [
@@ -312,31 +340,33 @@ export const TREASURE_INFO = {
   ribbon:  { label: 'Ribbons',  emoji: '🎀' },
   seaglass: { label: 'Sea glass', emoji: '💠' },
   blossom: { label: 'Blossoms', emoji: '🌺' },
+  moonstone: { label: 'Moonstones', emoji: '🌙' },
 };
 export const TREASURE_LAND_NAMES = {
   library: 'Whispering Library', frostfall: 'Frostfall Peaks',
-  meadow: 'Sunflower Meadows', village: 'Glass Slipper Village', cove: 'Seashell Cove', isle: 'Wayfinder Isle',
+  meadow: 'Sunflower Meadows', village: 'Glass Slipper Village', cove: 'Seashell Cove', isle: 'Wayfinder Isle', garden: 'Moonlit Palace Garden',
 };
 
 /** Everything the Treasure Book page shows, from plain save data. Never throws.
- * opts.coveOpen / opts.isleOpen: add Seashell Cove / Wayfinder Isle (its tile, its row and its sticker). A closed land stays
+ * opts.coveOpen / opts.isleOpen / opts.gardenOpen: add Seashell Cove / Wayfinder Isle / Moonlit Palace Garden (its tile, its row and its sticker). A closed land stays
  * hidden unless the save already holds something from it (so a preview's finds are never lost from view). */
 export function treasureBookModel(save, dayKey, opts = {}) {
-  const coveOpen = !!(opts && opts.coveOpen), isleOpen = !!(opts && opts.isleOpen);
+  const coveOpen = !!(opts && opts.coveOpen), isleOpen = !!(opts && opts.isleOpen), gardenOpen = !!(opts && opts.gardenOpen);
   const t = sanitizeTreasures(save && save.treasures);
   const have = sanitizeSecrets(save && save.secrets);
   const kindIds = ALL_TREASURE_KINDS.filter((k) => TREASURE_KINDS.includes(k)
-    || (k === COVE_KIND && (coveOpen || t.total[COVE_KIND])) || (k === ISLE_KIND && (isleOpen || t.total[ISLE_KIND])));
+    || (k === COVE_KIND && (coveOpen || t.total[COVE_KIND])) || (k === ISLE_KIND && (isleOpen || t.total[ISLE_KIND])) || (k === GARDEN_KIND && (gardenOpen || t.total[GARDEN_KIND])));
   const kinds = kindIds.map((kind) => {
     const count = t.total[kind] || 0;
     return { kind, label: TREASURE_INFO[kind].label, emoji: TREASURE_INFO[kind].emoji, count, found: count > 0 };
   });
-  const lands = treasureLandsFor([...(coveOpen ? [COVE_LAND] : []), ...(isleOpen ? [ISLE_LAND] : [])]).map((id) => ({
+  const lands = treasureLandsFor([...(coveOpen ? [COVE_LAND] : []), ...(isleOpen ? [ISLE_LAND] : []), ...(gardenOpen ? [GARDEN_LAND] : [])]).map((id) => ({
     id, name: TREASURE_LAND_NAMES[id], count: landTreasureCount({ treasures: t }, id, dayKey), of: TREASURES_PER_LAND,
   }));
   for (const l of lands) l.star = t.day === dayKey && t.stars.includes(l.id);
   const secretDefs = ALL_SECRETS.filter((s) => SECRETS.includes(s)
-    || (COVE_SECRETS.includes(s) && (coveOpen || have.includes(s.id))) || (ISLE_SECRETS.includes(s) && (isleOpen || have.includes(s.id))));
+    || (COVE_SECRETS.includes(s) && (coveOpen || have.includes(s.id))) || (ISLE_SECRETS.includes(s) && (isleOpen || have.includes(s.id)))
+    || (GARDEN_SECRETS.includes(s) && (gardenOpen || have.includes(s.id))));
   const stickers = secretDefs.map((s) => ({ id: s.id, label: s.label, emoji: s.emoji, found: have.includes(s.id) }));
   const total = kinds.reduce((n, k) => n + k.count, 0);
   return { kinds, lands, stickers, total };
