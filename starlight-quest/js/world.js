@@ -216,6 +216,7 @@ export function createWorld(container, hooks) {
   const onNearNPC = typeof hooks.onNearNPC === 'function' ? hooks.onNearNPC : () => {};
   const onInteractRequest = typeof hooks.onInteractRequest === 'function' ? hooks.onInteractRequest : () => {};
   const onPauseRequest = typeof hooks.onPauseRequest === 'function' ? hooks.onPauseRequest : () => {};
+  const onWorldTap = typeof hooks.onWorldTap === 'function' ? hooks.onWorldTap : () => {};
 
   // --- Renderer / scene / camera -------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -1175,6 +1176,152 @@ export function createWorld(container, hooks) {
   // joystick fed in from ui.js, and Bluetooth controllers via Gamepad API).
   let inputEnabled = true;
 
+  // --- Tap the world (E1): little scenery props that wiggle, glow and chime when tapped ---------
+  // Taps never move Zoe or start quests. Princess taps are checked first (see onPointerDown).
+  const tappables = [];   // invisible hit meshes (the second raycast list)
+  const tapItems = [];    // { group, hit, glow, kind, baseY, t } t < 0 = resting, else seconds into the reaction
+  const TAP_DUR = 0.9;    // seconds a reaction plays; re-taps are ignored until it ends
+  const tapHitGeo = G('tapHit', () => new THREE.SphereGeometry(1, 8, 6));
+  const tapHitMat = M('tapHit', () => { const m = new THREE.MeshBasicMaterial(); m.visible = false; return m; });
+  const tapStd = (key, color, emissive) => M(key, () => new THREE.MeshStandardMaterial(
+    emissive ? { color, roughness: 0.5, emissive, emissiveIntensity: 0.7, flatShading: true } : { color, roughness: 0.85, flatShading: true }));
+  const tapPart = (group, geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => {
+    const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); group.add(m); return m;
+  };
+  // Each builder fills a group (origin on the ground) and returns the glow height + hit radius.
+  const TAP_KINDS = {
+    flower(g, petalHex) {
+      tapPart(g, G('tapStem', () => new THREE.CylinderGeometry(0.05, 0.07, 1, 6)), tapStd('tapStem', 0x4caf6d), 0, 0.5, 0);
+      const p = tapPart(g, G('tapPetal', () => new THREE.CylinderGeometry(0.4, 0.4, 0.1, 10)), tapStd('tapPetal' + petalHex, petalHex), 0, 1.05, 0);
+      p.rotation.x = 0.35;
+      tapPart(g, G('tapCenter', () => new THREE.SphereGeometry(0.16, 8, 6)), tapStd('tapCenter', 0x8a5a3b), 0, 1.12, 0.05);
+      return { glowY: 1.1, hitR: 0.8 };
+    },
+    lantern(g) {
+      tapPart(g, G('tapPost', () => new THREE.CylinderGeometry(0.07, 0.09, 1, 6)), tapStd('tapPost', 0x8a7a9a), 0, 0.5, 0);
+      tapPart(g, G('tapGlobe', () => new THREE.SphereGeometry(0.3, 10, 8)), tapStd('tapGlobe', 0xffe3a0, 0xffe3a0), 0, 1.2, 0);
+      return { glowY: 1.2, hitR: 0.85 };
+    },
+    crystal(g) {
+      tapPart(g, G('tapRock', () => new THREE.SphereGeometry(0.4, 7, 5)), tapStd('tapRock', 0xe8f1fa), 0, 0.12, 0, 1.3, 0.45, 1.3);
+      tapPart(g, G('tapGem', () => new THREE.OctahedronGeometry(0.4)), tapStd('tapGem', 0xbfe9ff, 0x7fd3ff), 0, 0.85, 0, 0.9, 1.9, 0.9);
+      return { glowY: 0.85, hitR: 0.85 };
+    },
+    sapling(g, leafHex) {
+      tapPart(g, G('tapTrunk', () => new THREE.CylinderGeometry(0.1, 0.14, 0.7, 6)), tapStd('tapTrunk', 0x8a6a4b), 0, 0.35, 0);
+      tapPart(g, G('tapLeaf', () => new THREE.ConeGeometry(0.6, 1.3, 7)), tapStd('tapLeaf' + leafHex, leafHex), 0, 1.25, 0);
+      return { glowY: 1.2, hitR: 0.95 };
+    },
+    snowman(g) {
+      const snow = tapStd('tapSnow', 0xffffff);
+      tapPart(g, G('tapBall', () => new THREE.SphereGeometry(0.5, 10, 8)), snow, 0, 0.45, 0);
+      tapPart(g, G('tapBall', () => new THREE.SphereGeometry(0.5, 10, 8)), snow, 0, 1.15, 0, 0.7, 0.7, 0.7);
+      tapPart(g, G('tapNose', () => new THREE.ConeGeometry(0.07, 0.3, 6)), tapStd('tapNose', 0xff9b4a), 0, 1.15, 0.3).rotation.x = Math.PI / 2;
+      return { glowY: 1.1, hitR: 0.95 };
+    },
+    pot(g, petalHex) {
+      tapPart(g, G('tapPot', () => new THREE.CylinderGeometry(0.4, 0.28, 0.5, 10)), tapStd('tapPot', 0xe39a78), 0, 0.25, 0);
+      const f = new THREE.Group(); f.position.y = 0.45; f.scale.setScalar(0.7); g.add(f);
+      TAP_KINDS.flower(f, petalHex);
+      return { glowY: 1.0, hitR: 0.8 };
+    },
+    star(g) {
+      tapPart(g, G('tapPedestal', () => new THREE.CylinderGeometry(0.22, 0.34, 0.8, 8)), tapStd('tapPedestal', 0xffe3ee), 0, 0.4, 0);
+      const s = tapPart(g, G('tapStar', () => starGeometry(0.5, 0.21)), M('tapStar', () => new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide })), 0, 1.35, 0);
+      s.rotation.y = 0.4;
+      return { glowY: 1.35, hitR: 0.9 };
+    },
+  };
+  // Nudge a wished-for spot to the nearest clear ground (not on a collider, pad, or another prop).
+  const tapSpotFree = (x, z) => {
+    for (const c of colliders) if (Math.hypot(x - c.x, z - c.z) < c.r + 0.8) return false;
+    for (const p of Object.values(landPads)) if (Math.hypot(x - p.x, z - p.z) < 3.2) return false;
+    for (const it of tapItems) if (Math.hypot(x - it.group.position.x, z - it.group.position.z) < 1.8) return false;
+    return Math.hypot(x, z) > 4; // keep the hub plaza clear
+  };
+  const addTappable = (kind, x, z, arg, colorHex) => {
+    let px = x, pz = z;
+    for (let k = 0; k < 60 && !tapSpotFree(px, pz); k++) { px = x + Math.cos(k * 2.4) * 0.4 * k; pz = z + Math.sin(k * 2.4) * 0.4 * k; }
+    const group = new THREE.Group();
+    group.position.set(px, 0, pz);
+    group.rotation.y = (tapItems.length * 1.9) % 6.28;
+    group.scale.setScalar(1.25);
+    const info = TAP_KINDS[kind](group, arg);
+    const hit = new THREE.Mesh(tapHitGeo, tapHitMat);
+    hit.position.y = info.glowY * 0.8; hit.scale.setScalar(info.hitR);
+    group.add(hit);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: colorHex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    glow.position.y = info.glowY; glow.visible = false; glow.raycast = () => {};
+    group.add(glow);
+    scene.add(group);
+    const item = { group, hit, glow, kind, baseY: 0, t: -1 };
+    hit.userData.tapItem = item;
+    tappables.push(hit);
+    tapItems.push(item);
+  };
+  {
+    const L = landCenters;
+    const castleX = -11.5, castleZ = -8.5;
+    // Castle: a wishing star and flower pots on the front lawn, a lantern near the east tower
+    addTappable('star', castleX + 1.0, castleZ + 7.5, 0, 0xfff3a8);
+    addTappable('pot', castleX - 4.5, castleZ + 6.5, 0xff9ec6, 0xffc4dc);
+    addTappable('pot', castleX + 6.5, castleZ + 5.5, 0xfff3a0, 0xfff3a8);
+    addTappable('lantern', castleX + 7.5, castleZ + 1.5, 0, 0xffe3a0);
+    // Whispering Library
+    addTappable('lantern', L.library.x - 5.2, L.library.z + 2.2, 0, 0xffe3a0);
+    addTappable('lantern', L.library.x + 5.4, L.library.z + 2.6, 0, 0xffe3a0);
+    addTappable('flower', L.library.x - 3.2, L.library.z - 5.0, 0xb8a4ff, 0xdcd0ff);
+    addTappable('sapling', L.library.x + 3.8, L.library.z - 4.6, 0x7fcf9a, 0xcff5dc);
+    // Frostfall Peaks
+    addTappable('crystal', L.frostfall.x + 4.0, L.frostfall.z + 3.0, 0, 0xbfe9ff);
+    addTappable('crystal', L.frostfall.x + 2.5, L.frostfall.z - 4.5, 0, 0xbfe9ff);
+    addTappable('snowman', L.frostfall.x - 2.0, L.frostfall.z + 5.0, 0, 0xffffff);
+    addTappable('sapling', L.frostfall.x - 1.5, L.frostfall.z - 5.5, 0xcfe8f5, 0xeaf6ff);
+    // Sunflower Meadows
+    addTappable('flower', L.meadow.x - 4.0, L.meadow.z + 3.0, 0xffd34d, 0xfff3a0);
+    addTappable('flower', L.meadow.x + 4.5, L.meadow.z + 2.0, 0xff9ec6, 0xffc4dc);
+    addTappable('flower', L.meadow.x + 1.0, L.meadow.z + 6.0, 0xff8a7a, 0xffc4b8);
+    addTappable('sapling', L.meadow.x - 5.5, L.meadow.z - 2.5, 0x8fd98f, 0xd3f5d3);
+    // Glass Slipper Village
+    addTappable('lantern', L.village.x + 3.5, L.village.z - 1.5, 0, 0xffe3a0);
+    addTappable('pot', L.village.x - 1.5, L.village.z + 2.5, 0xffb3d1, 0xffd9e8);
+    addTappable('pot', L.village.x + 2.0, L.village.z + 6.5, 0xffe27a, 0xfff3a8);
+    addTappable('flower', L.village.x - 3.0, L.village.z - 3.0, 0xff9ec6, 0xffc4dc);
+  }
+  // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
+  // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
+  const TAP_GROW = 1.25;
+  function tapReact(it, dt) {
+    it.t += dt;
+    const p = it.t / TAP_DUR;
+    if (p >= 1) {
+      it.t = -1;
+      it.group.position.y = it.baseY; it.group.rotation.z = 0;
+      it.group.scale.setScalar(TAP_GROW);
+      it.glow.visible = false; it.glow.material.opacity = 0;
+      return;
+    }
+    const pulse = Math.sin(Math.PI * p);
+    if (calmMotion) {
+      it.group.scale.setScalar(TAP_GROW * (1 + 0.12 * pulse));
+      it.glow.scale.setScalar(1.8);
+      it.glow.material.opacity = 0.85 * pulse;
+    } else {
+      const fall = 1 - p;
+      it.group.position.y = it.baseY + Math.abs(Math.sin(p * Math.PI * 2)) * 0.45 * fall;
+      it.group.rotation.z = Math.sin(p * Math.PI * 6) * 0.28 * fall;
+      it.group.scale.setScalar(TAP_GROW * (1 + 0.15 * pulse));
+      it.glow.scale.setScalar(1.2 + 2.4 * p);
+      it.glow.material.opacity = 0.9 * fall;
+    }
+  }
+  function startTapReaction(it) {
+    if (it.t >= 0) return false; // already playing: debounce
+    it.t = 0;
+    it.glow.visible = true;
+    return true;
+  }
+
   // --- Tap-to-interact (raycast against NPC meshes) --------------------------
   const raycaster = new THREE.Raycaster();
   const pointerNDC = new THREE.Vector2();
@@ -1189,6 +1336,13 @@ export function createWorld(container, hooks) {
     const hits = raycaster.intersectObjects(npcHitMeshes, false);
     if (hits.length && hits[0].object.userData.npcId) {
       onInteractRequest(hits[0].object.userData.npcId);
+      return; // princess taps always win
+    }
+    // No princess hit: see if a bit of scenery was tapped (reaction + chime only; never moves Zoe or starts a quest).
+    const tapHits = raycaster.intersectObjects(tappables, false);
+    if (tapHits.length) {
+      const it = tapHits[0].object.userData.tapItem;
+      if (it && startTapReaction(it)) onWorldTap(it.kind);
     }
     // Taps on empty ground are ignored.
   };
@@ -1605,6 +1759,9 @@ export function createWorld(container, hooks) {
     if (iceCrystals && !calmMotion) iceCrystals.userData.set(t);
     if (meadowSway && !calmMotion) meadowSway.userData.set(t);
 
+    // ---- Tapped scenery reactions (only the few playing; nothing runs at rest) ----
+    for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
+
     // ---- Sky dome follows the camera ----
     skyMesh.position.copy(camera.position);
 
@@ -1705,6 +1862,7 @@ export function createWorld(container, hooks) {
     Input.dispose();
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+    tappables.length = 0; tapItems.length = 0; // sprite materials are freed by the scene traversal below
     scene.traverse((o) => {
       if (o.geometry && !Object.values(_geo).includes(o.geometry)) o.geometry.dispose();
       if (o.material && !Object.values(_mat).includes(o.material)) {
