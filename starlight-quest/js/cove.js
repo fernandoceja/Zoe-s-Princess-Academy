@@ -28,7 +28,7 @@ export function coveWet(lx, lz) {
 }
 
 /** Collects many coloured primitives into ONE BufferGeometry (vertex colours), so a whole prop is one draw call. */
-function makeMerger(THREE) {
+export function makeMerger(THREE) {
   const pos = [], nor = [], col = [];
   const mat = new THREE.Matrix4(), nmat = new THREE.Matrix3(), q = new THREE.Quaternion();
   const e = new THREE.Euler(), p = new THREE.Vector3(), s = new THREE.Vector3(), v = new THREE.Vector3(), c = new THREE.Color();

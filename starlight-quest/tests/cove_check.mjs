@@ -87,7 +87,7 @@ ok(findsTotal(false) === 20 && findsTotal(true) === 25, 'finds total is 20 close
 }
 
 // --- Secret: three shells small to big, then a rhyme ---------------------------------------------------------------
-ok(SECRETS.length === 4 && COVE_SECRETS.length === 1 && ALL_SECRETS.length === 5, 'four inner secrets unchanged + one cove secret');
+ok(SECRETS.length === 4 && COVE_SECRETS.length === 1 && same(ALL_SECRETS.slice(0, 5), [...SECRETS, ...COVE_SECRETS]), 'four inner secrets unchanged + one cove secret (the isle adds a sixth after them)');
 ok(COVE_SECRETS[0].id === 'shellrhyme' && COVE_SECRETS[0].npc === 'ariel' && COVE_SECRETS[0].emoji && COVE_SECRETS[0].label, 'cove secret has a sticker, an owner and a label');
 ok(same(sanitizeSecrets(['shellrhyme', 'x', 'clock']), ['clock', 'shellrhyme']), 'sticker id is a known id');
 { const s = {}; ok(foundSecret(s, 'shellrhyme') && !foundSecret(s, 'shellrhyme'), 'sticker is earned once'); }
@@ -163,13 +163,13 @@ ok(/if \(it\.onTap && !calmMotion\) it\.onTap\(it\)/.test(world), 'bubbles/rippl
 }
 // Only when open
 ok(/const coveOpen = isCoveOpen\(\)/.test(world) && /if \(coveOpen\) \{\s*cove = buildCove\(/.test(world), 'world builds the cove only when open');
-ok(/treasureLandsFor\(coveOpen\)/.test(world) && !/TREASURE_LANDS/.test(world), 'world hides cove treasures only when open');
+ok(/treasureLandsFor\(openLands\)/.test(world) && /const openLands = openLandIds\(\)/.test(world) && !/TREASURE_LANDS/.test(world), 'world hides cove treasures only when open');
 ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (the open slot is skipped)');
 ok(/landPads\[COVE\.land\]/.test(world) && !/NPC_ORDER\.push|NPC_ORDER = /.test(world), 'Ariel\'s pad is stored; world.js spawns her from NPC_ORDER like the others');
 ok(/export const NPC_ORDER = \['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'\]/.test(src('js/quests.js')), 'ariel is appended to NPC_ORDER (K5)');
 ok(/import \{ buildCove \} from '\.\/cove\.js\?v=20261027e2'/.test(world), 'world imports cove.js with the existing ?v= stamp');
 ok(/'\.\/js\/cove\.js\?v=20261027e2'/.test(sw), 'cove.js is precached with the existing stamp');
-ok(/isCoveOpen\(\)/.test(main) && /findsTotal\(COVE_OPEN\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), COVE_OPEN\)/.test(main) && !/TREASURE_LANDS\.length/.test(main), 'main counts only open lands (20 closed, 25 open)');
+ok(/openLandIds\(\)/.test(main) && /findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main) && !/TREASURE_LANDS\.length/.test(main), 'main counts only open lands (20 with none open, 25 with the cove)');
 ok(/Narrator\.speakExact\(def\.npc, line\)/.test(main) && /rhymeLine\(\)/.test(main), 'the rhyme is spoken with Ariel\'s voice via speakExact');
 ok(/coveOpen: isCoveOpen\(\)/.test(ui), 'Treasure Book asks for the cove only when open');
 ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds only sse: ariel in source');
