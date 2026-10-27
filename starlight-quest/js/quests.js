@@ -797,7 +797,7 @@ function _dictRound(tier, rng) {
       hintSay: `Good try! Listen again. ${spoken}`,
     };
   }
-  const target = words.map((w, i) => (i === 0 ? w : /^I(['’].*)?$/.test(w) ? w : w.toLowerCase()));
+  const target = words.slice(); // keep the grown-up's capitals (names like Zoe stay capitalized)
   const spare = [];
   if (tier === 2) {
     const extra = ['of', ...WEEK.sight, 'he', 'at'].find((w) => !target.some((t) => t.toLowerCase() === w));
