@@ -376,6 +376,13 @@ function injectCSS() {
   .zsq-btile:disabled { opacity: .25; cursor: default; box-shadow: none; }
   .zsq-btile.zsq-hintglow { border-color: ${GOLD}; background: #fde68a; animation: zsq-glow 1s ease-in-out infinite; }
   .zsq-btile.zsq-wiggle { animation: zsq-wiggle .4s ease-in-out; border-color: #f9a8d4; background: #fdf2f8; }
+  .zsq-words .zsq-slots { gap: 6px; align-items: center; }
+  .zsq-words .zsq-slot { min-width: 44px; height: 58px; font-size: 26px; padding: 0 8px; border-width: 3px; }
+  .zsq-words .zsq-bank { gap: 10px; }
+  .zsq-words .zsq-btile { min-width: 56px; min-height: 60px; font-size: 28px; padding: 0 12px; }
+  .zsq-slotpair { display: flex; align-items: center; gap: 4px; }
+  .zsq-endmark { font-size: 34px; font-weight: 900; color: #5b21b6; padding: 0 2px; }
+  .zsq-choice.zsq-long { font-size: 24px; line-height: 1.25; }
   .zsq-bctl { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
   .zsq-bundo { min-height: 56px; min-width: 110px; padding: 8px 18px; border-radius: 20px; border: 4px solid #f9a8d4; background: #fdf2f8;
     font-size: 22px; font-weight: 900; color: #9d174d; cursor: pointer; }
@@ -1133,6 +1140,35 @@ export const UI = {
       }));
       modal.appendChild(sh);
     }
+    // Dictation (S3): word tiles build a sentence; the end mark is fixed after the last slot (tier 2) or a tile (tier 3).
+    if (data.build && data.build.tiles && data.build.tiles.length) {
+      const b = data.build;
+      const sh = el('div', 'zsq-sort-hint');
+      sh.setAttribute('aria-live', 'polite');
+      const say = { '?': 'question mark', '.': 'period', '!': 'exclamation mark' };
+      const tb = tileBuilder({
+        tiles: b.tiles, target: b.target,
+        speak: (l) => { SoundFX.pop(); Narrator.speakExact(data.princessId, say[l] || l); },
+        onWrong: (info) => {
+          const last = info.index === b.target.length - 1;
+          const h = (b.hints && (info.index === 0 ? b.hints.first : last ? b.hints.last : null)) || b.hint || '';
+          sh.textContent = h;
+          if (typeof onChoose === 'function') onChoose('__spellwrong', { ...info, say: h });
+        },
+        onDone: () => { sh.textContent = ''; if (typeof onChoose === 'function') onChoose('__spelldone'); },
+      });
+      tb.classList.add('zsq-words');
+      if (b.end) {
+        // The end mark sits right after the last slot and wraps together with it.
+        const row = tb.querySelector('.zsq-slots');
+        const lastSlot = row.lastElementChild;
+        const pair = el('div', 'zsq-slotpair');
+        row.appendChild(pair);
+        pair.append(lastSlot, el('div', 'zsq-endmark', b.end));
+      }
+      modal.appendChild(tb);
+      modal.appendChild(sh);
+    }
     if (data.tiles && data.tiles.length) {
       modal.appendChild(_blendTiles(data.tiles, data.princessId));
       modal.addEventListener('click', (e) => { if (!e.target.closest('.zsq-tile, .zsq-blend')) _blendTok++; }, true);
@@ -1147,7 +1183,7 @@ export const UI = {
     const box = el('div', 'zsq-choices');
     const btns = {};
     for (const c of (data.choices || [])) {
-      const b = el('button', 'zsq-choice', c.label || '');
+      const b = el('button', 'zsq-choice' + ((c.label || '').length > 16 ? ' zsq-long' : ''), c.label || '');
       b.onclick = () => {
         SoundFX.pop();
         if (typeof onChoose === 'function') onChoose(c.id);
