@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { Input } from './input.js?v=20261027p1';
 import { OUTFIT } from './save.js?v=20261027p1';
+import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027p1';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -217,6 +218,8 @@ export function createWorld(container, hooks) {
   const onInteractRequest = typeof hooks.onInteractRequest === 'function' ? hooks.onInteractRequest : () => {};
   const onPauseRequest = typeof hooks.onPauseRequest === 'function' ? hooks.onPauseRequest : () => {};
   const onWorldTap = typeof hooks.onWorldTap === 'function' ? hooks.onWorldTap : () => {};
+  const onTreasure = typeof hooks.onTreasure === 'function' ? hooks.onTreasure : () => {};
+  const treasuresGot = typeof hooks.treasuresGot === 'function' ? hooks.treasuresGot : () => [];
 
   // --- Renderer / scene / camera -------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -1322,6 +1325,103 @@ export function createWorld(container, hooks) {
     return true;
   }
 
+  // --- Daily treasures (E2): small finds at date-seeded spots, collected by walking close or tapping ---
+  // Spots come from treasures.js (same all day, new tomorrow). Already-found ones are never built.
+  const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
+  const treasureHits = [];   // invisible hit meshes (tap raycast)
+  const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1 };
+  const TREASURE_KINDS_3D = {
+    shell(g) {
+      const m = tapStd('trShell', 0xffd9e8);
+      tapPart(g, G('trShellBody', () => new THREE.SphereGeometry(0.3, 8, 6)), m, 0, 0, 0, 1.1, 0.55, 1);
+      tapPart(g, G('trShellRidge', () => new THREE.TorusGeometry(0.22, 0.03, 5, 10, Math.PI)), tapStd('trShellRidge', 0xf5a3c4), 0, 0.08, 0.05);
+      tapPart(g, G('trShellBase', () => new THREE.ConeGeometry(0.13, 0.22, 6)), m, 0, -0.1, -0.25).rotation.x = -Math.PI / 2;
+    },
+    gem(g) {
+      tapPart(g, G('trGem', () => new THREE.OctahedronGeometry(0.3)), tapStd('trGem', 0x9fd8ff, 0x5fb8ff), 0, 0, 0, 0.9, 1.4, 0.9);
+    },
+    feather(g) {
+      tapPart(g, G('trFeather', () => new THREE.SphereGeometry(0.3, 8, 6)), tapStd('trFeather', 0xe3d6ff), 0, 0, 0, 0.35, 1.1, 0.12);
+      tapPart(g, G('trQuill', () => new THREE.CylinderGeometry(0.015, 0.02, 0.8, 4)), tapStd('trQuill', 0xb89cf0), 0, -0.05, 0);
+    },
+    star(g) {
+      tapPart(g, G('trStar', () => starGeometry(0.34, 0.15)), M('trStar', () => new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide })), 0, 0, 0);
+    },
+    ribbon(g) {
+      const m = tapStd('trRibbon', 0xff7fb0);
+      const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
+      tapPart(g, cone, m, -0.17, 0, 0).rotation.z = Math.PI / 2;
+      tapPart(g, cone, m, 0.17, 0, 0).rotation.z = -Math.PI / 2;
+      tapPart(g, G('trBowKnot', () => new THREE.SphereGeometry(0.09, 8, 6)), tapStd('trKnot', 0xff5c98), 0, 0, 0);
+    },
+  };
+  const treasureFree = (x, z) => {
+    if (!tapSpotFree(x, z)) return false;
+    for (const it of treasureList) if (Math.hypot(x - it.group.position.x, z - it.group.position.z) < 1.6) return false;
+    return true;
+  };
+  {
+    const gotToday = new Set(treasuresGot());
+    for (const landId of TREASURE_LANDS) {
+      const c = landCenters[landId];
+      if (!c) continue;
+      for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND)) {
+        const wx = c.x + sp.x, wz = c.z + sp.z;
+        let px = wx, pz = wz;
+        for (let k = 0; k < 60 && !treasureFree(px, pz); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
+        const group = new THREE.Group();
+        group.position.set(px, 0, pz);
+        const body = new THREE.Group();
+        body.position.y = TREASURE_Y;
+        TREASURE_KINDS_3D[sp.kind](body);
+        group.add(body);
+        const hit = new THREE.Mesh(tapHitGeo, tapHitMat);
+        hit.position.y = TREASURE_Y; hit.scale.setScalar(0.9);
+        group.add(hit);
+        const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: TREASURE_GLOW[sp.kind], transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending }));
+        glow.position.y = TREASURE_Y; glow.scale.setScalar(1.1); glow.raycast = () => {};
+        group.add(glow);
+        const item = { id: sp.id, kind: sp.kind, landId, group, body, glow, hit, phase: treasureList.length * 1.3, t: -1 };
+        hit.userData.treasure = item;
+        if (gotToday.has(sp.id)) { group.visible = false; item.t = -2; } // found earlier today: stays away
+        scene.add(group);
+        treasureList.push(item);
+        if (item.t !== -2) treasureHits.push(hit);
+      }
+    }
+  }
+  function collectTreasureItem(it) {
+    if (it.t !== -1) return false;
+    it.t = 0;
+    const i = treasureHits.indexOf(it.hit); if (i >= 0) treasureHits.splice(i, 1);
+    it.body.visible = false;
+    onTreasure(it.kind, it.landId, it.id);
+    return true;
+  }
+  // Per frame: gentle bob + spin (calm motion: still, soft glow only), proximity pickup, pickup sparkle. No allocation.
+  function updateTreasures(dt, t) {
+    for (let i = 0; i < treasureList.length; i++) {
+      const it = treasureList[i];
+      if (it.t === -2) continue;
+      if (it.t >= 0) {
+        it.t += dt;
+        const p = it.t / TREASURE_DUR;
+        if (p >= 1) { it.t = -2; it.group.visible = false; continue; }
+        it.glow.material.opacity = 0.9 * (1 - p);
+        it.glow.scale.setScalar(calmMotion ? 1.8 : 1.1 + 2.6 * p);
+        continue;
+      }
+      if (!calmMotion) {
+        it.body.position.y = TREASURE_Y + Math.sin(t * 2 + it.phase) * 0.12;
+        it.body.rotation.y = t * 1.2 + it.phase;
+      }
+      if (inputEnabled && Math.hypot(playerPos.x - it.group.position.x, playerPos.z - it.group.position.z) < TREASURE_PICKUP) {
+        collectTreasureItem(it);
+      }
+    }
+  }
+
   // --- Tap-to-interact (raycast against NPC meshes) --------------------------
   const raycaster = new THREE.Raycaster();
   const pointerNDC = new THREE.Vector2();
@@ -1337,6 +1437,12 @@ export function createWorld(container, hooks) {
     if (hits.length && hits[0].object.userData.npcId) {
       onInteractRequest(hits[0].object.userData.npcId);
       return; // princess taps always win
+    }
+    // Treasures next (a find is worth more than scenery): same pickup as walking up to it.
+    const trHits = raycaster.intersectObjects(treasureHits, false);
+    if (trHits.length) {
+      const it = trHits[0].object.userData.treasure;
+      if (it && collectTreasureItem(it)) return;
     }
     // No princess hit: see if a bit of scenery was tapped (reaction + chime only; never moves Zoe or starts a quest).
     const tapHits = raycaster.intersectObjects(tappables, false);
@@ -1761,6 +1867,7 @@ export function createWorld(container, hooks) {
 
     // ---- Tapped scenery reactions (only the few playing; nothing runs at rest) ----
     for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
+    updateTreasures(dt, t);
 
     // ---- Sky dome follows the camera ----
     skyMesh.position.copy(camera.position);
@@ -1862,7 +1969,7 @@ export function createWorld(container, hooks) {
     Input.dispose();
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
-    tappables.length = 0; tapItems.length = 0; // sprite materials are freed by the scene traversal below
+    tappables.length = 0; tapItems.length = 0; treasureList.length = 0; treasureHits.length = 0; // sprite materials are freed by the scene traversal below
     scene.traverse((o) => {
       if (o.geometry && !Object.values(_geo).includes(o.geometry)) o.geometry.dispose();
       if (o.material && !Object.values(_mat).includes(o.material)) {
