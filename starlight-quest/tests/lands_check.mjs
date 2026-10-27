@@ -4,12 +4,12 @@ import { readFileSync } from 'node:fs';
 import { NPC_ORDER, PRINCESSES } from '../js/quests.js?v=20261027e2';
 import { LAND_ORDER } from '../js/ladder.js?v=20261027e2';
 import { merge } from '../js/save.js?v=20261027e2';
-import { shouldRunFinale, shouldShowNewKingdoms, builtSlotIds, NEW_LAND_SLOTS } from '../js/worldmap.js?v=20261027e2';
+import { shouldRunFinale, shouldShowNewKingdoms, unseenKingdomSlots, builtSlotIds, NEW_LAND_SLOTS } from '../js/worldmap.js?v=20261027e2';
 
 const bad = [];
 const expect = (n, got, want) => { if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`${n}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`); };
 
-expect('canonical list', NPC_ORDER, ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel']);
+expect('canonical list', NPC_ORDER, ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana']);
 expect('LAND_ORDER reads the list', LAND_ORDER, NPC_ORDER);
 expect('every land has a princess entry', NPC_ORDER.filter((id) => !PRINCESSES[id]), []);
 expect('zoe is not a land', NPC_ORDER.includes('zoe'), false);
@@ -30,12 +30,12 @@ const old = merge({
   lastPlay: { belle: '2026-10-20' },
 });
 expect('old stars kept', old.stars, 12);
-expect('old shards kept, new land starts at 0', old.shards, { belle: 2, elsa: 1, rapunzel: 0, cinderella: 3, ariel: 0 });
+expect('old shards kept, new lands start at 0', old.shards, { belle: 2, elsa: 1, rapunzel: 0, cinderella: 3, ariel: 0, moana: 0 });
 expect('old done kept', old.done, ['belle']);
 expect('old ladder kept', old.ladder.belle, { tier: 2, review: [] });
 expect('old lastPlay kept', old.lastPlay, { belle: '2026-10-20' });
-expect('fresh save shards', merge(null).shards, { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0, ariel: 0 });
-expect('old ladder has no ariel entry yet', old.ladder.ariel, undefined);
+expect('fresh save shards', merge(null).shards, { belle: 0, elsa: 0, rapunzel: 0, cinderella: 0, ariel: 0, moana: 0 });
+expect('old ladder has no ariel or moana entry yet', [old.ladder.ariel, old.ladder.moana], [undefined, undefined]);
 
 // A future princess: added to the list, she starts fresh and nothing else moves.
 NPC_ORDER.push('olaf'); // test-only: this process exits after the checks
@@ -55,10 +55,22 @@ expect('veteran: Ariel shard starts at 0', veteran.shards.ariel, 0);
 expect('veteran: new-kingdoms card is due once', shouldShowNewKingdoms(builtSlotIds().length, veteran.seenNewKingdoms), true);
 expect('veteran: not due again after seen', shouldShowNewKingdoms(builtSlotIds().length, true), false);
 // Finale gate: only when every list princess is done AND every kingdom slot is built.
-expect('finale: four done + Ariel pending -> no finale', shouldRunFinale(FOUR, NPC_ORDER, builtSlotIds().length), false);
+expect('finale: four done + Ariel and Moana pending -> no finale', shouldRunFinale(FOUR, NPC_ORDER, builtSlotIds().length), false);
 expect('finale: Ariel done but other kingdoms closed -> land celebration only', shouldRunFinale([...FOUR, 'ariel'], NPC_ORDER, builtSlotIds().length), false);
+expect('finale: Ariel and Moana done but four kingdoms still closed -> land celebration only', shouldRunFinale([...FOUR, 'ariel', 'moana'], NPC_ORDER, builtSlotIds().length), false);
 expect('finale: everything open and done -> finale', shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), true);
 expect('finale: everything open, one missing -> no finale', shouldRunFinale(FOUR, NPC_ORDER, NEW_LAND_SLOTS.length), false);
+
+// K7: Moana's isle opened after Zoe had seen the first kingdoms card: she sees a short card again, once.
+expect('legacy save (flag only) counts the cove as seen', merge({ seenNewKingdoms: true }).seenKingdoms, ['sse']);
+expect('fresh save has seen no kingdom', merge(null).seenKingdoms, []);
+expect('junk seenKingdoms is sanitized', merge({ seenKingdoms: ['sse', 5, 'x y', 'ssw', 'sse'] }).seenKingdoms, ['sse', 'ssw']);
+const sawCove = merge({ done: [...FOUR, 'ariel'], seenNewKingdoms: true });
+expect('saw cove card: the isle is the only new kingdom', unseenKingdomSlots(builtSlotIds(), sawCove.seenKingdoms), ['ssw']);
+expect('saw both: no card', unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw']), []);
+expect('fresh save: both kingdoms are new (big card the first time)', unseenKingdomSlots(builtSlotIds(), []), ['sse', 'ssw']);
+expect('unseenKingdomSlots never throws', unseenKingdomSlots(null, 'x'), []);
+expect('saw cove card: Moana starts fresh, Ariel progress kept', [sawCove.done.includes('ariel'), sawCove.done.includes('moana'), sawCove.shards.moana], [true, false, 0]);
 
 if (bad.length) { console.error('FAIL\n' + bad.join('\n')); process.exit(1); }
 console.log('lands_check: ok');

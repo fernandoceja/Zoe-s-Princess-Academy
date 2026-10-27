@@ -54,7 +54,7 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
-  // --- New-kingdom princesses (K3). Ariel (K5) is in NPC_ORDER now; the rest are NOT yet: each kingdom PR
+  // --- New-kingdom princesses (K3). Ariel (K5) and Moana (K7) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
   // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
   // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
   ariel: {
@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -241,6 +241,54 @@ export const QUESTS = {
     complete: [
       'You did it! The shells are singing again.',
       'Every word found its friend, thanks to you.',
+    ],
+  },
+
+  // ---- MOANA: "The Shape Stones" — Math / geometry (shapes) -----------------
+  // (Original story. Static rounds below are only the fallback; buildRounds uses TIERS.moana.)
+  moana: {
+    title: 'The Shape Stones',
+    questName: 'The Shape Stones',
+    intro: [
+      'Hello! Welcome to Wayfinder Isle.',
+      'My island path is made of shape stones, but they got scattered.',
+      'Can you name them? Then the path will be whole again!',
+    ],
+    rounds: [
+      {
+        prompt: 'What shape is a can of soup?',
+        choices: ['cylinder', 'cube', 'sphere'],
+        answer: 'cylinder',
+        hint: 'Good try! Think about the whole object. Is it round, flat, or pointy?',
+      },
+      {
+        prompt: 'How many sides does a triangle have?',
+        choices: ['3', '4', '5'],
+        answer: '3',
+        hint: 'Good try! Touch each side with your finger and count them.',
+      },
+      {
+        prompt: 'Which shape has no corners?',
+        choices: ['circle', 'square', 'triangle'],
+        answer: 'circle',
+        hint: 'Good try! A corner is where two sides meet. Look for a shape with no corners at all.',
+      },
+      {
+        prompt: 'What shape is a ball?',
+        choices: ['sphere', 'cube', 'cone'],
+        answer: 'sphere',
+        hint: 'Good try! Think about the whole object. Is it round, flat, or pointy?',
+      },
+      {
+        prompt: 'How many flat faces does a cube have?',
+        choices: ['6', '4', '8'],
+        answer: '6',
+        hint: 'Good try! A flat face is a flat part you can touch with your whole hand. Count them all, even the ones you cannot see.',
+      },
+    ],
+    complete: [
+      'You did it! The path is whole again.',
+      'Every shape stone is home, thanks to you.',
     ],
   },
 
@@ -441,6 +489,11 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#128026; Ariel &mdash; The Seashell Songs</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Reading Foundations &mdash; CA CCSS RF.1.2 / RF.1.3</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Rhyming and word families: hearing which short words end with the same sound (cat, hat), then changing the first letter to build new words in a family (-at, -ig, -op).</div>
+</div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff7ed;">
+<div style="font-weight:700;font-size:15px;">&#128310; Moana &mdash; The Shape Stones</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math: geometry &mdash; CA CCSS 1.G.A.1 / 1.G.A.2 (and K.G)</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Naming flat shapes (circle, triangle, square, rectangle, pentagon, hexagon) and solid shapes (cube, sphere, cone, cylinder) by their sides, corners and flat faces, however they are turned or colored.</div>
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
@@ -1353,6 +1406,141 @@ function _arielFamily(rng) {
   return r;
 }
 
+// ---- Moana: shapes (K7). Flat shapes by sides and corners, solid shapes by flat faces and real things. ----
+// Defining attributes only: the picture's color, size and turn change on purpose, the answer never depends on them.
+// Facts (flat shapes: sides = corners; a circle has neither; "flat faces" for solids).
+export const SHAPE_FACTS = {
+  circle: { sides: 0, corners: 0 }, triangle: { sides: 3, corners: 3 }, square: { sides: 4, corners: 4 },
+  rectangle: { sides: 4, corners: 4 }, pentagon: { sides: 5, corners: 5 }, hexagon: { sides: 6, corners: 6 },
+  cube: { faces: 6, corners: 8 }, sphere: { faces: 0, corners: 0 }, cone: { faces: 1 }, cylinder: { faces: 2 },
+};
+export const SHAPE_PALETTE = ['#f472b6', '#38bdf8', '#fbbf24', '#34d399', '#a78bfa', '#fb923c'];
+const _FLAT_T1 = ['circle', 'triangle', 'square', 'rectangle', 'hexagon'];
+const _FLAT_ALL = ['circle', 'triangle', 'square', 'rectangle', 'pentagon', 'hexagon'];
+const _POLY = ['triangle', 'square', 'rectangle', 'pentagon', 'hexagon'];
+const _SOLIDS = ['cube', 'sphere', 'cone', 'cylinder'];
+/** A picture description for the shape drawer (js/shapes.js): random color, size and turn. */
+function _shapeVisual(shape, rng) {
+  const solid = _SOLIDS.includes(shape);
+  const v = { kind: 'shape', shape, color: _pick(SHAPE_PALETTE, rng), scale: Math.round((0.78 + rng() * 0.22) * 100) / 100, rot: 0, variant: 0 };
+  if (solid || shape === 'circle') return v;
+  v.rot = _pick([0, 0, 20, 35, 45, 60, 90, 120, 160, 200, 250, 300], rng);
+  if (shape === 'triangle') v.variant = Math.floor(rng() * 3);
+  if (shape === 'rectangle') v.variant = Math.floor(rng() * 2);
+  return v;
+}
+// Square and rectangle are never offered together: a square is also a rectangle, so a choice list with both could be unfair.
+function _shapeNames(answer, pool, rng) {
+  const twin = answer === 'square' ? 'rectangle' : answer === 'rectangle' ? 'square' : null;
+  for (let k = 0; k < 50; k++) {
+    const d = _shuffle(pool.filter((x) => x !== answer && x !== twin), rng).slice(0, 2);
+    if (!(d.includes('square') && d.includes('rectangle'))) return [answer, ...d];
+  }
+  return [answer, ..._shuffle(pool.filter((x) => x !== answer && x !== 'square' && x !== 'rectangle'), rng).slice(0, 2)];
+}
+function _moanaName(rng, pool) {
+  const answer = _pick(pool, rng);
+  const solid = _SOLIDS.includes(answer);
+  return {
+    kind: 'name', prompt: 'Which shape is this?', visual: _shapeVisual(answer, rng),
+    choices: _shapeNames(answer, pool, rng), answer,
+    hint: solid ? 'Good try! Look at the shape all over. Does it roll, or does it have flat parts?'
+      : 'Good try! Look at the sides and the corners. Count them one at a time.',
+  };
+}
+const _shapeNumChoices = (n, lo, hi, rng) => {
+  const all = []; for (let i = lo; i <= hi; i++) if (i !== n) all.push(i);
+  return [String(n), ..._shuffle(all, rng).slice(0, 2).map(String)];
+};
+function _moanaCount(rng) {
+  const shape = _pick(_POLY, rng), attr = _pick(['sides', 'corners'], rng), n = SHAPE_FACTS[shape][attr];
+  return {
+    kind: 'count', prompt: `How many ${attr} does a ${shape} have?`, visual: _shapeVisual(shape, rng),
+    choices: _shapeNumChoices(n, 3, 7, rng), answer: String(n),
+    hint: attr === 'sides' ? 'Good try! Touch each side with your finger and count them.'
+      : 'Good try! A corner is where two sides meet. Touch each corner and count.',
+  };
+}
+function _moanaNoCorners(rng) {
+  const d = _shapeNames('circle', ['circle', ..._POLY], rng).slice(1);
+  return {
+    kind: 'nocorners', prompt: 'Which shape has no corners?', choices: ['circle', ...d], answer: 'circle',
+    hint: 'Good try! A corner is where two sides meet. Look for a shape with no corners at all.',
+  };
+}
+function _moanaWhichCount(rng) {
+  const attr = _pick(['sides', 'corners'], rng), n = _pick([3, 4, 5, 6], rng);
+  // one shape per count, so exactly one choice is right (square or rectangle for 4, never both)
+  const rep = { 3: 'triangle', 4: _pick(['square', 'rectangle'], rng), 5: 'pentagon', 6: 'hexagon' };
+  const others = _shuffle([3, 4, 5, 6].filter((x) => x !== n).map((x) => rep[x]).concat('circle'), rng).slice(0, 2);
+  return {
+    kind: 'whichcount', prompt: `Which shape has ${n} ${attr}?`, choices: [rep[n], ...others], answer: rep[n],
+    hint: `Good try! Count the ${attr} of each shape, one shape at a time.`,
+  };
+}
+const _OBJECTS = [
+  { prompt: 'What shape is a ball?', shape: 'sphere', pic: '⚽' },
+  { prompt: 'What shape is a dice?', shape: 'cube', pic: '🎲' },
+  { prompt: 'What shape is a can of soup?', shape: 'cylinder', pic: '🥫' },
+  { prompt: 'What shape is a drum?', shape: 'cylinder', pic: '🥁' },
+  { prompt: 'What shape is a pointy party hat?', shape: 'cone', pic: '' },
+];
+function _moanaObject(rng) {
+  const o = _pick(_OBJECTS, rng);
+  const r = {
+    kind: 'object', prompt: o.prompt, choices: _shapeNames(o.shape, _SOLIDS, rng), answer: o.shape,
+    hint: 'Good try! Think about the whole object. Is it round, flat, or pointy?',
+  };
+  if (o.pic) r.pic = o.pic;
+  return r;
+}
+function _moanaFaces(rng) {
+  if (rng() < 0.2) {
+    return {
+      kind: 'cubecorners', prompt: 'How many corners does a cube have?', visual: _shapeVisual('cube', rng),
+      choices: ['8', '6', '12'].map(String), answer: '8',
+      hint: 'Good try! A cube has corners on the top and on the bottom. Count them all.',
+    };
+  }
+  const shape = _pick(_SOLIDS, rng), n = SHAPE_FACTS[shape].faces;
+  const pool = [0, 1, 2, 3, 4, 5, 6, 8].filter((x) => x !== n);
+  return {
+    kind: 'faces', prompt: `How many flat faces does a ${shape} have?`, visual: _shapeVisual(shape, rng),
+    choices: [String(n), ..._shuffle(pool, rng).slice(0, 2).map(String)], answer: String(n),
+    hint: 'Good try! A flat face is a flat part you can touch with your whole hand. Count them all, even the ones you cannot see.',
+  };
+}
+function _moanaWhichFaces(rng) {
+  const shape = _pick(_SOLIDS, rng), n = SHAPE_FACTS[shape].faces;
+  const what = n === 0 ? 'no flat faces' : n === 1 ? 'one flat face' : `${n} flat faces`;
+  return {
+    kind: 'whichfaces', prompt: `Which shape has ${what}?`, choices: _shapeNames(shape, _SOLIDS, rng), answer: shape,
+    hint: 'Good try! Picture each shape and count its flat faces, one shape at a time.',
+  };
+}
+function _moanaRoll(rng) {
+  const d = _shuffle(['a book', 'a shoebox', 'a toy brick'], rng).slice(0, 2);
+  return {
+    kind: 'roll', prompt: 'Which one can roll?', choices: ['a ball', ...d], answer: 'a ball',
+    hint: 'Good try! Picture pushing each one across the floor. Which one would keep going?',
+  };
+}
+function _moanaT1(rng) { return _moanaName(rng, rng() < 0.65 ? _FLAT_T1 : _SOLIDS); }
+function _moanaT2(rng) {
+  const x = rng();
+  if (x < 0.35) return _moanaCount(rng);
+  if (x < 0.5) return _moanaNoCorners(rng);
+  if (x < 0.8) return _moanaWhichCount(rng);
+  return _moanaName(rng, rng() < 0.5 ? _FLAT_ALL : _SOLIDS);
+}
+function _moanaT3(rng) {
+  const x = rng();
+  if (x < 0.3) return _moanaObject(rng);
+  if (x < 0.55) return _moanaFaces(rng);
+  if (x < 0.8) return _moanaWhichFaces(rng);
+  return _moanaRoll(rng);
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -1397,6 +1585,7 @@ const TIERS = {
     2: (rng) => (rng() < 0.75 ? _arielRhymePick(rng, true) : _arielOdd(rng)),
     3: (rng) => _arielFamily(rng),
   },
+  moana: { 1: _moanaT1, 2: _moanaT2, 3: _moanaT3 },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
     2: _sciOr(2, SCI_T2),

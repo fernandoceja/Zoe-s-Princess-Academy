@@ -80,6 +80,7 @@ function defaults() {
     outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
     treasures: { day: '', got: [], total: {}, stars: [] }, // daily finds (see treasures.js): got = ids found on `day`, total = lifetime by kind
     seenNewKingdoms: false, // the one-time "new kingdoms appeared" card has been shown (see worldmap.js)
+    seenKingdoms: [],       // slot ids of the kingdoms that card has told her about; a newly opened kingdom shows a short card again
     secrets: [],    // secret-surprise sticker ids found (see treasures.js SECRETS)
     lang: 'EN',
     muted: false,
@@ -121,6 +122,10 @@ export function merge(raw) {
   out.treasures = sanitizeTreasures(raw.treasures);
   out.secrets = sanitizeSecrets(raw.secrets);
   out.seenNewKingdoms = raw.seenNewKingdoms === true;
+  // Older saves only have the flag: they were told about the first kingdom (Seashell Cove, slot sse), nothing else.
+  out.seenKingdoms = Array.isArray(raw.seenKingdoms)
+    ? [...new Set(raw.seenKingdoms.filter((x) => typeof x === 'string' && /^[a-z]{2,4}$/.test(x)))].slice(0, 12)
+    : (out.seenNewKingdoms ? ['sse'] : []);
 
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
   if (typeof raw.muted === 'boolean') out.muted = raw.muted;

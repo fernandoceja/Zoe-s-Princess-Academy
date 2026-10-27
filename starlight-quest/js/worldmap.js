@@ -65,7 +65,7 @@ export const PLANNED_SLOTS = {
 
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
-export const BUILT_SLOTS = { sse: 'ariel' };   // K5: Seashell Cove is open (Ariel's quests exist)
+export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana' };   // K5: Seashell Cove, K7: Wayfinder Isle (their princesses' quests exist)
 
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));
@@ -74,7 +74,7 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5, so its flag is harmless.) K6: Wayfinder Isle is preview-only until K7.
+// (cove is built for real since K5 and the isle since K7, so their flags are harmless now.)
 export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
@@ -109,8 +109,8 @@ function slotLandGeometry(land) {
 }
 export function coveGeometry() { return slotLandGeometry(COVE); }
 
-// Wayfinder Isle (K6) sits at the 'ssw' slot (the slot planned for Moana). Drawn only when the slot is open: built for real
-// (K7 adds 'ssw' to BUILT_SLOTS) or ?preview=isle. Her pad is stored, but she is not spawned until K7 adds her to NPC_ORDER.
+// Wayfinder Isle (K6) sits at the 'ssw' slot (the slot planned for Moana). Built for real since K7 ('ssw' is in BUILT_SLOTS and
+// Moana is in NPC_ORDER, so she stands on her pad); ?preview=isle stays harmless.
 export const ISLE = { slot: 'ssw', land: 'isle', princess: 'moana', discR: LAND_DISC_R, padDist: 6.5 };
 export const isIsleOpen = (search) => isSlotOpen(ISLE.slot, search);
 export function isleGeometry() { return slotLandGeometry(ISLE); }
@@ -163,6 +163,13 @@ export function distToSegment(x, z, a, b) {
 // One-time "New kingdoms appeared" card: never with zero built slots, and only once.
 export function shouldShowNewKingdoms(builtCount, seen) {
   return builtCount > 0 && !seen;
+}
+
+/** Built slots the player has not been told about yet (K7): the card shows again when a new kingdom opens.
+ * `seenSlots` is Save.data.seenKingdoms (a list of slot ids). Never throws. */
+export function unseenKingdomSlots(builtSlots, seenSlots) {
+  const seen = new Set(Array.isArray(seenSlots) ? seenSlots : []);
+  return (Array.isArray(builtSlots) ? builtSlots : []).filter((s) => !seen.has(s));
 }
 
 // Starlight finale gate. The crown finale plays only when every princess in the play list is restored AND

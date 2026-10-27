@@ -68,8 +68,8 @@ const trunk = segs.find((x) => x.kind === 'trunk');
 ok(Math.hypot(trunk.from.x, trunk.from.z) > PLAZA_R, 'trunks start outside the plaza');
 
 // Built-slot map: empty for now, and closed gates shrink as slots are built
-ok(Object.keys(BUILT_SLOTS).length === 1 && builtSlotIds().length === 1 && BUILT_SLOTS.sse === 'ariel', 'one slot is built (the cove, K5)');
-ok(closedSlots().length === 5, 'the other 5 gates are still closed');
+ok(Object.keys(BUILT_SLOTS).length === 2 && builtSlotIds().length === 2 && BUILT_SLOTS.sse === 'ariel' && BUILT_SLOTS.ssw === 'moana', 'two slots are built (the cove, K5, and the isle, K7)');
+ok(closedSlots().length === 4, 'the other 4 gates are still closed');
 
 // Gates: tappable after the princess raycast (and after treasures and props), with a chime + toast hook, collider, and calm motion
 const iNpc = w.indexOf('intersectObjects(npcHitMeshes');
@@ -88,7 +88,7 @@ ok(shouldShowNewKingdoms(0, false) === false, 'card never shows with zero built 
 ok(shouldShowNewKingdoms(0, true) === false, 'card never shows with zero built, seen');
 ok(shouldShowNewKingdoms(1, false) === true, 'card shows once a slot is built');
 ok(shouldShowNewKingdoms(3, true) === false, 'card shows only once');
-ok(/shouldShowNewKingdoms\(builtSlotIds\(\)\.length, Save\.data\.seenNewKingdoms\)/.test(m), 'main.js gates the card on built slots and the save flag');
+ok(/unseenKingdomSlots\(builtSlotIds\(\), Save\.data\.seenKingdoms\)/.test(m) && /Save\.data\.seenNewKingdoms = true/.test(m), 'main.js gates the card on built slots the save has not seen (K7: a newly opened kingdom shows it again)');
 ok(/New kingdoms appeared beyond the Starlight Hub!/.test(src('ui.js')), 'card text');
 ok(merge(null).seenNewKingdoms === false, 'default flag is false');
 ok(merge({ seenNewKingdoms: true }).seenNewKingdoms === true, 'flag survives merge');
