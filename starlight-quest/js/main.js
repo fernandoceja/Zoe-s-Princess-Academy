@@ -19,7 +19,7 @@ import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=2026
 
 const NPC_IDS = NPC_ORDER;
 const OPEN_LANDS = openLandIds(); // new lands are drawn only when built or previewed (Wayfinder Isle: ?preview=isle); today's finds count only open lands
-const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle' };
+const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle', jasmine: 'garden' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
 const CELEBRATE_VIEW_MS = 1800;
@@ -382,9 +382,23 @@ export async function main(container) {
       return clockSVG(round.clock.hour, round.clock.minute);
     }
     if (npcId === 'moana' && round.visual && round.visual.kind === 'shape') return shapeSVG(round.visual);
+    if (npcId === 'jasmine' && round.visual && round.visual.kind === 'story') return storyCardsHtml(round.visual);
     if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
     if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel' || npcId === 'moana')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
+  }
+
+  // Jasmine's story cards (K9): a row of three small picture cards, each with a one-line caption. With `more`, two cards in order
+  // joined by arrows and a "?" card for the missing step. Escaped, no images, fits 390px wide next to the three choice buttons.
+  function storyCardsHtml(v) {
+    const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const card = (e, t, dashed) => `<div style="flex:1 1 0;min-width:0;max-width:112px;background:#fff;border:2px ${dashed ? 'dashed #a5b4fc' : 'solid #c7d2fe'};border-radius:14px;padding:6px 3px;text-align:center;box-sizing:border-box">` +
+      `<div style="font-size:34px;line-height:1.1">${e}</div><div style="font-size:12px;line-height:1.2;font-weight:700;color:#3730a3;margin-top:2px;overflow-wrap:anywhere">${t}</div></div>`;
+    const arrow = '<div style="flex:0 0 auto;font-size:16px;color:#6366f1;font-weight:800">&rarr;</div>';
+    const cards = (v.cards || []).slice(0, 3);
+    const parts = cards.map((c) => card(c.e, esc(c.t), false));
+    const row = v.more ? [...parts, card('❓', '?', true)].join(arrow) : parts.join('');
+    return `<div role="img" aria-label="${v.more ? 'The first two steps of a story' : 'Three story pictures'}" style="display:flex;align-items:stretch;justify-content:center;gap:5px;max-width:100%;margin:0 auto">${row}</div>`;
   }
 
   // Measuring picture: flowers stand on one ground line (compare heights), or a stem beside a column of petal units.
@@ -458,7 +472,7 @@ export async function main(container) {
     const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : tileRound ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
-    if ((npcId === 'cinderella' || npcId === 'rapunzel' || ((npcId === 'ariel' || npcId === 'moana') && !round.noChoiceSay)) && !round.sort) {
+    if ((npcId === 'cinderella' || npcId === 'rapunzel' || ((npcId === 'ariel' || npcId === 'moana' || npcId === 'jasmine') && !round.noChoiceSay)) && !round.sort) {
       // Read the words only, not the picture emoji in front of them.
       const labels = arr.map((c) => c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';

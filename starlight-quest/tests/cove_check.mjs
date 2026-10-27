@@ -20,15 +20,15 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const day = '2026-10-27';
 
 // --- "Open" -----------------------------------------------------------------------------------------------------
-ok(same(Object.keys(BUILT_SLOTS), ['sse', 'ssw']) && BUILT_SLOTS.sse === 'ariel' && BUILT_SLOTS.ssw === 'moana' && builtSlotIds().includes('sse'), 'the cove slot is built (K5: Ariel plays there), and so is the isle (K7)');
+ok(same(Object.keys(BUILT_SLOTS).sort(), ['nne', 'sse', 'ssw']) && BUILT_SLOTS.sse === 'ariel' && BUILT_SLOTS.ssw === 'moana' && BUILT_SLOTS.nne === 'jasmine' && builtSlotIds().includes('sse'), 'the cove slot is built (K5: Ariel plays there), and so are the isle (K7) and the garden (K9)');
 ok(PLANNED_SLOTS.ariel === 'sse' && COVE.slot === 'sse', 'cove sits at the planned sse slot');
 ok(previewFlags('').size === 0 && previewFlags().size === 0, 'no preview flag by default (node has no location)');
 ok(isCoveOpen() && isCoveOpen('') && isCoveOpen('?x=1&preview=moana'), 'cove is open by default (built, no flag needed)');
-ok(same(openSlotIds(''), ['sse', 'ssw']) && closedSlots('').length === 4 && closedSlots().length === 4 && !closedSlots().some((s) => s.slot === 'sse'), 'default: the cove gate (and the isle gate) are gone, four gates still drawn');
+ok(same([...openSlotIds('')].sort(), ['nne', 'sse', 'ssw']) && closedSlots('').length === 3 && closedSlots().length === 3 && !closedSlots().some((s) => s.slot === 'sse'), 'default: the cove gate (and the isle and garden gates) are gone, three gates still drawn');
 ok(isCoveOpen('?preview=cove') && isCoveOpen('?preview=all') && isCoveOpen('?a=1&preview=Cove') && isCoveOpen('?preview=x,cove'), 'preview=cove / all still parse and keep the cove open');
-ok(same(openSlotIds('?preview=cove'), ['sse', 'ssw']), 'the preview flag adds nothing: sse and ssw are open already');
+ok(same([...openSlotIds('?preview=cove')].sort(), ['nne', 'sse', 'ssw']), 'the preview flag adds nothing: sse, ssw and nne are open already');
 const closedPreview = closedSlots('?preview=cove');
-ok(closedPreview.length === 4 && !closedPreview.some((s) => s.slot === 'sse'), 'open slot loses its closed gate, the other four stay');
+ok(closedPreview.length === 3 && !closedPreview.some((s) => s.slot === 'sse'), 'open slot loses its closed gate, the other three stay');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 ok(!isSlotOpen('ese', '?preview=cove') && !isSlotOpen('ese', '?preview=all'), 'other lands are not built yet, so "all" opens only the cove (the ?preview flag keeps working)');
 
@@ -166,13 +166,13 @@ ok(/const coveOpen = isCoveOpen\(\)/.test(world) && /if \(coveOpen\) \{\s*cove =
 ok(/treasureLandsFor\(openLands\)/.test(world) && /const openLands = openLandIds\(\)/.test(world) && !/TREASURE_LANDS/.test(world), 'world hides cove treasures only when open');
 ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (the open slot is skipped)');
 ok(/landPads\[COVE\.land\]/.test(world) && !/NPC_ORDER\.push|NPC_ORDER = /.test(world), 'Ariel\'s pad is stored; world.js spawns her from NPC_ORDER like the others');
-ok(/export const NPC_ORDER = \['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'(, 'moana')?\]/.test(src('js/quests.js')), 'ariel is appended to NPC_ORDER (K5; Moana follows in K7)');
+ok(/export const NPC_ORDER = \['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'(, 'moana')?(, 'jasmine')?\]/.test(src('js/quests.js')), 'ariel is appended to NPC_ORDER (K5; Moana follows in K7, Jasmine in K9)');
 ok(/import \{ buildCove \} from '\.\/cove\.js\?v=20261027e2'/.test(world), 'world imports cove.js with the existing ?v= stamp');
 ok(/'\.\/js\/cove\.js\?v=20261027e2'/.test(sw), 'cove.js is precached with the existing stamp');
 ok(/openLandIds\(\)/.test(main) && /findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main) && !/TREASURE_LANDS\.length/.test(main), 'main counts only open lands (20 with none open, 25 with the cove)');
 ok(/Narrator\.speakExact\(def\.npc, line\)/.test(main) && /rhymeLine\(\)/.test(main), 'the rhyme is spoken with Ariel\'s voice via speakExact');
 ok(/coveOpen: isCoveOpen\(\)/.test(ui), 'Treasure Book asks for the cove only when open');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse: ariel and ssw: moana in source');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse: ariel, ssw: moana and nne: jasmine in source');
 ok(/'shell-' \+ \(i \+ 1\)/.test(cove) && /\['shell1', 'shell2', 'shell3'\]/.test(cove), 'the three secret shells report shell-1..3 (small to big)');
 // Six surprises
 for (const k of ['clam', 'pool', 'starfish', 'coral', 'hermit', 'chime']) ok(new RegExp(`items\\.${k} = addTappable\\(`).test(cove), `surprise: ${k}`);

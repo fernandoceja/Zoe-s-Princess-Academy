@@ -471,8 +471,8 @@ export function createWorld(container, hooks) {
     landCenters[ISLE.land] = new THREE.Vector3(ig.center.x, 0, ig.center.z);
     landPads[ISLE.land] = new THREE.Vector3(ig.pad.x, 0, ig.pad.z);
   }
-  // Moonlit Palace Garden (K8): only when its slot is open (really built in K9, or ?preview=garden). Centre and Jasmine's pad are
-  // stored like the isle's so the scatter and every spot check stay clear of them; Jasmine is NOT spawned (not in NPC_ORDER until K9).
+  // Moonlit Palace Garden (K8): only when its slot is open (built for real since K9, or ?preview=garden). Centre and Jasmine's pad are
+  // stored like the isle's so the scatter and every spot check stay clear of them; Jasmine is in NPC_ORDER (K9), so the spawn loop below puts her on this pad.
   const gardenOpen = isGardenOpen();
   if (gardenOpen) {
     const gg = gardenGeometry();

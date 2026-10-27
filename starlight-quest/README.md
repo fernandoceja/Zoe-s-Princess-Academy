@@ -16,8 +16,9 @@ states, ever.** Wrong picks get gentle encouragement and a retry; progress is ne
 | Cinderella (village) | Glass Slipper Village | The Midnight Clock — wind 5 clocks | Math: telling time to the hour & half-hour (analog clock faces drawn in-game) |
 | Ariel (cove) | Seashell Cove (first new kingdom, south-east of the hub) | The Seashell Songs — match 5 rhymes | ELA: rhyming and word families (RF.1.2 / RF.1.3): rhyme pairs, odd one out, change the first letter |
 | Moana (isle) | Wayfinder Isle (second new kingdom, south-west of the hub) | The Shape Stones — name 5 shapes | Math: geometry (1.G.A.1 / 1.G.A.2 / K.G): name flat and solid shapes, count sides, corners and flat faces; shapes are drawn in-game and turned or recolored |
+| Jasmine (garden) | Moonlit Palace Garden (third new kingdom, north-north-east of the hub) | The Story Lanterns — put 5 stories in order | ELA: story order and retelling (RL.1.2 / RL.K.2 / RL.1.3): first, next, last on tiny 3-picture stories (a seed growing, an egg hatching, getting ready for school) |
 
-Finish the first four and Seashell Cove opens, then Wayfinder Isle (a short card tells Zoe when a new kingdom opens). Each land gets its own glowing celebration; the big Starlight Crown finale plays only once every kingdom is open and restored (until then, finishing a land never replays it). See `STANDARDS.md`
+Finish the first four and Seashell Cove opens, then Wayfinder Isle and the Moonlit Palace Garden (a short card tells Zoe when a new kingdom opens). Each land gets its own glowing celebration; the big Starlight Crown finale plays only once every kingdom is open and restored (until then, finishing a land never replays it). See `STANDARDS.md`
 for the full quest-to-standard mapping (also shown in-game in the 📊 Parent Corner).
 
 ## Preview locally

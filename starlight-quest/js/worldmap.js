@@ -65,7 +65,7 @@ export const PLANNED_SLOTS = {
 
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
-export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana' };   // K5: Seashell Cove, K7: Wayfinder Isle (their princesses' quests exist)
+export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana', nne: 'jasmine' };   // K5: Seashell Cove, K7: Wayfinder Isle, K9: Moonlit Palace Garden (their princesses' quests exist)
 
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));
@@ -74,7 +74,7 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5 and the isle since K7, so their flags are harmless now. garden (K8) is preview-only until Jasmine's quests land.)
+// (cove is built for real since K5 and the isle since K7, and the garden since K9, so all three flags are harmless now.)
 export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
@@ -116,7 +116,7 @@ export const isIsleOpen = (search) => isSlotOpen(ISLE.slot, search);
 export function isleGeometry() { return slotLandGeometry(ISLE); }
 
 // Moonlit Palace Garden (K8) sits at the 'nne' slot (the slot planned for Jasmine), north-north-east, past the Library. Drawn only
-// when 'nne' is open: in BUILT_SLOTS (K9, with Jasmine's quests) or ?preview=garden (or ?preview=all). Jasmine is NOT spawned until K9.
+// when 'nne' is open: in BUILT_SLOTS (K9, with Jasmine's quests) or ?preview=garden (or ?preview=all). Built for real since K9: Jasmine is in NPC_ORDER and stands on her pad.
 export const GARDEN = { slot: 'nne', land: 'garden', princess: 'jasmine', discR: LAND_DISC_R, padDist: 6.5 };
 export const isGardenOpen = (search) => isSlotOpen(GARDEN.slot, search);
 export function gardenGeometry() { return slotLandGeometry(GARDEN); }

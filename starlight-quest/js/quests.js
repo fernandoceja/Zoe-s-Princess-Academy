@@ -54,7 +54,7 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
-  // --- New-kingdom princesses (K3). Ariel (K5) and Moana (K7) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
+  // --- New-kingdom princesses (K3). Ariel (K5), Moana (K7) and Jasmine (K9) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
   // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
   // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
   ariel: {
@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -289,6 +289,54 @@ export const QUESTS = {
     complete: [
       'You did it! The path is whole again.',
       'Every shape stone is home, thanks to you.',
+    ],
+  },
+
+  // ---- JASMINE: "The Story Lanterns" — ELA / story order (first, next, last) --------
+  // (Original story. Static rounds below are only the fallback; buildRounds uses TIERS.jasmine.)
+  jasmine: {
+    title: 'The Story Lanterns',
+    questName: 'The Story Lanterns',
+    intro: [
+      'Hello! Welcome to the Moonlit Palace Garden.',
+      'My story lanterns got mixed up, so the garden cannot tell its stories.',
+      'Can you put each story in order? Then the lanterns will glow again!',
+    ],
+    rounds: [
+      {
+        prompt: 'Leo woke up. Then he ate breakfast. Last, he went to school. What happened first?',
+        choices: ['wake up', 'eat breakfast', 'go to school'],
+        answer: 'wake up',
+        hint: 'Good try! Listen to the story again. What happened before everything else?',
+      },
+      {
+        prompt: 'Pip was an egg. Then Pip was a baby chick. Last, Pip was a big hen. What happened last?',
+        choices: ['egg', 'baby chick', 'big hen'],
+        answer: 'big hen',
+        hint: 'Good try! Listen to the story again. What happened after everything else?',
+      },
+      {
+        prompt: 'Mia put on her socks. Then she put on her shoes. Last, she ran and played. What happened in the middle?',
+        choices: ['put on socks', 'put on shoes', 'run and play'],
+        answer: 'put on shoes',
+        hint: 'Good try! The middle happens after the first part and before the last part.',
+      },
+      {
+        prompt: 'Which is the right order?',
+        choices: ['first clouds, then rain, last rainbow', 'first rainbow, then clouds, last rain', 'first rain, then rainbow, last clouds'],
+        answer: 'first clouds, then rain, last rainbow',
+        hint: 'Good try! Tell the story in your head. Which order makes sense?',
+      },
+      {
+        prompt: 'Sam rolled a snowball. Then Sam made a snowman. What comes first?',
+        choices: ['roll a snowball', 'make a snowman', 'go inside'],
+        answer: 'roll a snowball',
+        hint: 'Good try! Think about how this story begins, before anything else happens.',
+      },
+    ],
+    complete: [
+      'You did it! The lanterns are glowing again.',
+      'Every story is in the right order, thanks to you.',
     ],
   },
 
@@ -494,6 +542,11 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#128310; Moana &mdash; The Shape Stones</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math: geometry &mdash; CA CCSS 1.G.A.1 / 1.G.A.2 (and K.G)</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Naming flat shapes (circle, triangle, square, rectangle, pentagon, hexagon) and solid shapes (cube, sphere, cone, cylinder) by their sides, corners and flat faces, however they are turned or colored.</div>
+</div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#eef2ff;">
+<div style="font-weight:700;font-size:15px;">&#127982; Jasmine &mdash; The Story Lanterns</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Reading Literature &mdash; CA CCSS RL.1.2 (and RL.K.2 / RL.1.3)</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Story order: retelling a short story with its key details in the right order, using first, next and last (beginning, middle and end) with everyday sequences like a seed growing or getting ready for school.</div>
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
@@ -1541,6 +1594,126 @@ function _moanaT3(rng) {
   return _moanaRoll(rng);
 }
 
+// ---- Jasmine: story order (K9). Tiny 3-step stories shown as picture cards; first / next / middle / last. ----
+// Every sequence is an everyday order a 6-year-old knows (growing, hatching, routines). `t` is the short label (choice text and card caption),
+// `e` the card picture, `sent` the story told in three short sentences (the sentences use the same step words as the labels).
+// `world` keeps "what happens next" fair: its two wrong choices come from the OTHER world, so none of them could also come next.
+// `noD` marks a sequence whose steps are never used as wrong choices (they could look like they fit another story).
+export const STORY_SEQUENCES = [
+  { id: 'grow',     world: 'nature', steps: [['🌱', 'tiny sprout'], ['🌿', 'bigger plant'], ['🌻', 'tall flower']],
+    sent: ['Nia saw a tiny sprout.', 'Then it was a bigger plant.', 'Last, it was a tall flower.'] },
+  { id: 'chick',    world: 'nature', steps: [['🥚', 'egg'], ['🐥', 'baby chick'], ['🐔', 'big hen']],
+    sent: ['Pip was an egg.', 'Then Pip was a baby chick.', 'Last, Pip was a big hen.'] },
+  { id: 'butterfly', world: 'nature', steps: [['🥚', 'tiny egg'], ['🐛', 'caterpillar'], ['🦋', 'butterfly']],
+    sent: ['A tiny egg sat on a leaf.', 'Then a caterpillar came out.', 'Last, it was a butterfly.'] },
+  { id: 'snowman',  world: 'nature', steps: [['❄️', 'snow falls'], ['⚪', 'roll a snowball'], ['⛄', 'make a snowman']],
+    sent: ['Snow fell all day.', 'Then Sam rolled a snowball.', 'Last, Sam made a snowman.'] },
+  { id: 'rain',     world: 'nature', steps: [['☁️', 'clouds come'], ['🌧️', 'it rains'], ['🌈', 'a rainbow']],
+    sent: ['Clouds came.', 'Then it rained.', 'Last, a rainbow showed up.'] },
+  { id: 'day',      world: 'nature', noD: true, steps: [['🌅', 'sun comes up'], ['☀️', 'sun is high'], ['🌙', 'moon comes out']],
+    sent: ['The sun came up.', 'Then the sun was high.', 'Last, the moon came out.'] },
+  { id: 'growup',   world: 'nature', steps: [['👶', 'baby'], ['🧒', 'kid'], ['🧑', 'grown-up']],
+    sent: ['Ben was a baby.', 'Then Ben was a kid.', 'Last, Ben was a grown-up.'] },
+  { id: 'acorn',    world: 'nature', steps: [['🌰', 'acorn'], ['🌱', 'little sprout'], ['🌳', 'big tree']],
+    sent: ['An acorn fell down.', 'Then a little sprout grew.', 'Last, there was a big tree.'] },
+  { id: 'dig',      world: 'nature', steps: [['⛏️', 'dig a hole'], ['🌱', 'plant the seed'], ['💧', 'water the seed']],
+    sent: ['Zoey dug a hole.', 'Then she planted the seed.', 'Last, she watered the seed.'] },
+  { id: 'morning',  world: 'life', steps: [['⏰', 'wake up'], ['🥣', 'eat breakfast'], ['🚌', 'go to school']],
+    sent: ['Leo woke up.', 'Then he ate breakfast.', 'Last, he went to school.'] },
+  { id: 'cake',     world: 'life', steps: [['🥣', 'mix the batter'], ['🔥', 'bake the cake'], ['🍰', 'eat the cake']],
+    sent: ['Mom mixed the batter.', 'Then she baked the cake.', 'Last, they ate the cake.'] },
+  { id: 'dish',     world: 'life', steps: [['🍽️', 'dirty dish'], ['🧽', 'scrub the dish'], ['✨', 'clean dish']],
+    sent: ['The dish was dirty.', 'Then Dad scrubbed the dish.', 'Last, the dish was clean.'] },
+  { id: 'sandwich', world: 'life', steps: [['🍞', 'get the bread'], ['🧀', 'add the cheese'], ['🥪', 'eat the sandwich']],
+    sent: ['Leo got the bread.', 'Then he added the cheese.', 'Last, he ate the sandwich.'] },
+  { id: 'socks',    world: 'life', steps: [['🧦', 'put on socks'], ['👟', 'put on shoes'], ['🏃', 'run and play']],
+    sent: ['Mia put on her socks.', 'Then she put on her shoes.', 'Last, she ran and played.'] },
+  { id: 'paint',    world: 'life', steps: [['🎨', 'get the paints'], ['🖌️', 'paint a picture'], ['🖼️', 'hang it up']],
+    sent: ['Nia got the paints.', 'Then she painted a picture.', 'Last, she hung it up.'] },
+  { id: 'letter',   world: 'life', steps: [['✏️', 'write a note'], ['✉️', 'mail the note'], ['📬', 'friend gets it']],
+    sent: ['Sam wrote a note.', 'Then Sam mailed the note.', 'Last, his friend got it.'] },
+  { id: 'night',    world: 'life', noD: true, steps: [['🌙', 'night comes'], ['🛏️', 'get in bed'], ['😴', 'fall asleep']],
+    sent: ['Night came.', 'Then Ben got in bed.', 'Last, Ben fell asleep.'] },
+  { id: 'trip',     world: 'life', steps: [['🧳', 'pack a bag'], ['🚗', 'ride in the car'], ['🏖️', 'play at the beach']],
+    sent: ['Zoey packed a bag.', 'Then they rode in the car.', 'Last, they played at the beach.'] },
+  { id: 'shop',     world: 'life', steps: [['🛒', 'shop for food'], ['🍳', 'cook the food'], ['🍽️', 'eat dinner']],
+    sent: ['Dad shopped for food.', 'Then he cooked the food.', 'Last, they ate dinner.'] },
+  { id: 'school',   world: 'life', steps: [['🏫', 'sit in class'], ['📚', 'learn and read'], ['🏠', 'go home']],
+    sent: ['Mia sat in class.', 'Then she learned and read.', 'Last, she went home.'] },
+  { id: 'gift',     world: 'life', steps: [['🎁', 'a wrapped gift'], ['🎀', 'pull the ribbon'], ['🧸', 'play with the toy']],
+    sent: ['Leo had a wrapped gift.', 'Then he pulled the ribbon.', 'Last, he played with the toy.'] },
+].map((q) => ({ ...q, steps: q.steps.map(([e, t]) => ({ e, t })) }));
+// Short words for the "which is the right order" choices (so "first sprout, then plant, last flower" fits a phone button).
+const _STORY_KEYS = [['sprout', 'plant', 'flower'], ['egg', 'chick', 'hen'], ['egg', 'caterpillar', 'butterfly'], ['snow', 'snowball', 'snowman'], ['clouds', 'rain', 'rainbow'],
+  ['sunrise', 'high sun', 'moon'], ['baby', 'kid', 'grown-up'], ['acorn', 'sprout', 'tree'], ['dig', 'plant', 'water'], ['wake up', 'breakfast', 'school'],
+  ['mix', 'bake', 'eat'], ['dirty', 'scrub', 'clean'], ['bread', 'cheese', 'sandwich'], ['socks', 'shoes', 'play'], ['get paints', 'paint', 'hang up'],
+  ['write', 'mail', 'read'], ['night', 'bed', 'sleep'], ['pack', 'car', 'beach'], ['shop', 'cook', 'eat'], ['class', 'read', 'home'], ['gift', 'ribbon', 'toy']];
+STORY_SEQUENCES.forEach((q, i) => q.steps.forEach((s, k) => { s.k = _STORY_KEYS[i][k]; }));
+
+const _STORY_HINT = {
+  first: 'Good try! Think about how this story begins, before anything else happens.',
+  last: 'Good try! Think about how this story ends, after everything else has happened.',
+  middle: 'Good try! The middle happens after the first part and before the last part.',
+  next: 'Good try! Look at the pictures you can see. What would happen right after them?',
+  order: 'Good try! Tell the story in your head. Which order makes sense?',
+  tellfirst: 'Good try! Listen to the story again. What happened before everything else?',
+  telllast: 'Good try! Listen to the story again. What happened after everything else?',
+};
+const _cards = (steps, extra) => ({ kind: 'story', cards: steps.map((s) => ({ e: s.e, t: s.t })), ...(extra || {}) });
+// A shuffled order of the three cards that is not the true order (a row already in order would give the answer away).
+function _storyShuffle(steps, rng) {
+  for (let k = 0; k < 30; k++) {
+    const a = _shuffle(steps, rng);
+    if (a.some((s, i) => s !== steps[i])) return a;
+  }
+  return [steps[1], steps[2], steps[0]];
+}
+function _storyPick(rng) { return _pick(STORY_SEQUENCES, rng); }
+function _storyAsk(rng, which) {
+  const q = _storyPick(rng), st = q.steps;
+  const idx = { first: 0, middle: 1, last: 2 }[which];
+  return {
+    kind: which, prompt: which === 'first' ? 'What comes first?' : which === 'last' ? 'What happens last?' : 'What comes in the middle?',
+    visual: _cards(_storyShuffle(st, rng)), choices: st.map((s) => s.t), answer: st[idx].t, hint: _STORY_HINT[which],
+  };
+}
+function _storyNext(rng) {
+  const q = _storyPick(rng), st = q.steps;
+  const pool = STORY_SEQUENCES.filter((o) => o.world !== q.world && !o.noD && o.id !== q.id);
+  const wrong = [];
+  for (const o of _shuffle(pool, rng)) { if (wrong.length < 2) wrong.push(_pick(o.steps, rng).t); }
+  return {
+    kind: 'next', prompt: 'What happens next?', visual: _cards([st[0], st[1]], { more: true }),
+    choices: [st[2].t, ...wrong], answer: st[2].t, hint: _STORY_HINT.next,
+  };
+}
+function _storyOrder(rng) {
+  const q = _storyPick(rng), st = q.steps;
+  const say = (a) => `first ${a[0].k}, then ${a[1].k}, last ${a[2].k}`;
+  const perms = [[0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]].map((p) => p.map((i) => st[i]));
+  const wrong = _shuffle(perms, rng).slice(0, 2).map(say);
+  return {
+    kind: 'order', prompt: 'Which is the right order?', visual: _cards(_storyShuffle(st, rng)),
+    choices: [say(st), ...wrong], answer: say(st), hint: _STORY_HINT.order,
+  };
+}
+function _storyTell(rng) {
+  const q = _storyPick(rng), st = q.steps;
+  const last = rng() < 0.5;
+  return {
+    kind: last ? 'telllast' : 'tellfirst', prompt: `${q.sent.join(' ')} What happened ${last ? 'last' : 'first'}?`,
+    choices: st.map((s) => s.t), answer: st[last ? 2 : 0].t, hint: last ? _STORY_HINT.telllast : _STORY_HINT.tellfirst,
+  };
+}
+function _jasmineT1(rng) { return _storyAsk(rng, 'first'); }
+function _jasmineT2(rng) {
+  const x = rng();
+  if (x < 0.3) return _storyAsk(rng, 'last');
+  if (x < 0.6) return _storyAsk(rng, 'middle');
+  return _storyNext(rng);
+}
+function _jasmineT3(rng) { return rng() < 0.5 ? _storyOrder(rng) : _storyTell(rng); }
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -1586,6 +1759,7 @@ const TIERS = {
     3: (rng) => _arielFamily(rng),
   },
   moana: { 1: _moanaT1, 2: _moanaT2, 3: _moanaT3 },
+  jasmine: { 1: _jasmineT1, 2: _jasmineT2, 3: _jasmineT3 },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
     2: _sciOr(2, SCI_T2),
