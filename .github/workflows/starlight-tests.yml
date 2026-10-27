@@ -50,3 +50,5 @@ jobs:
         run: node starlight-quest/tests/tap_check.mjs
       - name: Daily treasures check
         run: node starlight-quest/tests/treasure_check.mjs
+      - name: Treasure Book check
+        run: node starlight-quest/tests/treasurebook_check.mjs

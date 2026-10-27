@@ -11,6 +11,7 @@ import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolW
 import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261027p1';
 import { landState, today } from './ladder.js?v=20261027p1';
 import { Input } from './input.js?v=20261027p1';
+import { todayKey, treasureBookModel } from './treasures.js?v=20261027p1';
 
 const GOLD = '#ebd373';
 
@@ -547,6 +548,28 @@ function injectCSS() {
     max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
   .zsq-howto { color: #fff; background: linear-gradient(135deg, #1d4ed8, #1e40af); }
 
+  /* ---------- treasure book ---------- */
+  .zsq-pause-card.zsq-tb-card { padding: 18px 16px; }
+  .zsq-tb-card .zsq-tut-emoji { font-size: 44px; margin-bottom: 0; }
+  .zsq-tb-card .zsq-tut-title { font-size: 30px; margin-bottom: 4px; }
+  .zsq-tb-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 8px 0 0; }
+  .zsq-tb-tile { grid-column: span 2; background: #fff7e0; border: 3px solid ${GOLD}; border-radius: 20px; padding: 8px 2px; min-height: 92px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+  .zsq-tb-tile:nth-child(4) { grid-column: 2 / span 2; }
+  .zsq-tb-emoji { font-size: 40px; line-height: 1.1; }
+  .zsq-tb-name { font-size: 17px; font-weight: 900; color: #92400e; }
+  .zsq-tb-unfound { background: #f1f5f9; border-color: #cbd5e1; }
+  .zsq-tb-unfound .zsq-tb-emoji { filter: grayscale(1) brightness(0) opacity(.22); }
+  .zsq-tb-unfound .zsq-tb-name { color: #64748b; font-size: 22px; }
+  .zsq-tb-h { font-size: 22px; font-weight: 900; color: #92400e; margin: 12px 0 2px; }
+  .zsq-tb-land { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; text-align: left;
+    font-size: 16px; font-weight: 800; color: #334155; }
+  .zsq-tb-dots { display: flex; gap: 5px; flex-shrink: 0; }
+  .zsq-tb-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid ${GOLD}; background: #fff; box-sizing: border-box; }
+  .zsq-tb-dot.zsq-on { background: ${GOLD}; }
+  .zsq-tb-total { font-size: 22px; font-weight: 900; color: #1e40af; margin-top: 10px; }
+  .zsq-tb-card .zsq-tut-row { margin-top: 12px; }
+
   /* ---------- wardrobe ---------- */
   .zsq-wd-row { margin: 14px 0 0; text-align: left; }
   .zsq-wd-name { font-size: 22px; font-weight: 900; color: #92400e; margin-bottom: 8px; }
@@ -933,10 +956,51 @@ export const UI = {
       SoundFX.pop();
       this.showWardrobe({ onOutfit, onClose: () => this.showPauseMenu({ onResume, onHowTo, onOutfit }) });
     };
-    row.append(resume, howto, wardrobe);
+    const book = el('button', 'zsq-bigbtn zsq-howto', '🧺 Treasure Book');
+    book.onclick = () => {
+      SoundFX.pop();
+      this.showTreasureBook({ onClose: () => this.showPauseMenu({ onResume, onHowTo, onOutfit }) });
+    };
+    row.append(resume, howto, wardrobe, book);
     card.appendChild(row);
     wrap.appendChild(card);
     show(wrap);
+  },
+
+  /** Treasure Book card (inside the pause overlay): lifetime finds per kind, today's finds per land. */
+  showTreasureBook({ onClose } = {}) {
+    const wrap = _els.pauseWrap;
+    wrap.innerHTML = '';
+    const card = el('div', 'zsq-pause-card zsq-tb-card');
+    const m = treasureBookModel(Save.data, todayKey());
+    card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
+    const grid = el('div', 'zsq-tb-grid');
+    for (const k of m.kinds) {
+      const tile = el('div', 'zsq-tb-tile' + (k.found ? '' : ' zsq-tb-unfound'));
+      tile.append(el('div', 'zsq-tb-emoji', k.emoji), el('div', 'zsq-tb-name', k.found ? `${k.label}: ${k.count}` : '?'));
+      tile.setAttribute('aria-label', k.found ? `${k.label}: ${k.count}` : 'Not found yet');
+      grid.appendChild(tile);
+    }
+    card.appendChild(grid);
+    card.appendChild(el('div', 'zsq-tb-h', 'Found today'));
+    for (const l of m.lands) {
+      const r = el('div', 'zsq-tb-land');
+      r.setAttribute('aria-label', `${l.name}: ${l.count} of ${l.of} today`);
+      const dots = el('div', 'zsq-tb-dots');
+      for (let i = 0; i < l.of; i++) dots.appendChild(el('span', 'zsq-tb-dot' + (i < l.count ? ' zsq-on' : '')));
+      r.append(el('span', '', l.name), dots);
+      card.appendChild(r);
+    }
+    const line = m.total === 1 ? 'You have found 1 treasure!' : `You have found ${m.total} treasures!`;
+    card.appendChild(el('div', 'zsq-tb-total', line));
+    const crow = el('div', 'zsq-tut-row');
+    const close = el('button', 'zsq-bigbtn', '✔ Close');
+    close.onclick = () => { SoundFX.pop(); Narrator.stop(); if (typeof onClose === 'function') onClose(); };
+    crow.appendChild(close);
+    card.appendChild(crow);
+    wrap.appendChild(card);
+    show(wrap);
+    Narrator.speakText('Treasure Book. ' + line, { pitch: 1.2, rate: 0.85 });
   },
 
   /** Wardrobe card (inside the pause overlay): wear unlocked star rewards. onOutfit(outfit) applies + saves. */
