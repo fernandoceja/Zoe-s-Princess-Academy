@@ -102,3 +102,30 @@ export function collectTreasure(save, id, kind, dayKey) {
   t.total[kind] = (t.total[kind] || 0) + 1;
   return true;
 }
+
+/** Kid-facing names + emoji for the Treasure Book (original emoji art). */
+export const TREASURE_INFO = {
+  shell:   { label: 'Shells',   emoji: '🐚' },
+  gem:     { label: 'Gems',     emoji: '💎' },
+  feather: { label: 'Feathers', emoji: '🪶' },
+  star:    { label: 'Stars',    emoji: '⭐' },
+  ribbon:  { label: 'Ribbons',  emoji: '🎀' },
+};
+export const TREASURE_LAND_NAMES = {
+  library: 'Whispering Library', frostfall: 'Frostfall Peaks',
+  meadow: 'Sunflower Meadows', village: 'Glass Slipper Village',
+};
+
+/** Everything the Treasure Book page shows, from plain save data. Never throws. */
+export function treasureBookModel(save, dayKey) {
+  const t = sanitizeTreasures(save && save.treasures);
+  const kinds = TREASURE_KINDS.map((kind) => {
+    const count = t.total[kind] || 0;
+    return { kind, label: TREASURE_INFO[kind].label, emoji: TREASURE_INFO[kind].emoji, count, found: count > 0 };
+  });
+  const lands = TREASURE_LANDS.map((id) => ({
+    id, name: TREASURE_LAND_NAMES[id], count: landTreasureCount({ treasures: t }, id, dayKey), of: TREASURES_PER_LAND,
+  }));
+  const total = kinds.reduce((n, k) => n + k.count, 0);
+  return { kinds, lands, total };
+}
