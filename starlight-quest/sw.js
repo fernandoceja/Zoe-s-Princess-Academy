@@ -28,6 +28,7 @@ const PRECACHE_URLS = [
   './js/portrait-zoe.js?v=20261027p1',
   './js/quests.js?v=20261027p1',
   './js/save.js?v=20261027p1',
+  './js/treasures.js?v=20261027p1',
   './js/ui.js?v=20261027p1',
   './js/world.js?v=20261027p1',
   // Princess voice clips (shared with the Academy in the repo-root assets/).

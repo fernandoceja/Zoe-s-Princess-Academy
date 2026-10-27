@@ -10,6 +10,7 @@ import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, setWeek,
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027p1';
 import { UI } from './ui.js?v=20261027p1';
 import { Save, checkMilestones } from './save.js?v=20261027p1';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND } from './treasures.js?v=20261027p1';
 import { Input } from './input.js?v=20261027p1';
 import { startPadNav } from './padnav.js?v=20261027p1';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027p1';
@@ -29,6 +30,7 @@ const PRAISES = [
 
 export async function main(container) {
   Save.load();
+  rolloverTreasures(Save.data, todayKey());
   setSchoolWords(Save.data.schoolWords);
   setWeek(Save.data.week);
   setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
@@ -90,6 +92,14 @@ export async function main(container) {
     onWorldTap() {
       if (state !== 'roam' || paused) return;
       SoundFX.chime();
+    },
+    treasuresGot() { return treasuresGotToday(Save.data, todayKey()); },
+    onTreasure(kind, landId, id) {
+      const day = todayKey();
+      if (!collectTreasure(Save.data, id, kind, day)) return;
+      Save.save();
+      SoundFX.chime();
+      UI.toast(`You found a ${kind}! ${landTreasureCount(Save.data, landId, day)} of ${TREASURES_PER_LAND} here today ✨`);
     },
   });
   // Title screen is up: no roaming input until the adventure starts.
