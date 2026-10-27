@@ -10,13 +10,14 @@ import { PRINCESSES, NPC_ORDER, QUESTS, WEEK, FINALE_LINES, buildRounds, setScho
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027e2';
 import { UI } from './ui.js?v=20261027e2';
 import { Save, checkMilestones } from './save.js?v=20261027e2';
-import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, TREASURE_LANDS, TREASURE_LAND_NAMES, awardRowStar, SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine } from './treasures.js?v=20261027e2';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine } from './treasures.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
-import { builtSlotIds, shouldShowNewKingdoms } from './worldmap.js?v=20261027e2';
+import { builtSlotIds, shouldShowNewKingdoms, isCoveOpen } from './worldmap.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
 const NPC_IDS = NPC_ORDER;
+const COVE_OPEN = isCoveOpen(); // Seashell Cove is drawn only when built or previewed (?preview=cove); today's finds count only open lands
 const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
@@ -40,11 +41,12 @@ export async function main(container) {
   const secretTracker = createSecretTracker();
   // A secret was found: the princess says her learning echo; the first time also earns a sticker.
   function revealSecret(id) {
-    const def = SECRETS.find((x) => x.id === id);
+    const def = ALL_SECRETS.find((x) => x.id === id);
     if (!def) return;
     let line;
     if (id === 'clock') { const c = clockLine(); world.setClockTime(c.h, c.m); line = c.say; }
     else if (id === 'icetwins') line = doublesLine().say;
+    else if (id === 'shellrhyme') line = rhymeLine().say;
     else if (id === 'bookstack') { const sp = spellLine(WEEK.spelling); line = sp.say; UI.toast(`📚 ${sp.show}`); }
     else line = plantLine().say;
     SoundFX.chime();
@@ -129,7 +131,7 @@ export async function main(container) {
       if (!collectTreasure(Save.data, id, kind, day)) return;
       Save.save();
       SoundFX.chime();
-      UI.toast(`You found a ${kind}! ${landTreasureCount(Save.data, landId, day)} of ${TREASURES_PER_LAND} here today ✨`);
+      UI.toast(`You found a ${kind === 'seaglass' ? 'piece of sea glass' : kind}! ${landTreasureCount(Save.data, landId, day)} of ${TREASURES_PER_LAND} here today ✨`);
       if (awardRowStar(Save.data, landId, day)) {
         // Same award path as a won round: +1 star, save, counter. (Milestones are checked after the next quest.)
         Save.data.stars += 1;
@@ -137,7 +139,7 @@ export async function main(container) {
         UI.updateStars(Save.data.stars);
         setTimeout(() => UI.toast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`), 1600);
       }
-      UI.updateFinds(Save.data.treasures.got.length, TREASURE_LANDS.length * TREASURES_PER_LAND);
+      UI.updateFinds(findsToday(Save.data, todayKey(), COVE_OPEN), findsTotal(COVE_OPEN));
     },
   });
   // Title screen is up: no roaming input until the adventure starts.
@@ -164,7 +166,7 @@ export async function main(container) {
     if (NPC_IDS.includes(id)) world.setNPCState(id, 'done');
   }
   UI.updateStars(Save.data.stars);
-  UI.updateFinds(Save.data.treasures.got.length, TREASURE_LANDS.length * TREASURES_PER_LAND);
+  UI.updateFinds(findsToday(Save.data, todayKey(), COVE_OPEN), findsTotal(COVE_OPEN));
   world.setOutfit(Save.data.outfit);
   refreshPill();
   refreshTodayStar();

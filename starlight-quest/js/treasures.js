@@ -8,6 +8,23 @@ export const TREASURE_KINDS = ['shell', 'gem', 'feather', 'star', 'ribbon'];
 export const TREASURES_PER_LAND = 5;
 export const TREASURE_LANDS = ['library', 'frostfall', 'meadow', 'village'];
 
+// Seashell Cove (K4): its own treasure kind, hidden only while the cove is open (see worldmap.js isCoveOpen).
+// TREASURE_KINDS / TREASURE_LANDS stay the original lists so the other lands' daily spots never change.
+export const COVE_LAND = 'cove';
+export const COVE_KIND = 'seaglass';
+export const ALL_TREASURE_KINDS = [...TREASURE_KINDS, COVE_KIND];
+export const ALL_TREASURE_LANDS = [...TREASURE_LANDS, COVE_LAND];
+
+/** Lands that hide treasures today: the four inner lands, plus the cove when it is open. */
+export function treasureLandsFor(coveOpen) { return coveOpen ? ALL_TREASURE_LANDS : TREASURE_LANDS; }
+/** Treasures hidden in total today: 20 now, 25 when the cove is open. */
+export function findsTotal(coveOpen) { return treasureLandsFor(coveOpen).length * TREASURES_PER_LAND; }
+/** Ids found today that belong to a land that is open (a closed cove never counts). */
+export function findsToday(save, dayKey, coveOpen) {
+  const lands = treasureLandsFor(coveOpen);
+  return treasuresGotToday(save, dayKey).filter((id) => lands.some((l) => id.startsWith(l + '-'))).length;
+}
+
 /** Local date as YYYY-MM-DD. */
 export function todayKey(date = new Date()) {
   const p = (n) => String(n).padStart(2, '0');
@@ -38,6 +55,7 @@ export function treasureSpots(dayKey, landId, count = TREASURES_PER_LAND, rngFac
   const spots = [];
   for (let i = 0; i < count; i++) {
     const kind = TREASURE_KINDS[Math.floor(rand() * TREASURE_KINDS.length)];
+    // (the cove draws the same random numbers, then swaps in its own kind, so the spots stay date-seeded and stable)
     let x = 0, z = 0;
     for (let tries = 0; tries < 12; tries++) {
       const a = rand() * Math.PI * 2;
@@ -45,7 +63,7 @@ export function treasureSpots(dayKey, landId, count = TREASURES_PER_LAND, rngFac
       x = Math.cos(a) * r; z = Math.sin(a) * r;
       if (spots.every((s) => Math.hypot(s.x - x, s.z - z) >= 2.2)) break;
     }
-    spots.push({ id: `${landId}-${i}`, kind, x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100 });
+    spots.push({ id: `${landId}-${i}`, kind: landId === COVE_LAND ? COVE_KIND : kind, x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100 });
   }
   return spots;
 }
@@ -65,13 +83,13 @@ export function sanitizeTreasures(raw) {
     }
   }
   if (raw.total && typeof raw.total === 'object' && !Array.isArray(raw.total)) {
-    for (const k of TREASURE_KINDS) {
+    for (const k of ALL_TREASURE_KINDS) {
       const v = raw.total[k];
       if (typeof v === 'number' && Number.isFinite(v) && v > 0) out.total[k] = Math.min(Math.floor(v), 99999);
     }
   }
   if (Array.isArray(raw.stars)) {
-    for (const id of raw.stars) if (TREASURE_LANDS.includes(id) && !out.stars.includes(id)) out.stars.push(id);
+    for (const id of raw.stars) if (ALL_TREASURE_LANDS.includes(id) && !out.stars.includes(id)) out.stars.push(id);
   }
   if (!out.day) { out.got = []; out.stars = []; } // finds with no known day cannot be trusted
   return out;
@@ -97,7 +115,7 @@ export function landTreasureCount(save, landId, dayKey) {
 
 /** Record a find. Returns true when it was new, false for repeats or bad input. */
 export function collectTreasure(save, id, kind, dayKey) {
-  if (typeof id !== 'string' || !ID_RE.test(id) || !TREASURE_KINDS.includes(kind)) return false;
+  if (typeof id !== 'string' || !ID_RE.test(id) || !ALL_TREASURE_KINDS.includes(kind)) return false;
   if (typeof dayKey !== 'string' || !DAY_RE.test(dayKey)) return false;
   const t = rolloverTreasures(save, dayKey);
   if (t.got.includes(id)) return false;
@@ -109,7 +127,7 @@ export function collectTreasure(save, id, kind, dayKey) {
 /** Row star (E4): 1 star the first time all 5 treasures of one land are found on a day.
  * Returns true exactly once per land per day (and marks it); false otherwise. Caller adds the star. */
 export function awardRowStar(save, landId, dayKey) {
-  if (!TREASURE_LANDS.includes(landId)) return false;
+  if (!ALL_TREASURE_LANDS.includes(landId)) return false;
   if (landTreasureCount(save, landId, dayKey) < TREASURES_PER_LAND) return false;
   const t = rolloverTreasures(save, dayKey);
   if (t.stars.includes(landId)) return false;
@@ -124,7 +142,13 @@ export const SECRETS = [
   { id: 'bookstack', land: 'library',   npc: 'belle',      label: 'Book stack',    emoji: '📚' },
   { id: 'sunflower', land: 'meadow',    npc: 'rapunzel',   label: 'Super sunflower', emoji: '🌻' },
 ];
-const SECRET_IDS = SECRETS.map((s) => s.id);
+// Seashell Cove's secret (K4): tap three shells small to big. Ariel says a rhyme (her skill is rhyming).
+// Kept apart from SECRETS so the four inner-land stickers never change; the cove one shows only while the cove is open.
+export const COVE_SECRETS = [
+  { id: 'shellrhyme', land: 'cove', npc: 'ariel', label: 'Rhyming shells', emoji: '🎶' },
+];
+export const ALL_SECRETS = [...SECRETS, ...COVE_SECRETS];
+const SECRET_IDS = ALL_SECRETS.map((s) => s.id);
 
 /** Heal anything into a list of known sticker ids (in SECRETS order). Never throws. */
 export function sanitizeSecrets(raw) {
@@ -142,13 +166,14 @@ export function foundSecret(save, id) {
   return true;
 }
 
-const SECRET_WINDOW_MS = 3000; // clock: 3 taps / ice twins: both crystals, within this long
+const SECRET_WINDOW_MS = 3000; // clock: 3 taps / ice twins: both crystals / cove shells: all three, within this long
 const SECRET_COOL_MS = 3500;   // after a secret fires, ignore it for a moment (no speech spam)
 
 /** Tap tracker. tap(part, nowMs) -> a secret id when that tap completes one, else null.
- * parts: 'clock', 'ice-a', 'ice-b', 'bookstack', 'sunflower'. */
+ * parts: 'clock', 'ice-a', 'ice-b', 'bookstack', 'sunflower', and the cove's 'shell-1' (small), 'shell-2', 'shell-3' (big). */
 export function createSecretTracker() {
   let clock = [];
+  let shells = []; // times of the in-order cove shell taps so far
   const ice = { a: -Infinity, b: -Infinity };
   const cool = {};
   const fire = (id, now) => { if (now < (cool[id] ?? -Infinity) + SECRET_COOL_MS) return null; cool[id] = now; return id; };
@@ -169,6 +194,14 @@ export function createSecretTracker() {
         return null;
       }
       if (part === 'bookstack' || part === 'sunflower') return fire(part, now);
+      if (part === 'shell-1' || part === 'shell-2' || part === 'shell-3') {
+        const n = Number(part.slice(-1));
+        // Small to big, in order, all within the window. A wrong shell starts over (shell 1 starts a new try).
+        if (shells.length && now - shells[0] > SECRET_WINDOW_MS) shells = [];
+        if (n === shells.length + 1) shells.push(now); else shells = n === 1 ? [now] : [];
+        if (shells.length === 3) { shells = []; return fire('shellrhyme', now); }
+        return null;
+      }
       return null;
     },
   };
@@ -203,6 +236,17 @@ export function spellLine(words, rand = Math.random) {
   };
 }
 
+// Rhyming pairs for Ariel: each pair ends the same after the first vowel (sh-ell / b-ell), starts differently.
+export const RHYME_PAIRS = [
+  ['shell', 'bell'], ['sand', 'hand'], ['wave', 'cave'], ['fish', 'dish'], ['tide', 'wide'],
+  ['moon', 'spoon'], ['boat', 'coat'], ['star', 'jar'],
+];
+/** Ariel's rhyme for the shell secret: "Shell and bell rhyme!" */
+export function rhymeLine(rand = Math.random) {
+  const [a, b] = RHYME_PAIRS[Math.floor(rand() * RHYME_PAIRS.length) % RHYME_PAIRS.length];
+  return { a, b, say: `${a[0].toUpperCase()}${a.slice(1)} and ${b} rhyme!` };
+}
+
 /** Rapunzel's short science lines (count by 2s, or a plant fact). */
 export function plantLine(rand = Math.random) {
   const facts = [
@@ -225,25 +269,31 @@ export const TREASURE_INFO = {
   feather: { label: 'Feathers', emoji: '🪶' },
   star:    { label: 'Stars',    emoji: '⭐' },
   ribbon:  { label: 'Ribbons',  emoji: '🎀' },
+  seaglass: { label: 'Sea glass', emoji: '💠' },
 };
 export const TREASURE_LAND_NAMES = {
   library: 'Whispering Library', frostfall: 'Frostfall Peaks',
-  meadow: 'Sunflower Meadows', village: 'Glass Slipper Village',
+  meadow: 'Sunflower Meadows', village: 'Glass Slipper Village', cove: 'Seashell Cove',
 };
 
-/** Everything the Treasure Book page shows, from plain save data. Never throws. */
-export function treasureBookModel(save, dayKey) {
+/** Everything the Treasure Book page shows, from plain save data. Never throws.
+ * opts.coveOpen: add Seashell Cove (its sea glass tile, its row and its sticker). A closed cove stays hidden unless
+ * the save already holds something from it (so a preview's finds are never lost from view). */
+export function treasureBookModel(save, dayKey, opts = {}) {
+  const coveOpen = !!(opts && opts.coveOpen);
   const t = sanitizeTreasures(save && save.treasures);
-  const kinds = TREASURE_KINDS.map((kind) => {
+  const have = sanitizeSecrets(save && save.secrets);
+  const kindIds = (coveOpen || t.total[COVE_KIND]) ? ALL_TREASURE_KINDS : TREASURE_KINDS;
+  const kinds = kindIds.map((kind) => {
     const count = t.total[kind] || 0;
     return { kind, label: TREASURE_INFO[kind].label, emoji: TREASURE_INFO[kind].emoji, count, found: count > 0 };
   });
-  const lands = TREASURE_LANDS.map((id) => ({
+  const lands = treasureLandsFor(coveOpen).map((id) => ({
     id, name: TREASURE_LAND_NAMES[id], count: landTreasureCount({ treasures: t }, id, dayKey), of: TREASURES_PER_LAND,
   }));
   for (const l of lands) l.star = t.day === dayKey && t.stars.includes(l.id);
-  const have = sanitizeSecrets(save && save.secrets);
-  const stickers = SECRETS.map((s) => ({ id: s.id, label: s.label, emoji: s.emoji, found: have.includes(s.id) }));
+  const secretDefs = (coveOpen || have.includes('shellrhyme')) ? ALL_SECRETS : SECRETS;
+  const stickers = secretDefs.map((s) => ({ id: s.id, label: s.label, emoji: s.emoji, found: have.includes(s.id) }));
   const total = kinds.reduce((n, k) => n + k.count, 0);
   return { kinds, lands, stickers, total };
 }
