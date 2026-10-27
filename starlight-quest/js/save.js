@@ -4,7 +4,7 @@
  * ES module, no external requests.
  */
 
-import { sanitizeTreasures } from './treasures.js?v=20261027p1';
+import { sanitizeTreasures, sanitizeSecrets } from './treasures.js?v=20261027p1';
 
 const KEY = 'zoe-starlight-quest-v1';
 
@@ -77,7 +77,8 @@ function defaults() {
     done: [],
     milestones: [], // unlocked milestone ids (see MILESTONES)
     outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
-    treasures: { day: '', got: [], total: {} }, // daily finds (see treasures.js): got = ids found on `day`, total = lifetime by kind
+    treasures: { day: '', got: [], total: {}, stars: [] }, // daily finds (see treasures.js): got = ids found on `day`, total = lifetime by kind
+    secrets: [],    // secret-surprise sticker ids found (see treasures.js SECRETS)
     lang: 'EN',
     muted: false,
     started: false,
@@ -116,6 +117,7 @@ function merge(raw) {
 
   out.outfit = sanitizeOutfit(raw.outfit, out.milestones);
   out.treasures = sanitizeTreasures(raw.treasures);
+  out.secrets = sanitizeSecrets(raw.secrets);
 
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
   if (typeof raw.muted === 'boolean') out.muted = raw.muted;

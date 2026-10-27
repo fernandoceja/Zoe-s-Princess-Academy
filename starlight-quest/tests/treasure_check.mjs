@@ -56,7 +56,7 @@ ok('collect works with no field', collectTreasure(s3, 'village-1', 'star', '2026
 // Wiring (source inspection; save.js and world.js need a browser)
 const rd = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const saveSrc = rd('../js/save.js'), world = rd('../js/world.js'), main = rd('../js/main.js');
-ok('save defaults has treasures', /treasures: \{ day: '', got: \[\], total: \{\} \}/.test(saveSrc));
+ok('save defaults has treasures', /treasures: \{ day: '', got: \[\], total: \{\}(, stars: \[\])? \}/.test(saveSrc));
 ok('save merge sanitizes treasures', saveSrc.includes('sanitizeTreasures(raw.treasures)'));
 ok('world and main wire onTreasure', world.includes('onTreasure(it.kind, it.landId, it.id)') && main.includes('onTreasure('));
 const ph = world.slice(world.indexOf('const onPointerDown'), world.indexOf("addEventListener('pointerdown', onPointerDown)"));

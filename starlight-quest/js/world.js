@@ -218,6 +218,7 @@ export function createWorld(container, hooks) {
   const onInteractRequest = typeof hooks.onInteractRequest === 'function' ? hooks.onInteractRequest : () => {};
   const onPauseRequest = typeof hooks.onPauseRequest === 'function' ? hooks.onPauseRequest : () => {};
   const onWorldTap = typeof hooks.onWorldTap === 'function' ? hooks.onWorldTap : () => {};
+  const onSecretTap = typeof hooks.onSecretTap === 'function' ? hooks.onSecretTap : () => {};
   const onTreasure = typeof hooks.onTreasure === 'function' ? hooks.onTreasure : () => {};
   const treasuresGot = typeof hooks.treasuresGot === 'function' ? hooks.treasuresGot : () => [];
 
@@ -1234,6 +1235,41 @@ export function createWorld(container, hooks) {
       s.rotation.y = 0.4;
       return { glowY: 1.35, hitR: 0.9 };
     },
+    // Secret props (E4): a village clock, a stack of books, and one extra-big sunflower.
+    clock(g) {
+      tapPart(g, G('tapClkPost', () => new THREE.CylinderGeometry(0.12, 0.17, 1.5, 8)), tapStd('tapClkPost', 0x9a7ab0), 0, 0.75, 0);
+      const face = new THREE.Group(); face.position.set(0, 1.95, 0); face.rotation.x = -0.45; g.add(face);
+      tapPart(face, G('tapClkRim', () => new THREE.CylinderGeometry(0.62, 0.62, 0.12, 20)), tapStd('tapClkRim', 0xe8b84a), 0, 0, 0).rotation.x = Math.PI / 2;
+      tapPart(face, G('tapClkFace', () => new THREE.CylinderGeometry(0.54, 0.54, 0.14, 20)), tapStd('tapClkFace', 0xfffdf5), 0, 0, 0.01).rotation.x = Math.PI / 2;
+      const tick = G('tapClkTick', () => new THREE.BoxGeometry(0.05, 0.1, 0.03));
+      for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6;
+        tapPart(face, tick, tapStd('tapClkTick', 0x6b5b7b), Math.sin(a) * 0.43, Math.cos(a) * 0.43, 0.08).rotation.z = -a;
+      }
+      const hand = (len, w, key) => {
+        const pivot = new THREE.Group(); pivot.position.z = key === 'h' ? 0.1 : 0.12; face.add(pivot);
+        tapPart(pivot, G('tapClkHand' + key, () => new THREE.BoxGeometry(w, len, 0.04)), tapStd('tapClkHand' + key, key === 'h' ? 0x5b4a8a : 0xd1466f), 0, len / 2, 0);
+        return pivot;
+      };
+      g.userData.hourHand = hand(0.28, 0.09, 'h');
+      g.userData.minHand = hand(0.42, 0.06, 'm');
+      return { glowY: 1.95, hitR: 0.9 };
+    },
+    books(g) {
+      const cols = [0xd6577a, 0x5b8be0, 0x59b87a, 0xf0b840];
+      const box = G('tapBook', () => new THREE.BoxGeometry(0.9, 0.2, 0.62));
+      cols.forEach((c, i) => { tapPart(g, box, tapStd('tapBook' + c, c), (i % 2 ? 0.05 : -0.05), 0.1 + i * 0.21, 0, 1 - i * 0.07, 1, 1 - i * 0.05).rotation.y = (i - 1.5) * 0.28; });
+      return { glowY: 0.6, hitR: 0.85 };
+    },
+    sunflower(g) {
+      tapPart(g, G('tapSfStem', () => new THREE.CylinderGeometry(0.07, 0.1, 1.5, 6)), tapStd('tapStem', 0x4caf6d), 0, 0.75, 0);
+      tapPart(g, G('tapSfLeaf', () => new THREE.SphereGeometry(0.28, 6, 4)), tapStd('tapStem', 0x4caf6d), 0.28, 0.6, 0, 1.4, 0.3, 0.7);
+      const head = new THREE.Group(); head.position.set(0, 1.6, 0.05); head.rotation.x = 0.35; g.add(head);
+      tapPart(head, G('tapSfPetal', () => new THREE.CylinderGeometry(0.72, 0.72, 0.08, 14)), tapStd('tapSfPetal', 0xffc933), 0, 0, 0);
+      tapPart(head, G('tapSfPetal2', () => new THREE.CylinderGeometry(0.62, 0.62, 0.1, 8)), tapStd('tapSfPetal2', 0xffe27a), 0, 0.01, 0).rotation.y = 0.4;
+      tapPart(head, G('tapSfSeed', () => new THREE.CylinderGeometry(0.34, 0.34, 0.14, 12)), tapStd('tapSfSeed', 0x7a4b2a), 0, 0.06, 0);
+      return { glowY: 1.65, hitR: 1.0 };
+    },
   };
   // Nudge a wished-for spot to the nearest clear ground (not on a collider, pad, or another prop).
   const tapSpotFree = (x, z) => {
@@ -1242,7 +1278,7 @@ export function createWorld(container, hooks) {
     for (const it of tapItems) if (Math.hypot(x - it.group.position.x, z - it.group.position.z) < 1.8) return false;
     return Math.hypot(x, z) > 4; // keep the hub plaza clear
   };
-  const addTappable = (kind, x, z, arg, colorHex) => {
+  const addTappable = (kind, x, z, arg, colorHex, secret) => {
     let px = x, pz = z;
     for (let k = 0; k < 60 && !tapSpotFree(px, pz); k++) { px = x + Math.cos(k * 2.4) * 0.4 * k; pz = z + Math.sin(k * 2.4) * 0.4 * k; }
     const group = new THREE.Group();
@@ -1257,11 +1293,20 @@ export function createWorld(container, hooks) {
     glow.position.y = info.glowY; glow.visible = false; glow.raycast = () => {};
     group.add(glow);
     scene.add(group);
-    const item = { group, hit, glow, kind, baseY: 0, t: -1 };
+    const item = { group, hit, glow, kind, baseY: 0, t: -1, secret: secret || null };
     hit.userData.tapItem = item;
     tappables.push(hit);
     tapItems.push(item);
+    return item;
   };
+  // Secret clock: hands show a time (h 1-12, m 0 or 30). Hour hand sits between hours at half past.
+  let clockItem = null;
+  function setClockTime(h, m) {
+    const hands = clockItem && clockItem.group.userData;
+    if (!hands || !hands.hourHand) return;
+    hands.minHand.rotation.z = -(m / 60) * Math.PI * 2;
+    hands.hourHand.rotation.z = -(((h % 12) + m / 60) / 12) * Math.PI * 2;
+  }
   {
     const L = landCenters;
     const castleX = -11.5, castleZ = -8.5;
@@ -1290,6 +1335,14 @@ export function createWorld(container, hooks) {
     addTappable('pot', L.village.x - 1.5, L.village.z + 2.5, 0xffb3d1, 0xffd9e8);
     addTappable('pot', L.village.x + 2.0, L.village.z + 6.5, 0xffe27a, 0xfff3a8);
     addTappable('flower', L.village.x - 3.0, L.village.z - 3.0, 0xff9ec6, 0xffc4dc);
+    // Secret surprises (E4): hidden learning echoes, found by tapping a set way (see treasures.js SECRETS)
+    addTappable('books', L.library.x + 0.5, L.library.z + 5.2, 0, 0xffe3a0, 'bookstack');
+    addTappable('crystal', L.frostfall.x - 5.4, L.frostfall.z - 1.0, 0, 0xbfe9ff, 'ice-a');
+    addTappable('crystal', L.frostfall.x - 3.2, L.frostfall.z - 1.0, 0, 0xbfe9ff, 'ice-b');
+    addTappable('sunflower', L.meadow.x - 1.5, L.meadow.z - 5.0, 0, 0xfff3a0, 'sunflower');
+    clockItem = addTappable('clock', L.village.x - 5.0, L.village.z + 1.5, 0, 0xfff3a8, 'clock');
+    clockItem.group.rotation.y = 0; // face the camera
+    setClockTime(3, 0);
   }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
@@ -1448,7 +1501,11 @@ export function createWorld(container, hooks) {
     const tapHits = raycaster.intersectObjects(tappables, false);
     if (tapHits.length) {
       const it = tapHits[0].object.userData.tapItem;
-      if (it && startTapReaction(it)) onWorldTap(it.kind);
+      if (it) {
+        const fresh = startTapReaction(it);
+        if (fresh) onWorldTap(it.kind);
+        if (it.secret) onSecretTap(it.secret); // counted even mid-reaction, so quick triple taps work
+      }
     }
     // Taps on empty ground are ignored.
   };
@@ -1995,6 +2052,7 @@ export function createWorld(container, hooks) {
     setNPCState,
     setOutfit,
     setTodayStar,
+    setClockTime,
     pause: pauseRendering,
     resume: resumeRendering,
     isPaused() { return worldPaused; },

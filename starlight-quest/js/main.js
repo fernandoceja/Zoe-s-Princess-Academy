@@ -6,11 +6,11 @@
  */
 
 import { createWorld } from './world.js?v=20261027p1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027p1';
+import { PRINCESSES, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027p1';
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027p1';
 import { UI } from './ui.js?v=20261027p1';
 import { Save, checkMilestones } from './save.js?v=20261027p1';
-import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND } from './treasures.js?v=20261027p1';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, TREASURE_LANDS, TREASURE_LAND_NAMES, awardRowStar, SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine } from './treasures.js?v=20261027p1';
 import { Input } from './input.js?v=20261027p1';
 import { startPadNav } from './padnav.js?v=20261027p1';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027p1';
@@ -35,6 +35,25 @@ export async function main(container) {
   setWeek(Save.data.week);
   setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
   Narrator.setMuted(!!Save.data.muted);
+
+  const secretTracker = createSecretTracker();
+  // A secret was found: the princess says her learning echo; the first time also earns a sticker.
+  function revealSecret(id) {
+    const def = SECRETS.find((x) => x.id === id);
+    if (!def) return;
+    let line;
+    if (id === 'clock') { const c = clockLine(); world.setClockTime(c.h, c.m); line = c.say; }
+    else if (id === 'icetwins') line = doublesLine().say;
+    else if (id === 'bookstack') { const sp = spellLine(WEEK.spelling); line = sp.say; UI.toast(`📚 ${sp.show}`); }
+    else line = plantLine().say;
+    SoundFX.chime();
+    Narrator.speakExact(def.npc, line);
+    if (id !== 'bookstack') UI.toast(`${def.emoji} ${line}`);
+    if (foundSecret(Save.data, id)) {
+      Save.save();
+      setTimeout(() => UI.toast(`New sticker: ${def.label}! ${def.emoji}`), 1400);
+    }
+  }
 
   // state: title | roam | dialogue | challenge | celebrate | finale
   let state = 'title';
@@ -93,6 +112,11 @@ export async function main(container) {
       if (state !== 'roam' || paused) return;
       SoundFX.chime();
     },
+    onSecretTap(part) {
+      if (state !== 'roam' || paused) return;
+      const id = secretTracker.tap(part, Date.now());
+      if (id) revealSecret(id);
+    },
     treasuresGot() { return treasuresGotToday(Save.data, todayKey()); },
     onTreasure(kind, landId, id) {
       const day = todayKey();
@@ -100,6 +124,14 @@ export async function main(container) {
       Save.save();
       SoundFX.chime();
       UI.toast(`You found a ${kind}! ${landTreasureCount(Save.data, landId, day)} of ${TREASURES_PER_LAND} here today ✨`);
+      if (awardRowStar(Save.data, landId, day)) {
+        // Same award path as a won round: +1 star, save, counter. (Milestones are checked after the next quest.)
+        Save.data.stars += 1;
+        Save.save();
+        UI.updateStars(Save.data.stars);
+        setTimeout(() => UI.toast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`), 1600);
+      }
+      UI.updateFinds(Save.data.treasures.got.length, TREASURE_LANDS.length * TREASURES_PER_LAND);
     },
   });
   // Title screen is up: no roaming input until the adventure starts.
@@ -126,6 +158,7 @@ export async function main(container) {
     if (NPC_IDS.includes(id)) world.setNPCState(id, 'done');
   }
   UI.updateStars(Save.data.stars);
+  UI.updateFinds(Save.data.treasures.got.length, TREASURE_LANDS.length * TREASURES_PER_LAND);
   world.setOutfit(Save.data.outfit);
   refreshPill();
   refreshTodayStar();
