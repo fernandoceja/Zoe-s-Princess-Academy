@@ -31,6 +31,7 @@ const PRECACHE_URLS = [
   './js/treasures.js?v=20261027e2',
   './js/ui.js?v=20261027e2',
   './js/world.js?v=20261027e2',
+  './js/worldmap.js?v=20261027e2',
   // Princess voice clips (shared with the Academy in the repo-root assets/).
   '../assets/audio/EN/princess_belle_greeting_01.mp3',
   '../assets/audio/EN/princess_belle_praise_01.mp3',

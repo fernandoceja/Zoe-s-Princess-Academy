@@ -1605,6 +1605,11 @@ export const UI = {
     SoundFX.fanfare();
   },
 
+  /** One-time card for when the first new kingdoms open (main.js only calls it with at least one built slot). */
+  showNewKingdoms(onDone) {
+    UI.showMilestone({ title: 'New kingdoms appeared beyond the Starlight Hub!', sub: 'Follow the sparkly paths to find them.', emoji: '🌟🏰🌟' }, onDone);
+  },
+
   /** Soft stop card: Rest (default) or One more. */
   showRest({ title, sub }, onRest, onMore) {
     const c = _els.celebrate;

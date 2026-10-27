@@ -56,3 +56,5 @@ jobs:
         run: node starlight-quest/tests/secret_check.mjs
       - name: Lands and princess list check
         run: node starlight-quest/tests/lands_check.mjs
+      - name: Bigger world check
+        run: node starlight-quest/tests/world_check.mjs

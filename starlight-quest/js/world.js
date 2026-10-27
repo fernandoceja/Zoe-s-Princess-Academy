@@ -9,23 +9,27 @@ import * as THREE from 'three';
 import { Input } from './input.js?v=20261027e2';
 import { OUTFIT } from './save.js?v=20261027e2';
 import { todayKey, treasureSpots, TREASURE_LANDS, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
+import {
+  INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
+  closedSlots, slotPos, pathSegments, distToSegment,
+} from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
 const GOLD = 0xebd373;
-const WORLD_RADIUS = 34;          // invisible wall radius
+const WORLD_RADIUS = WORLD_RADIUS_M; // invisible wall radius (60: reaches the outer ring of new-kingdom slots, see worldmap.js)
 const PRINCESS_SCALE = 1.2;       // princesses and Zoe stand a little taller than the scenery props
 const NPC_INTERACT_DIST = 3.5;    // proximity radius for onNearNPC
 const PLAYER_SPEED = 7.5;         // units / second
 
 // Land id -> compass direction (radians on XZ) + world slot.
 const LANDS = {
-  library:  { angle: -Math.PI / 2, label: 'Whispering Library' },   // north (-Z)
-  frostfall: { angle: 0,            label: 'Frostfall Peaks' },      // east (+X)
-  meadow:   { angle: Math.PI / 2,  label: 'Sunflower Meadows' },     // south (+Z)
-  village:  { angle: Math.PI,       label: 'Glass Slipper Village' }, // west (-X)
+  library:  { angle: INNER_LAND_ANGLES.library, label: 'Whispering Library' },   // north (-Z)
+  frostfall: { angle: INNER_LAND_ANGLES.frostfall, label: 'Frostfall Peaks' },      // east (+X)
+  meadow:   { angle: INNER_LAND_ANGLES.meadow, label: 'Sunflower Meadows' },     // south (+Z)
+  village:  { angle: INNER_LAND_ANGLES.village, label: 'Glass Slipper Village' }, // west (-X)
 };
 
 const NPC_DEFS = {
@@ -219,6 +223,7 @@ export function createWorld(container, hooks) {
   const onPauseRequest = typeof hooks.onPauseRequest === 'function' ? hooks.onPauseRequest : () => {};
   const onWorldTap = typeof hooks.onWorldTap === 'function' ? hooks.onWorldTap : () => {};
   const onSecretTap = typeof hooks.onSecretTap === 'function' ? hooks.onSecretTap : () => {};
+  const onGateTap = typeof hooks.onGateTap === 'function' ? hooks.onGateTap : () => {};
   const onTreasure = typeof hooks.onTreasure === 'function' ? hooks.onTreasure : () => {};
   const treasuresGot = typeof hooks.treasuresGot === 'function' ? hooks.treasuresGot : () => [];
 
@@ -287,7 +292,7 @@ export function createWorld(container, hooks) {
 
   // --- Ground: big soft disc, reaches past the fog so the far edge fades into the sky ---
   const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(160, 64),
+    new THREE.CircleGeometry(190, 64), // past the fog even from the outer ring (player up to r=60, view ~90 beyond)
     pastel(0xb3e29c)
   );
   ground.rotation.x = -Math.PI / 2;
@@ -407,7 +412,7 @@ export function createWorld(container, hooks) {
   addCollider(-11.5, -8.5, 5.2);
 
   // --- Lands ----------------------------------------------------------------
-  const LAND_DIST = 27;         // land center distance from origin
+  const LAND_DIST = LAND_DIST_M; // land center distance from origin
   const PAD_DIST = 18.5;        // NPC pad distance (near land entrance)
   const landCenters = {};
   const landPads = {};
@@ -850,15 +855,93 @@ export function createWorld(container, hooks) {
     addCollider(tx, tz, 1.9);
   }
 
+  // --- Outer ring: paths + closed star gates for the new-kingdom slots (worldmap.js) ---
+  // A few instanced meshes in total (paths, pads, pillars, arches, stars, glow veils), no extra lights.
+  const NEW_PATHS = pathSegments();
+  const closedGates = closedSlots().map((s) => { const p = slotPos(s); return { slot: s.slot, x: p.x, z: p.z, yaw: Math.atan2(-p.x, -p.z) }; });
+  let gateVeilMat = null;
+  {
+    const dummy = new THREE.Object3D();
+    // Path ribbons: one unit plane stretched per segment (trunks leave the plaza between two inner lands)
+    const ribbons = new THREE.InstancedMesh(G('ringPathPlane', () => new THREE.PlaneGeometry(1, 1)), pathMat, NEW_PATHS.length);
+    NEW_PATHS.forEach((sg, i) => {
+      const dx = sg.to.x - sg.from.x, dz = sg.to.z - sg.from.z;
+      const len = Math.hypot(dx, dz);
+      dummy.position.set((sg.from.x + sg.to.x) / 2, 0.025, (sg.from.z + sg.to.z) / 2);
+      dummy.rotation.set(-Math.PI / 2, Math.atan2(-dx, -dz), 0, 'YXZ');
+      dummy.scale.set(PATH_WIDTH, len, 1);
+      dummy.updateMatrix();
+      ribbons.setMatrixAt(i, dummy.matrix);
+    });
+    ribbons.instanceMatrix.needsUpdate = true;
+    scene.add(ribbons);
+
+    // Soft grass-tint patches out in the ring so it does not look flat (one draw call)
+    const ringPatches = new THREE.InstancedMesh(patchGeo, patchMat, 8);
+    for (let i = 0; i < 8; i++) {
+      const a = (i + 0.5) * Math.PI / 4 + 0.2, rr = 44 + (i % 3) * 5;
+      dummy.position.set(Math.cos(a) * rr, 0.01, Math.sin(a) * rr);
+      dummy.rotation.set(-Math.PI / 2, 0, 0); dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      ringPatches.setMatrixAt(i, dummy.matrix);
+    }
+    ringPatches.instanceMatrix.needsUpdate = true;
+    scene.add(ringPatches);
+
+    const n = closedGates.length;
+    if (n) {
+      const gateMat = M('gateStone', () => new THREE.MeshStandardMaterial({ color: 0xe9dcff, roughness: 0.6, emissive: 0xb9a4f0, emissiveIntensity: 0.25, flatShading: true }));
+      const pads = new THREE.InstancedMesh(G('gatePad', () => new THREE.CircleGeometry(4.6, 28)), pathMat, n);
+      const pillars = new THREE.InstancedMesh(G('gatePillar', () => new THREE.CylinderGeometry(0.36, 0.46, 4.2, 8)), gateMat, n * 2);
+      const arches = new THREE.InstancedMesh(G('gateArch', () => new THREE.TorusGeometry(2.0, 0.3, 6, 16, Math.PI)), gateMat, n);
+      const stars = new THREE.InstancedMesh(G('gateStar', () => starGeometry(0.85, 0.36)), M('gateStar', () => new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide })), n);
+      const veilGeo = G('gateVeil', () => {
+        const sh = new THREE.Shape();
+        sh.moveTo(-1.95, 0.1); sh.lineTo(1.95, 0.1); sh.lineTo(1.95, 4.2);
+        sh.absarc(0, 4.2, 1.95, 0, Math.PI, false);
+        sh.lineTo(-1.95, 0.1);
+        return new THREE.ShapeGeometry(sh, 14);
+      });
+      gateVeilMat = M('gateVeil', () => new THREE.MeshBasicMaterial({ color: 0xe4d6ff, transparent: true, opacity: 0.36, side: THREE.DoubleSide, depthWrite: false }));
+      const veils = new THREE.InstancedMesh(veilGeo, gateVeilMat, n);
+      const holder = new THREE.Object3D(), part = new THREE.Object3D();
+      const put = (mesh, idx, x, y, z) => {
+        part.position.set(x, y, z); part.rotation.set(0, 0, 0); part.updateMatrix();
+        mesh.setMatrixAt(idx, holder.matrix.clone().multiply(part.matrix));
+      };
+      closedGates.forEach((g, i) => {
+        holder.position.set(g.x, 0, g.z); holder.rotation.set(0, g.yaw, 0); holder.updateMatrix();
+        put(pillars, i * 2, -2.0, 2.1, 0); put(pillars, i * 2 + 1, 2.0, 2.1, 0);
+        put(arches, i, 0, 4.2, 0);
+        put(stars, i, 0, 7.0, 0);
+        put(veils, i, 0, 0, 0);
+        addCollider(g.x, g.z, 2.5);
+      });
+      // Pads are flat circles at the gate foot (the gate yaw does not matter for a circle)
+      closedGates.forEach((g, i) => {
+        dummy.position.set(g.x, 0.026, g.z); dummy.rotation.set(-Math.PI / 2, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+        pads.setMatrixAt(i, dummy.matrix);
+      });
+      for (const m of [pads, pillars, arches, stars, veils]) { m.instanceMatrix.needsUpdate = true; scene.add(m); }
+    }
+  }
+  // Open ground check for scatter: clear of the new paths and gate pads
+  const nearRingPaths = (x, z, pad) => {
+    for (const sg of NEW_PATHS) if (distToSegment(x, z, sg.from, sg.to) < PATH_WIDTH / 2 + 1 + pad) return true;
+    for (const g of closedGates) if (Math.hypot(x - g.x, z - g.z) < 6 + pad) return true;
+    return false;
+  };
+
   // --- Grass tufts + bushes in the empty areas (seeded, instanced, static) ---
   {
     const bushGreens = [0x86c785, 0x78bd7c];
     const grassGreens = [0x8bd07f, 0x7cc476];
     const flowerColors = [0xffb3d1, 0xffffff, 0xffe27a];
     // Open ground only: outside the plaza, off the paths, away from lands, castle and NPC pads
-    const openSpot = (x, z, pad) => {
+    const openSpot = (x, z, pad, rMax = 40) => {
       const r = Math.hypot(x, z);
-      if (r < 10 + pad || r > 40) return false;
+      if (r < 10 + pad || r > rMax) return false;
+      if (nearRingPaths(x, z, pad)) return false;
       for (const land of Object.values(LANDS)) {
         const dx = Math.cos(land.angle), dz = Math.sin(land.angle);
         const t = Math.max(0, Math.min(LAND_DIST, x * dx + z * dz));
@@ -879,6 +962,17 @@ export function createWorld(container, hooks) {
       }
       return null;
     };
+    // Outer ring (r 40..57): its own seeded stream, so the hub scatter above never shifts.
+    const rand2 = mulberry32(0x0b16c0de);
+    const pickOuter = (pad) => {
+      for (let tries = 0; tries < 60; tries++) {
+        const a = rand2() * Math.PI * 2;
+        const r = Math.sqrt(1600 + rand2() * (57 * 57 - 1600));
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        if (openSpot(x, z, pad, 58)) return { x, z, rnd: rand2 };
+      }
+      return null;
+    };
     const dummy = new THREE.Object3D();
     const col = new THREE.Color();
 
@@ -891,12 +985,18 @@ export function createWorld(container, hooks) {
       if (bushSpots.some((b) => Math.hypot(p.x - b.x, p.z - b.z) < 3)) continue;
       bushSpots.push(p);
     }
+    // +8 bushes in the outer ring (modest on purpose: iPhone)
+    for (let k = 0; k < 8; k++) {
+      const p = pickOuter(0.8);
+      if (p && !bushSpots.some((b) => Math.hypot(p.x - b.x, p.z - b.z) < 3)) bushSpots.push(p);
+    }
     const bushes = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.85, 0), pastel(0xffffff), bushSpots.length);
     const blooms = new THREE.InstancedMesh(new THREE.SphereGeometry(0.09, 6, 4), new THREE.MeshStandardMaterial({ roughness: 0.7 }), bushSpots.length * 3);
     bushSpots.forEach((b, i) => {
-      const s = 0.85 + rand() * 0.3;
+      const rnd = b.rnd || rand;
+      const s = 0.85 + rnd() * 0.3;
       dummy.position.set(b.x, 0.5 * s, b.z);
-      dummy.rotation.set(0, rand() * Math.PI * 2, 0);
+      dummy.rotation.set(0, rnd() * Math.PI * 2, 0);
       dummy.scale.set(s, s * 0.85, s);
       dummy.updateMatrix();
       bushes.setMatrixAt(i, dummy.matrix);
@@ -904,7 +1004,7 @@ export function createWorld(container, hooks) {
       addCollider(b.x, b.z, 0.8);
       // 3 flowers sitting on the upper surface
       for (let f = 0; f < 3; f++) {
-        const th = rand() * Math.PI * 2, el = 0.5 + rand() * 0.8;
+        const th = rnd() * Math.PI * 2, el = 0.5 + rnd() * 0.8;
         const R = 0.85 * s * 0.98;
         dummy.position.set(b.x + Math.cos(el) * Math.cos(th) * R, 0.5 * s + Math.sin(el) * R * 0.85, b.z + Math.cos(el) * Math.sin(th) * R);
         dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1);
@@ -920,16 +1020,17 @@ export function createWorld(container, hooks) {
     scene.add(bushes, blooms);
 
     // Grass: ~330 blades in clumps of 3 (sized to read from the phone camera)
-    const CLUMPS = 110;
-    const grass = new THREE.InstancedMesh(new THREE.ConeGeometry(0.14, 0.65, 4), pastel(0xffffff), CLUMPS * 3);
+    const CLUMPS = 110, OUTER_CLUMPS = 45; // outer ring adds +45 clumps (+41%)
+    const grass = new THREE.InstancedMesh(new THREE.ConeGeometry(0.14, 0.65, 4), pastel(0xffffff), (CLUMPS + OUTER_CLUMPS) * 3);
     let g = 0;
-    for (let k = 0; k < CLUMPS; k++) {
-      const p = pickSpot(0.3);
-      if (!p) break;
+    for (let k = 0; k < CLUMPS + OUTER_CLUMPS; k++) {
+      const p = k < CLUMPS ? pickSpot(0.3) : pickOuter(0.3);
+      if (!p) { if (k < CLUMPS) break; continue; }
+      const rnd = p.rnd || rand;
       for (let j = 0; j < 3; j++) {
-        const s = 0.8 + rand() * 0.6;
-        dummy.position.set(p.x + (rand() - 0.5) * 0.5, 0.225 * s, p.z + (rand() - 0.5) * 0.5);
-        dummy.rotation.set((rand() - 0.5) * 0.3, rand() * Math.PI, (rand() - 0.5) * 0.3);
+        const s = 0.8 + rnd() * 0.6;
+        dummy.position.set(p.x + (rnd() - 0.5) * 0.5, 0.225 * s, p.z + (rnd() - 0.5) * 0.5);
+        dummy.rotation.set((rnd() - 0.5) * 0.3, rnd() * Math.PI, (rnd() - 0.5) * 0.3);
         dummy.scale.set(1, s, 1);
         dummy.updateMatrix();
         grass.setMatrixAt(g, dummy.matrix);
@@ -1475,6 +1576,24 @@ export function createWorld(container, hooks) {
     }
   }
 
+  // --- Closed star gates (K2): tap = chime + "opens soon" toast via onGateTap. Checked after princesses, treasures and props. ---
+  const gateHits = [];
+  let gateFlash = 0; // 0..1 brightness bump after a tap (skipped under calm motion)
+  closedGates.forEach((g) => {
+    const hit = new THREE.Mesh(tapHitGeo, tapHitMat);
+    hit.position.set(g.x, 3.2, g.z); hit.scale.setScalar(3.6);
+    hit.userData.gateSlot = g.slot;
+    scene.add(hit);
+    gateHits.push(hit);
+  });
+  // Soft glow: gentle pulse (still under calm motion), brighter for a moment after a tap.
+  function updateGates(dt, t) {
+    if (!gateVeilMat) return;
+    if (calmMotion) { gateVeilMat.opacity = 0.36; return; }
+    gateFlash = Math.max(0, gateFlash - dt * 1.8);
+    gateVeilMat.opacity = 0.3 + 0.08 * Math.sin(t * 1.6) + 0.25 * gateFlash;
+  }
+
   // --- Tap-to-interact (raycast against NPC meshes) --------------------------
   const raycaster = new THREE.Raycaster();
   const pointerNDC = new THREE.Vector2();
@@ -1506,6 +1625,14 @@ export function createWorld(container, hooks) {
         if (fresh) onWorldTap(it.kind);
         if (it.secret) onSecretTap(it.secret); // counted even mid-reaction, so quick triple taps work
       }
+      return;
+    }
+    // A closed star gate: chime + toast (the hook in main.js); a short glow flash unless calm motion.
+    const gHits = raycaster.intersectObjects(gateHits, false);
+    if (gHits.length) {
+      if (!calmMotion) gateFlash = 1;
+      onGateTap(gHits[0].object.userData.gateSlot);
+      return;
     }
     // Taps on empty ground are ignored.
   };
@@ -1925,6 +2052,7 @@ export function createWorld(container, hooks) {
     // ---- Tapped scenery reactions (only the few playing; nothing runs at rest) ----
     for (let i = 0; i < tapItems.length; i++) if (tapItems[i].t >= 0) tapReact(tapItems[i], dt);
     updateTreasures(dt, t);
+    updateGates(dt, t);
 
     // ---- Sky dome follows the camera ----
     skyMesh.position.copy(camera.position);
@@ -2026,7 +2154,7 @@ export function createWorld(container, hooks) {
     Input.dispose();
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
-    tappables.length = 0; tapItems.length = 0; treasureList.length = 0; treasureHits.length = 0; // sprite materials are freed by the scene traversal below
+    gateHits.length = 0; tappables.length = 0; tapItems.length = 0; treasureList.length = 0; treasureHits.length = 0; // sprite materials are freed by the scene traversal below
     scene.traverse((o) => {
       if (o.geometry && !Object.values(_geo).includes(o.geometry)) o.geometry.dispose();
       if (o.material && !Object.values(_mat).includes(o.material)) {

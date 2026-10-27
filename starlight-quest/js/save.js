@@ -79,6 +79,7 @@ function defaults() {
     milestones: [], // unlocked milestone ids (see MILESTONES)
     outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
     treasures: { day: '', got: [], total: {}, stars: [] }, // daily finds (see treasures.js): got = ids found on `day`, total = lifetime by kind
+    seenNewKingdoms: false, // the one-time "new kingdoms appeared" card has been shown (see worldmap.js)
     secrets: [],    // secret-surprise sticker ids found (see treasures.js SECRETS)
     lang: 'EN',
     muted: false,
@@ -119,6 +120,7 @@ export function merge(raw) {
   out.outfit = sanitizeOutfit(raw.outfit, out.milestones);
   out.treasures = sanitizeTreasures(raw.treasures);
   out.secrets = sanitizeSecrets(raw.secrets);
+  out.seenNewKingdoms = raw.seenNewKingdoms === true;
 
   if (raw.lang === 'ES' || raw.lang === 'EN') out.lang = raw.lang;
   if (typeof raw.muted === 'boolean') out.muted = raw.muted;
