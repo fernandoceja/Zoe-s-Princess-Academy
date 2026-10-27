@@ -28,6 +28,8 @@ jobs:
         run: node starlight-quest/tests/measure_check.mjs
       - name: Teacher word list check
         run: node starlight-quest/tests/words_check.mjs
+      - name: This week pack check
+        run: node starlight-quest/tests/week_check.mjs
       - name: Star milestone check
         run: node starlight-quest/tests/milestone_check.mjs
       - name: Wardrobe outfit check

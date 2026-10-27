@@ -6,7 +6,7 @@
  */
 
 import { createWorld } from './world.js?v=20261026s1';
-import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026s1';
+import { PRINCESSES, QUESTS, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261026s1';
 import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261026s1';
 import { UI } from './ui.js?v=20261026s1';
 import { Save, checkMilestones } from './save.js?v=20261026s1';
@@ -30,6 +30,7 @@ const PRAISES = [
 export async function main(container) {
   Save.load();
   setSchoolWords(Save.data.schoolWords);
+  setWeek(Save.data.week);
   setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
   Narrator.setMuted(!!Save.data.muted);
 

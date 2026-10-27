@@ -476,6 +476,51 @@ export function setSchoolWords(list) {
   SCHOOL_WORDS.push(...cleanWordList(list));
   return SCHOOL_WORDS.slice();
 }
+// ---- This week's school pack (S1). A grown-up edits it in Parent Corner. ----
+export const WEEK_DEFAULT = {
+  spelling: ['lend', 'send', 'fast', 'sink', 'past'],
+  sight: ['of', 'he'],
+  dictation: 'Can he run past the tent?',
+  vowels: ['sat', 'hip', 'pen', 'log', 'nut']
+};
+/** Live pack; updated in place by setWeek. */
+export const WEEK = {
+  spelling: WEEK_DEFAULT.spelling.slice(),
+  sight: WEEK_DEFAULT.sight.slice(),
+  dictation: WEEK_DEFAULT.dictation,
+  vowels: WEEK_DEFAULT.vowels.slice()
+};
+function _weekList(input) {
+  const parts = Array.isArray(input) ? input : String(input == null ? '' : input).split(/[,\n\r;]+/);
+  const out = [];
+  for (const p of parts) {
+    const w = String(p).trim().toLowerCase();
+    if (/^[a-z]{1,12}$/.test(w) && !out.includes(w)) out.push(w);
+    if (out.length >= 15) break;
+  }
+  return out;
+}
+function _weekSentence(input) {
+  const t = String(input == null ? '' : input).trim().replace(/\s+/g, ' ');
+  return t.length <= 60 && /^[A-Z][A-Za-z', ]*[.?!]$/.test(t) && /[a-z]/.test(t) ? t : '';
+}
+/** Clean a pack: bad or empty fields fall back to the default. Returns a fresh object. */
+export function cleanWeek(raw) {
+  const r = raw && typeof raw === 'object' ? raw : {};
+  const list = (v, d) => { const l = _weekList(v); return l.length ? l : d.slice(); };
+  return {
+    spelling: list(r.spelling, WEEK_DEFAULT.spelling),
+    sight: list(r.sight, WEEK_DEFAULT.sight),
+    dictation: _weekSentence(r.dictation) || WEEK_DEFAULT.dictation,
+    vowels: list(r.vowels, WEEK_DEFAULT.vowels)
+  };
+}
+/** Set the live pack (null resets to defaults). Returns a copy. */
+export function setWeek(raw) {
+  const c = cleanWeek(raw);
+  WEEK.spelling = c.spelling; WEEK.sight = c.sight; WEEK.dictation = c.dictation; WEEK.vowels = c.vowels;
+  return cleanWeek(WEEK);
+}
 const SIGHT_1ST = [
   'after', 'again', 'could', 'every', 'from', 'give', 'has', 'her', 'him', 'how',
   'just', 'know', 'live', 'once', 'open', 'some', 'them', 'then', 'think', 'were', 'when',
@@ -781,8 +826,11 @@ const TIERS = {
     },
     2: (rng) => {
       if (rng() < 0.5) { const dg = _pick(DIGRAPH_SETS, rng); return _wordRound(dg[0], dg.slice(1)); }
-      const sight = SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS.slice() : SIGHT_1ST;
-      return _sightRound(_pick(sight, rng), [...new Set([...sight, ...DOLCH_1ST])], rng);
+      // The week's sight words are always in the pool, with the class list or built-in list.
+      const sight = [...new Set([...WEEK.sight, ...(SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS : SIGHT_1ST)])];
+      // Half of these rounds practice this week's sight words, so they come up often.
+      const w = WEEK.sight.length && rng() < 0.5 ? _pick(WEEK.sight, rng) : _pick(sight, rng);
+      return _sightRound(w, [...new Set([...sight, ...DOLCH_1ST])], rng);
     },
     3: (rng) => {
       if (rng() < 0.5) { const bl = _pick(BLEND_SETS, rng); return _wordRound(bl[0], bl.slice(1)); }

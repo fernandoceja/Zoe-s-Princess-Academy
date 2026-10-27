@@ -7,7 +7,7 @@
 
 import { Narrator, SoundFX } from './audio.js?v=20261026s1';
 import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261026s1';
-import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, tileSound } from './quests.js?v=20261026s1';
+import { PARENT_CORNER_HTML, PRINCESSES, SCHOOL_WORDS, cleanWordList, setSchoolWords, WEEK, WEEK_DEFAULT, cleanWeek, setWeek, tileSound } from './quests.js?v=20261026s1';
 import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?v=20261026s1';
 import { landState, today } from './ladder.js?v=20261026s1';
 import { Input } from './input.js?v=20261026s1';
@@ -361,6 +361,7 @@ function injectCSS() {
   .zsq-words .zsq-wrow button { flex: 1; min-height: 56px; border-radius: 14px; border: none; font-size: 20px;
     font-weight: 800; cursor: pointer; background: #0f172a; color: #fff; }
   .zsq-words .zsq-wrow button.zsq-wsave { background: #16a34a; }
+  .zsq-words .zsq-wlab { display: block; margin: 10px 0 4px; font-size: 15px; font-weight: 700; }
   .zsq-words .zsq-wstat { margin: 0; font-size: 15px; line-height: 1.4; }
   .zsq-close { min-width: 64px; min-height: 56px; border-radius: 14px; border: none;
     background: #0f172a; color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; padding: 10px 22px; }
@@ -1178,6 +1179,66 @@ export const UI = {
     return box;
   },
 
+  /** "This week" school pack editor for Parent Corner (saved on this device). */
+  _weekBlock() {
+    const box = el('div', 'zsq-words');
+    box.innerHTML = '<h3>This week</h3>'
+      + '<p style="margin:0 0 4px;font-size:15px">This week\'s school list. Separate words with commas.</p>';
+    const fields = [
+      ['spelling', 'Spelling words', 'lend, send, fast'],
+      ['sight', 'Sight words', 'of, he'],
+      ['dictation', 'Dictation sentence', 'Can he run past the tent?'],
+      ['vowels', 'Short-vowel words', 'sat, hip, pen']
+    ];
+    const inputs = {};
+    for (const [key, label, ph] of fields) {
+      const lab = el('label', 'zsq-wlab', label);
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = ph;
+      input.autocomplete = 'off';
+      input.autocapitalize = key === 'dictation' ? 'sentences' : 'off';
+      input.spellcheck = false;
+      // Typing must never reach the game's key controls; releases still do.
+      input.addEventListener('keydown', (e) => e.stopPropagation());
+      lab.append(input);
+      inputs[key] = input;
+      box.append(lab);
+    }
+    const fill = () => {
+      for (const k of ['spelling', 'sight', 'vowels']) inputs[k].value = WEEK[k].join(', ');
+      inputs.dictation.value = WEEK.dictation;
+    };
+    fill();
+    const row = el('div', 'zsq-wrow');
+    const save = el('button', 'zsq-wsave', 'Save');
+    const reset = el('button', '', 'Back to defaults');
+    row.append(save, reset);
+    const stat = el('p', 'zsq-wstat', '');
+    save.onclick = () => {
+      SoundFX.pop();
+      const c = cleanWeek({
+        spelling: inputs.spelling.value, sight: inputs.sight.value,
+        dictation: inputs.dictation.value, vowels: inputs.vowels.value
+      });
+      Save.data.week = c;
+      Save.save();
+      setWeek(c);
+      fill();
+      stat.textContent = 'Saved. Anything left blank or not valid uses the default.';
+    };
+    reset.onclick = () => {
+      SoundFX.pop();
+      Save.data.week = null;
+      Save.save();
+      setWeek(null);
+      fill();
+      stat.textContent = 'Back to the default list.';
+    };
+    box.append(row, stat);
+    return box;
+  },
+
   /** Parent corner overlay (scrollable, with close button). */
   showParentCorner(onClose) {
     const wrap = _els.parentWrap;
@@ -1192,6 +1253,7 @@ export const UI = {
     };
     head.appendChild(close);
     const body = el('div', 'zsq-parent-body', this._progressHtml());
+    body.appendChild(this._weekBlock());
     body.appendChild(this._wordsBlock());
     body.insertAdjacentHTML('beforeend', PARENT_HTML);
     panel.append(head, body);
