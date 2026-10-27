@@ -14,8 +14,9 @@ states, ever.** Wrong picks get gentle encouragement and a retry; progress is ne
 | Elsa (ice) | Frostfall Peaks | The Frozen Bridge — unfreeze 5 bridges | Math: addition/subtraction within 20, with countable ❄️ visuals |
 | Rapunzel (garden) | Sunflower Meadows | The Sleepy Garden — wake 5 flowers | Science: what plants need; living vs nonliving |
 | Cinderella (village) | Glass Slipper Village | The Midnight Clock — wind 5 clocks | Math: telling time to the hour & half-hour (analog clock faces drawn in-game) |
+| Ariel (cove) | Seashell Cove (first new kingdom, south-east of the hub) | The Seashell Songs — match 5 rhymes | ELA: rhyming and word families (RF.1.2 / RF.1.3): rhyme pairs, odd one out, change the first letter |
 
-Finish all four → the Starlight Crown is restored (celebration scene). See `STANDARDS.md`
+Finish the first four and Seashell Cove opens (a one-time card tells Zoe). Each land gets its own glowing celebration; the big Starlight Crown finale plays only once every kingdom is open and restored (until then, finishing a land never replays it). See `STANDARDS.md`
 for the full quest-to-standard mapping (also shown in-game in the 📊 Parent Corner).
 
 ## Preview locally

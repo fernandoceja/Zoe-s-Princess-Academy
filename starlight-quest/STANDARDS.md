@@ -43,7 +43,15 @@
 - **Example round:** *"What time is the clock showing?"* (clock shows 5:30)
   — choices: `half past 5`, `5 o'clock`, `half past 6`.
 
+## 🐚 Ariel — "The Seashell Songs" · Seashell Cove
+
+- **Standard:** ELA Reading Foundations — CA CCSS **RF.1.2 / RF.1.3**
+- **What the child practices:** Rhyming and word families with short CVC words
+  (-at, -an, -ap, -en, -et, -ig, -in, -it, -og, -op, -ot, -ug, -un). Easy: which word or pair rhymes.
+  Core: pick the rhyme, find the word that does not rhyme. Stretch: add a letter to a family ending to make a new word.
+- **Example round:** *"Which word rhymes with pig?"* — choices: `wig`, `pan`, `bug`.
+
 ## 👑 Starlight Finale
 
-- Finishing all four quests restores the Starlight Crown and celebrates
+- Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates
   persistence. There are no fail states anywhere in the game.

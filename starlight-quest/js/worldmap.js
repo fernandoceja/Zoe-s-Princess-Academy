@@ -65,7 +65,7 @@ export const PLANNED_SLOTS = {
 
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
-export const BUILT_SLOTS = {};
+export const BUILT_SLOTS = { sse: 'ariel' };   // K5: Seashell Cove is open (Ariel's quests exist)
 
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));
@@ -147,4 +147,12 @@ export function distToSegment(x, z, a, b) {
 // One-time "New kingdoms appeared" card: never with zero built slots, and only once.
 export function shouldShowNewKingdoms(builtCount, seen) {
   return builtCount > 0 && !seen;
+}
+
+// Starlight finale gate. The crown finale plays only when every princess in the play list is restored AND
+// every new-kingdom slot has been built, so finishing one new land (e.g. Ariel's) just gets that land's own
+// celebration. Called from main.js after a quest completes, never on load. K16 builds the 10-land finale.
+export function shouldRunFinale(doneIds, orderIds, builtCount) {
+  const done = Array.isArray(doneIds) ? doneIds : [];
+  return builtCount >= NEW_LAND_SLOTS.length && orderIds.length > 0 && orderIds.every((id) => done.includes(id));
 }

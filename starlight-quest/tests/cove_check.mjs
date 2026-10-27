@@ -20,17 +20,17 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const day = '2026-10-27';
 
 // --- "Open" -----------------------------------------------------------------------------------------------------
-ok(Object.keys(BUILT_SLOTS).length === 0 && builtSlotIds().length === 0, 'no slot is built yet (Ariel plays in K5)');
+ok(same(Object.keys(BUILT_SLOTS), ['sse']) && BUILT_SLOTS.sse === 'ariel' && same(builtSlotIds(), ['sse']), 'only the cove slot is built (K5: Ariel plays there)');
 ok(PLANNED_SLOTS.ariel === 'sse' && COVE.slot === 'sse', 'cove sits at the planned sse slot');
 ok(previewFlags('').size === 0 && previewFlags().size === 0, 'no preview flag by default (node has no location)');
-ok(!isCoveOpen() && !isCoveOpen('') && !isCoveOpen('?x=1&preview=moana'), 'cove is closed by default');
-ok(openSlotIds('').length === 0 && closedSlots('').length === 6 && closedSlots().length === 6, 'default: all six gates still drawn');
-ok(isCoveOpen('?preview=cove') && isCoveOpen('?preview=all') && isCoveOpen('?a=1&preview=Cove') && isCoveOpen('?preview=x,cove'), 'preview=cove / all opens the cove');
+ok(isCoveOpen() && isCoveOpen('') && isCoveOpen('?x=1&preview=moana'), 'cove is open by default (built, no flag needed)');
+ok(same(openSlotIds(''), ['sse']) && closedSlots('').length === 5 && closedSlots().length === 5, 'default: the cove gate is gone, five gates still drawn');
+ok(isCoveOpen('?preview=cove') && isCoveOpen('?preview=all') && isCoveOpen('?a=1&preview=Cove') && isCoveOpen('?preview=x,cove'), 'preview=cove / all still parse and keep the cove open');
 ok(same(openSlotIds('?preview=cove'), ['sse']), 'only the sse slot opens');
 const closedPreview = closedSlots('?preview=cove');
 ok(closedPreview.length === 5 && !closedPreview.some((s) => s.slot === 'sse'), 'open slot loses its closed gate, the other five stay');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
-ok(!isSlotOpen('ese', '?preview=cove') && !isSlotOpen('ese', '?preview=all'), 'other lands are not built yet, so "all" opens only the cove');
+ok(!isSlotOpen('ese', '?preview=cove') && !isSlotOpen('ese', '?preview=all'), 'other lands are not built yet, so "all" opens only the cove (the ?preview flag keeps working)');
 
 // --- Geometry: the path reaches the land, Ariel's pad is on the sand near the entrance --------------------------------
 {
@@ -165,14 +165,14 @@ ok(/if \(it\.onTap && !calmMotion\) it\.onTap\(it\)/.test(world), 'bubbles/rippl
 ok(/const coveOpen = isCoveOpen\(\)/.test(world) && /if \(coveOpen\) \{\s*cove = buildCove\(/.test(world), 'world builds the cove only when open');
 ok(/treasureLandsFor\(coveOpen\)/.test(world) && !/TREASURE_LANDS/.test(world), 'world hides cove treasures only when open');
 ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (the open slot is skipped)');
-ok(/landPads\[COVE\.land\]/.test(world) && !/NPC_ORDER\.push|NPC_ORDER = /.test(world), 'Ariel\'s pad is stored, she is not spawned');
-ok(!/NPC_ORDER = \[[^\]]*ariel/.test(src('js/quests.js')) && !/ariel/.test(src('js/quests.js').match(/export const NPC_ORDER[^\n]*/)[0]), 'ariel is still not in NPC_ORDER');
+ok(/landPads\[COVE\.land\]/.test(world) && !/NPC_ORDER\.push|NPC_ORDER = /.test(world), 'Ariel\'s pad is stored; world.js spawns her from NPC_ORDER like the others');
+ok(/export const NPC_ORDER = \['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'\]/.test(src('js/quests.js')), 'ariel is appended to NPC_ORDER (K5)');
 ok(/import \{ buildCove \} from '\.\/cove\.js\?v=20261027e2'/.test(world), 'world imports cove.js with the existing ?v= stamp');
 ok(/'\.\/js\/cove\.js\?v=20261027e2'/.test(sw), 'cove.js is precached with the existing stamp');
 ok(/isCoveOpen\(\)/.test(main) && /findsTotal\(COVE_OPEN\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), COVE_OPEN\)/.test(main) && !/TREASURE_LANDS\.length/.test(main), 'main counts only open lands (20 closed, 25 open)');
 ok(/Narrator\.speakExact\(def\.npc, line\)/.test(main) && /rhymeLine\(\)/.test(main), 'the rhyme is spoken with Ariel\'s voice via speakExact');
 ok(/coveOpen: isCoveOpen\(\)/.test(ui), 'Treasure Book asks for the cove only when open');
-ok(!/BUILT_SLOTS\s*=\s*\{[^}]*\w/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS is still empty in source');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds only sse: ariel in source');
 ok(/'shell-' \+ \(i \+ 1\)/.test(cove) && /\['shell1', 'shell2', 'shell3'\]/.test(cove), 'the three secret shells report shell-1..3 (small to big)');
 // Six surprises
 for (const k of ['clam', 'pool', 'starfish', 'coral', 'hermit', 'chime']) ok(new RegExp(`items\\.${k} = addTappable\\(`).test(cove), `surprise: ${k}`);

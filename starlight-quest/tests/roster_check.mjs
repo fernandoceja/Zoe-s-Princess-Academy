@@ -39,7 +39,7 @@ expect('voices distinct', new Set(vs).size === vs.length);
 const cs = all.map(([, p]) => p.color.toLowerCase());
 expect('colors distinct', new Set(cs).size === cs.length);
 // Not in the game yet.
-expect('NPC_ORDER is still the original four', JSON.stringify(NPC_ORDER) === JSON.stringify(['belle', 'elsa', 'rapunzel', 'cinderella']));
+expect('NPC_ORDER is the original four plus Ariel (K5); the other five are not in it yet', JSON.stringify(NPC_ORDER) === JSON.stringify(['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel']));
 // Planned slots.
 expect('PLANNED_SLOTS covers exactly the six', JSON.stringify(Object.keys(PLANNED_SLOTS).sort()) === JSON.stringify([...ids].sort()));
 const valid = new Set(NEW_LAND_SLOTS.map((s) => s.slot));
@@ -60,7 +60,8 @@ expect('world.js has curls hair style', /hairStyle === 'curls'/.test(world));
 // audio.js: no clip lookup for the new ids.
 const audio = read('js/audio.js');
 expect('NO_CLIP_IDS has the six', ids.every((id) => NO_CLIP_IDS.includes(id)));
-expect('NO_CLIP_IDS has no original', NPC_ORDER.every((id) => !NO_CLIP_IDS.includes(id)));
+expect('NO_CLIP_IDS has no original four', ['belle', 'elsa', 'rapunzel', 'cinderella'].every((id) => !NO_CLIP_IDS.includes(id)));
+expect('Ariel has no recorded clips (she uses the speech voice)', NO_CLIP_IDS.includes('ariel'));
 const iSkip = audio.indexOf('NO_CLIP_IDS.includes(princessId)');
 const iClip = audio.indexOf("new Audio()");
 expect('audio.js skips clips before creating Audio', iSkip > 0 && iClip > iSkip);
