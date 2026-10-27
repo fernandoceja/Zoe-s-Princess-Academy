@@ -26,6 +26,8 @@ jobs:
         run: node starlight-quest/tests/precache_check.mjs
       - name: Measurement round check
         run: node starlight-quest/tests/measure_check.mjs
+      - name: Count on and doubles check
+        run: node starlight-quest/tests/counton_check.mjs
       - name: Teacher word list check
         run: node starlight-quest/tests/words_check.mjs
       - name: Star milestone check

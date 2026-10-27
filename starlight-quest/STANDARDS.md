@@ -17,7 +17,9 @@
 - **Standard:** Math, Operations within 20 — CA CCSS **1.OA**
 - **What the child practices:** Adding and subtracting within 20 (sums ≤ 20,
   minuends ≤ 20, no negative answers), with countable on-screen snowflakes as
-  visual supports.
+  visual supports. Also counting on from the greater addend, 1 to 3 (CA CCSS
+  **1.OA.5 / 1.OA.6**, school Lesson 3.2) and doubles 1+1 through 5+5
+  (**1.OA.6**, Lesson 3.3).
 - **Example round:** *"The bridge needs 7 + 5 snowflakes. How many?"*
   — choices: `12`, `11`, `13`.
 
