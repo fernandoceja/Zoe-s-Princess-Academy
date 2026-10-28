@@ -12,7 +12,7 @@ import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { todayKey, treasureBookModel } from './treasures.js?v=20261027e2';
-import { isCoveOpen, isIsleOpen, isGardenOpen, isHarborOpen, isBayouOpen } from './worldmap.js?v=20261027e2';
+import { isCoveOpen, isIsleOpen, isGardenOpen, isHarborOpen, isBayouOpen, isGlenOpen } from './worldmap.js?v=20261027e2';
 
 const GOLD = '#ebd373';
 
@@ -613,6 +613,15 @@ function injectCSS() {
   .zsq-tb-card.zsq-tb-full .zsq-tb-land { min-height: 26px; }
   .zsq-tb-card.zsq-tb-full .zsq-tb-h { margin-top: 4px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tut-emoji { font-size: 38px; }
+  /* Eleven kinds, ten lands and ten stickers at 390x844. Override earlier compact rules. */
+  .zsq-tb-glen .zsq-tb-grid { grid-template-columns: repeat(12, 1fr); }
+  .zsq-tb-glen .zsq-tb-grid .zsq-tb-tile { grid-column: span 2; min-height: 46px; }
+  .zsq-tb-glen .zsq-tb-grid .zsq-tb-tile:nth-child(7) { grid-column: 2 / span 2; }
+  .zsq-tb-card.zsq-tb-glen .zsq-tut-emoji { font-size: 24px; }
+  .zsq-tb-card.zsq-tb-glen .zsq-tb-land { min-height: 22px; font-size: 13px; }
+  .zsq-tb-card.zsq-tb-glen .zsq-tb-h { margin-top: 3px; }
+  .zsq-tb-glen .zsq-tb-stickers { gap: 2px; }
+  .zsq-tb-glen .zsq-tb-sticker { width: 29px; height: 29px; font-size: 17px; }
   .zsq-tb-emoji { font-size: 40px; line-height: 1.1; }
   .zsq-tb-name { font-size: 17px; font-weight: 900; color: #92400e; }
   .zsq-tb-unfound { background: #f1f5f9; border-color: #cbd5e1; }
@@ -1037,8 +1046,8 @@ export const UI = {
   showTreasureBook({ onClose } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
-    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen(), gardenOpen: isGardenOpen(), harborOpen: isHarborOpen(), bayouOpen: isBayouOpen() });
-    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : '') + (m.lands.length > 6 ? ' zsq-tb-tight' : '') + (m.lands.length > 7 ? ' zsq-tb-full' : '') + (m.lands.length > 8 ? ' zsq-tb-vast' : ''));
+    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen(), gardenOpen: isGardenOpen(), harborOpen: isHarborOpen(), bayouOpen: isBayouOpen(), glenOpen: isGlenOpen() });
+    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : '') + (m.lands.length > 6 ? ' zsq-tb-tight' : '') + (m.lands.length > 7 ? ' zsq-tb-full' : '') + (m.lands.length > 8 ? ' zsq-tb-vast' : '') + (m.lands.length > 9 ? ' zsq-tb-glen' : ''));
     card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
     const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : '') + (m.kinds.length > 7 ? ' zsq-tb-eight' : '') + (m.kinds.length > 8 ? ' zsq-tb-nine' : '') + (m.kinds.length > 9 ? ' zsq-tb-ten' : ''));
     for (const k of m.kinds) {
@@ -1662,7 +1671,7 @@ export const UI = {
   showNewKingdoms(onDone, landNames) {
     // First time: the big announcement. Later (a land opened after she saw it): a short card naming the new land(s).
     if (Array.isArray(landNames) && landNames.length) {
-      UI.showMilestone({ title: landNames.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!', sub: `${landNames.join(' and ')} ${landNames.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`, emoji: landNames.length === 1 && /Garden/.test(landNames[0]) ? '🌟🌙🌟' : landNames.length === 1 && /Harbor/.test(landNames[0]) ? '🌟⚓🌟' : landNames.length === 1 && /Bayou/.test(landNames[0]) ? '🌟🪷🌟' : '🌟🏝️🌟' }, onDone);
+      UI.showMilestone({ title: landNames.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!', sub: `${landNames.join(' and ')} ${landNames.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`, emoji: landNames.length === 1 && /Garden/.test(landNames[0]) ? '🌟🌙🌟' : landNames.length === 1 && /Harbor/.test(landNames[0]) ? '🌟⚓🌟' : landNames.length === 1 && /Bayou/.test(landNames[0]) ? '🌟🌸🌟' : '🌟🏝️🌟' }, onDone);
       return;
     }
     UI.showMilestone({ title: 'New kingdoms appeared beyond the Starlight Hub!', sub: 'Follow the sparkly paths to find them.', emoji: '🌟🏰🌟' }, onDone);

@@ -30,7 +30,7 @@ ok(same([...openSlotIds('?preview=cove')].sort(), ['ese', 'nne', 'sse', 'ssw', '
 const closedPreview = closedSlots('?preview=cove');
 ok(closedPreview.length === 1 && !closedPreview.some((s) => s.slot === 'sse'), 'open slot loses its closed gate, the last one stays');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
-ok(isSlotOpen('ese', '?preview=cove') && isSlotOpen('wsw', '?preview=cove') && !isSlotOpen('ene', '?preview=all'), 'the harbor (K11) and the bayou (K13) are built; the last land (ene) stays closed even with ?preview=all');
+ok(isSlotOpen('ese', '?preview=cove') && isSlotOpen('wsw', '?preview=cove') && (!isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the harbor (K11) and the bayou (K13) are built; the last land stays closed normally and opens in preview=all');
 
 // --- Geometry: the path reaches the land, Ariel's pad is on the sand near the entrance --------------------------------
 {

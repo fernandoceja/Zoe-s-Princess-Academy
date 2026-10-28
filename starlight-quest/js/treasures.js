@@ -452,7 +452,7 @@ export const TREASURE_INFO = {
   blossom: { label: 'Blossoms', emoji: '🌺' },
   moonstone: { label: 'Moonstones', emoji: '🌙' },
   anchor: { label: 'Anchors', emoji: '⚓' },
-  lily: { label: 'Lilies', emoji: '🪷' },
+  lily: { label: 'Lilies', emoji: '🌸' },
   rose: { label: 'Roses', emoji: '🌹' },
 };
 export const TREASURE_LAND_NAMES = {
