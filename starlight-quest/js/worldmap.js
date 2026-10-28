@@ -74,8 +74,9 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5, the isle since K7, the garden since K9 and the harbor since K11, so all four flags are harmless now.)
-export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese' };
+// (cove is built for real since K5, the isle since K7, the garden since K9 and the harbor since K11, so those four flags are harmless now.
+// bayou (K12) is preview-only until Tiana's quests land.)
+export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese', bayou: 'wsw' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
 export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
@@ -127,13 +128,20 @@ export const HARBOR = { slot: 'ese', land: 'harbor', princess: 'anna', discR: LA
 export const isHarborOpen = (search) => isSlotOpen(HARBOR.slot, search);
 export function harborGeometry() { return slotLandGeometry(HARBOR); }
 
-/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle', 'garden'] or all four with the harbor. */
+// Firefly Bayou (K12) sits at the 'wsw' slot (the slot planned for Tiana), west-south-west, near Glass Slipper Village. Drawn only when 'wsw' is
+// open: in BUILT_SLOTS (K13, with Tiana's quests) or ?preview=bayou (or ?preview=all). Tiana is NOT spawned until K13.
+export const BAYOU = { slot: 'wsw', land: 'bayou', princess: 'tiana', discR: LAND_DISC_R, padDist: 6.5 };
+export const isBayouOpen = (search) => isSlotOpen(BAYOU.slot, search);
+export function bayouGeometry() { return slotLandGeometry(BAYOU); }
+
+/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle', 'garden'], all four with the harbor, and the bayou when previewed. */
 export function openLandIds(search) {
   const out = [];
   if (isCoveOpen(search)) out.push(COVE.land);
   if (isIsleOpen(search)) out.push(ISLE.land);
   if (isGardenOpen(search)) out.push(GARDEN.land);
   if (isHarborOpen(search)) out.push(HARBOR.land);
+  if (isBayouOpen(search)) out.push(BAYOU.land);
   return out;
 }
 
