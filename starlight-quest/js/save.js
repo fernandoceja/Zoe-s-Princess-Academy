@@ -4,8 +4,8 @@
  * ES module, no external requests.
  */
 
-import { sanitizeTreasures, sanitizeSecrets } from './treasures.js?v=20261027e2';
-import { NPC_ORDER } from './quests.js?v=20261027e2';
+import { sanitizeTreasures, sanitizeSecrets } from './treasures.js?v=20261028r3';
+import { NPC_ORDER } from './quests.js?v=20261028r3';
 
 const KEY = 'zoe-starlight-quest-v1';
 

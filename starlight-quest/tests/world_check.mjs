@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 import {
   INNER_LAND_ANGLES, LAND_DIST, LAND_DISC_R, CASTLE_POS, WORLD_RADIUS, OUTER_DIST, NEW_LAND_SLOTS, ANNA_SLOT,
   BUILT_SLOTS, builtSlotIds, closedSlots, slotPos, pathSegments, distToSegment, PATH_WIDTH, PLAZA_R, shouldShowNewKingdoms,
-} from '../js/worldmap.js?v=20261027e2';
-import { merge } from '../js/save.js?v=20261027e2';
+} from '../js/worldmap.js?v=20261028r3';
+import { merge } from '../js/save.js?v=20261028r3';
 
 const bad = [];
 const ok = (cond, msg) => { if (!cond) bad.push(msg); };

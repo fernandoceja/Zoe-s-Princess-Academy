@@ -13,7 +13,7 @@
 // No lights, no shadow maps, no new assets. All motion is skipped under calmMotion (a tap then only glows).
 // ============================================================================
 
-import { makeMerger } from './cove.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261028r3';
 
 const D2R = Math.PI / 180;
 

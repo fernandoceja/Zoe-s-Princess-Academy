@@ -132,6 +132,6 @@ assert.match(src('js/world.js'), /glen.settle\(wx, wz, treasureFree\)/);
 assert.match(src('js/world.js'), /rose\(g\)/);
 assert.match(src('js/ui.js'), /glenOpen: isGlenOpen\(\)/);
 assert.match(src('js/ui.js'), /zsq-tb-glen/);
-assert.match(src('sw.js'), /\.\/js\/glen.js\?v=20261027e2/);
+assert.match(src('sw.js'), /\.\/js\/glen.js\?v=20261028r3/);
 assert.match(readFileSync(new URL('../../.github/workflows/starlight-tests.yml', import.meta.url), 'utf8'), /glen_check.mjs/);
 console.log('glen_check ok: preview-only, 50 finds, ten rows, secret order, eight draw calls, 400-day placement, calm motion');

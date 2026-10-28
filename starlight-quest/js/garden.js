@@ -18,7 +18,7 @@
 // All motion is skipped under calmMotion (a tap then only glows; the halos stay still).
 // ============================================================================
 
-import { makeMerger } from './cove.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261028r3';
 
 // Garden layout, in metres from the garden centre (x east, z south). The entrance (branch path) is to the south, so the
 // camera, which looks north, sees the pool and fountain open out in front of the path.

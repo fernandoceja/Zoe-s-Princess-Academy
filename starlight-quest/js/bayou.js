@@ -19,8 +19,8 @@
 // All motion is skipped under calmMotion (a tap then only glows; the fireflies and the lantern halo stay still).
 // ============================================================================
 
-import { makeMerger } from './cove.js?v=20261027e2';
-import { TALLY_TARGET, TALLY_BASKETS, tallyMarks, tallyRows } from './treasures.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261028r3';
+import { TALLY_TARGET, TALLY_BASKETS, tallyMarks, tallyRows } from './treasures.js?v=20261028r3';
 
 // Bayou layout, in metres from the bayou centre (x east, z south). The entrance (branch path) is to the EAST, where Tiana's pad is;
 // the camera looks north, so the cabin's porch and the stand's board face south, toward the player.

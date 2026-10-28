@@ -5,7 +5,7 @@
  * - Review: a missed round comes back in later plays; it leaves the queue after
  *   it has been answered right on the first try twice.
  */
-import { roundKey, NPC_ORDER } from './quests.js?v=20261027e2';
+import { roundKey, NPC_ORDER } from './quests.js?v=20261028r3';
 
 export const MAX_REVIEW = 6;
 

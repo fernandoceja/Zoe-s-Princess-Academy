@@ -19,7 +19,7 @@
 // All motion is skipped under calmMotion (a tap then only glows; the lamp halo stays still).
 // ============================================================================
 
-import { makeMerger } from './cove.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261028r3';
 
 // Harbor layout, in metres from the harbor centre (x east, z south). The entrance (branch path) is to the WEST, where Anna's pad is;
 // the camera looks north, so the fjord opens out beyond the dock at the top of the screen.

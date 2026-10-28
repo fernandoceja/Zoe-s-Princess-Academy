@@ -2,7 +2,7 @@
  * tallySVG(n) draws n tally marks: every group of five is four upright lines with ONE red slash straight across them,
  * and any left over are single upright lines. Each mark is one <line>, so the number of <line> elements always equals n
  * (the tests count them). tallyChartHtml(visual) draws a small chart: a picture and name on the left, a tally on the right. */
-import { tallyMarks } from './treasures.js?v=20261027e2';
+import { tallyMarks } from './treasures.js?v=20261028r3';
 
 export const TALLY_MAX = 20;
 const STEP = 12, PAD = 12, GAP = 10, H = 56;   // spacing of the upright lines, padding in a group, space between groups, picture height

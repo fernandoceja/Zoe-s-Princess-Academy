@@ -1,10 +1,10 @@
 // Lands and princess list: one source of truth (NPC_ORDER), no hard-coded four-land lists, save merge keeps progress.
 import { readFileSync } from 'node:fs';
 // Same ?v= stamp as the app's import graph, so this is the same module instance save.js reads.
-import { NPC_ORDER, PRINCESSES } from '../js/quests.js?v=20261027e2';
-import { LAND_ORDER } from '../js/ladder.js?v=20261027e2';
-import { merge } from '../js/save.js?v=20261027e2';
-import { shouldRunFinale, shouldShowNewKingdoms, unseenKingdomSlots, builtSlotIds, NEW_LAND_SLOTS } from '../js/worldmap.js?v=20261027e2';
+import { NPC_ORDER, PRINCESSES } from '../js/quests.js?v=20261028r3';
+import { LAND_ORDER } from '../js/ladder.js?v=20261028r3';
+import { merge } from '../js/save.js?v=20261028r3';
+import { shouldRunFinale, shouldShowNewKingdoms, unseenKingdomSlots, builtSlotIds, NEW_LAND_SLOTS } from '../js/worldmap.js?v=20261028r3';
 
 const bad = [];
 const expect = (n, got, want) => { if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`${n}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`); };

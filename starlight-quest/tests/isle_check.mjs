@@ -270,9 +270,9 @@ ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (an o
 ok(/landPads\[ISLE\.land\]/.test(world) && /landCenters\[ISLE\.land\]/.test(world), 'the isle centre and Moana\'s pad are stored like the cove\'s');
 ok(!/NPC_ORDER\.push|NPC_ORDER = /.test(world) && NPC_ORDER.indexOf('moana') === NPC_ORDER.indexOf('ariel') + 1 && /moana/.test(quests.slice(quests.indexOf('export const NPC_ORDER'), quests.indexOf('\n', quests.indexOf('export const NPC_ORDER')))), 'Moana follows Ariel in NPC_ORDER (Jasmine follows in K9): world.js spawns her on the isle pad like the others');
 ok(PRINCESSES.moana && PRINCESSES.moana.landName === 'Wayfinder Isle', 'Moana\'s princess entry names the land');
-ok(/import \{ buildIsle \} from '\.\/isle\.js\?v=20261027e2'/.test(world), 'world imports isle.js with the existing ?v= stamp');
-ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(isle), 'isle.js shares the cove\'s merger with the existing stamp');
-ok(/'\.\/js\/isle\.js\?v=20261027e2'/.test(sw), 'isle.js is precached with the existing stamp');
+ok(/import \{ buildIsle \} from '\.\/isle\.js\?v=20261028r3'/.test(world), 'world imports isle.js with the existing ?v= stamp');
+ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261028r3'/.test(isle), 'isle.js shares the cove\'s merger with the existing stamp');
+ok(/'\.\/js\/isle\.js\?v=20261028r3'/.test(sw), 'isle.js is precached with the existing stamp');
 ok(!/CACHE_VERSION\s*=\s*['"][^'"]*isle/i.test(sw), 'cache version untouched');
 ok(/openLandIds\(\)/.test(main) && /findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main), 'main counts only open lands (25 now, 30 with the isle)');
 ok(/id === 'shapestones'\) line = shapeLine\(\)\.say/.test(main) && /Narrator\.speakExact\(def\.npc, line\)/.test(main), 'the shape fact is spoken with Moana\'s voice via speakExact');

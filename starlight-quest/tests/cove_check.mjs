@@ -167,8 +167,8 @@ ok(/treasureLandsFor\(openLands\)/.test(world) && /const openLands = openLandIds
 ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (the open slot is skipped)');
 ok(/landPads\[COVE\.land\]/.test(world) && !/NPC_ORDER\.push|NPC_ORDER = /.test(world), 'Ariel\'s pad is stored; world.js spawns her from NPC_ORDER like the others');
 ok(/export const NPC_ORDER = \['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel'(, 'moana')?(, 'jasmine')?(, 'anna')?(, 'tiana')?(, 'aurora')?\]/.test(src('js/quests.js')), 'ariel is appended to NPC_ORDER (K5; Moana follows in K7, Jasmine in K9, Anna in K11, Tiana in K13)');
-ok(/import \{ buildCove \} from '\.\/cove\.js\?v=20261027e2'/.test(world), 'world imports cove.js with the existing ?v= stamp');
-ok(/'\.\/js\/cove\.js\?v=20261027e2'/.test(sw), 'cove.js is precached with the existing stamp');
+ok(/import \{ buildCove \} from '\.\/cove\.js\?v=20261028r3'/.test(world), 'world imports cove.js with the existing ?v= stamp');
+ok(/'\.\/js\/cove\.js\?v=20261028r3'/.test(sw), 'cove.js is precached with the existing stamp');
 ok(/openLandIds\(\)/.test(main) && /findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main) && !/TREASURE_LANDS\.length/.test(main), 'main counts only open lands (20 with none open, 25 with the cove)');
 ok(/Narrator\.speakExact\(def\.npc, line\)/.test(main) && /rhymeLine\(\)/.test(main), 'the rhyme is spoken with Ariel\'s voice via speakExact');
 ok(/coveOpen: isCoveOpen\(\)/.test(ui), 'Treasure Book asks for the cove only when open');

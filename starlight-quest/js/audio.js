@@ -5,7 +5,7 @@
  * ES module, zero network requests on its own.
  */
 
-import { PRINCESSES, NO_CLIP_IDS } from './quests.js?v=20261027e2';
+import { PRINCESSES, NO_CLIP_IDS } from './quests.js?v=20261028r3';
 
 export let LANG = 'EN';
 export function setLang(l) {
