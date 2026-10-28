@@ -31,13 +31,13 @@ ok(isGardenOpen() && isGardenOpen('') && isGardenOpen('?x=1') && isGardenOpen('?
 ok(isGardenOpen('?preview=garden') && isGardenOpen('?preview=all') && isGardenOpen('?a=1&preview=Garden') && isGardenOpen('?preview=cove,garden'), 'preview=garden / all / lists open it');
 ok(PREVIEW_LANDS.garden === 'nne' && PREVIEW_LANDS.cove === 'sse' && PREVIEW_LANDS.isle === 'ssw', 'garden is in PREVIEW_LANDS (cove and isle flags stay)');
 ok(isCoveOpen('?preview=garden') && isIsleOpen('?preview=garden') && isCoveOpen() && isIsleOpen(), 'cove and isle stay open (and ?preview=cove / isle stay harmless)');
-ok(same(openLandIds(''), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=cove'), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=isle'), ['cove', 'isle', 'garden', 'harbor', 'bayou']), 'without the garden flag nothing changes: the garden is open anyway (K9)');
-ok(same(openLandIds('?preview=garden'), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'built lands stay open; preview=all also includes the glen');
-ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=garden')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: nne is open with or without the flag');
-ok(closedSlots('').length === 1 && !closedSlots('').some((s) => s.slot === 'nne'), 'default: the nne star gate is gone (1 gate left)');
-ok(closedSlots('?preview=garden').length === 1 && !closedSlots('?preview=garden').some((s) => s.slot === 'nne'), 'open garden has no gate; the last one stays');
-ok(closedSlots('').length === 1 && closedSlots('?preview=all').length === 0, 'default: one gate stays (the bayou is built since K13); preview=all opens the glen');
-ok(isSlotOpen('ese', '') && isSlotOpen('wsw', '') && (!isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the harbor (K11) and the bayou (K13) are built; the last land is preview-only');
+ok(same(openLandIds(''), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && same(openLandIds('?preview=cove'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && same(openLandIds('?preview=isle'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'without the garden flag nothing changes: the garden is open anyway (K9)');
+ok(same(openLandIds('?preview=garden'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'built lands stay open; preview=all also includes the glen');
+ok(same([...openSlotIds('')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=garden')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: nne is open with or without the flag');
+ok(closedSlots('').length === 0 && !closedSlots('').some((s) => s.slot === 'nne'), 'default: the nne star gate is gone (1 gate left)');
+ok(closedSlots('?preview=garden').length === 0 && !closedSlots('?preview=garden').some((s) => s.slot === 'nne'), 'open garden has no gate; the last one stays');
+ok(closedSlots('').length === 0 && closedSlots('?preview=all').length === 0, 'default: one gate stays (the bayou is built since K13); preview=all opens the glen');
+ok(isSlotOpen('ese', '') && isSlotOpen('wsw', '') && (isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the harbor (K11) and the bayou (K13) are built; the last land is preview-only');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 
 // --- Geometry: path reaches the land, Jasmine's pad is stored, clear of the Library, castle, plaza paths and other lands -------
@@ -106,8 +106,8 @@ ok(['library', 'frostfall', 'meadow', 'village', 'cove', 'isle'].every((l) => tr
 ok(same(treasureSpots(day, 'cove', 5).map((s) => s.kind), Array(5).fill('seaglass')) && same(treasureSpots(day, 'isle', 5).map((s) => s.kind), Array(5).fill('blossom')), 'cove and isle treasures are unchanged');
 ok(same(treasureLandsFor(['cove', 'isle']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle'])
   && same(treasureLandsFor(['cove', 'isle', 'garden']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden']), 'treasure lands: only open lands');
-ok(findsTotal(openLandIds('')) === 45, 'finds total is 45 now (garden, harbor and bayou open)');
-ok(findsTotal(openLandIds('?preview=garden')) === 45 && findsTotal(openLandIds('')) === 45 && findsTotal(openLandIds('?preview=all')) === 50 && findsTotal(['cove', 'isle', 'garden']) === 35, 'normal play keeps its existing total; preview=all adds five glen roses');
+ok(findsTotal(openLandIds('')) === 50, 'finds total is 45 now (garden, harbor and bayou open)');
+ok(findsTotal(openLandIds('?preview=garden')) === 50 && findsTotal(openLandIds('')) === 50 && findsTotal(openLandIds('?preview=all')) === 50 && findsTotal(['cove', 'isle', 'garden']) === 35, 'normal play keeps its existing total; preview=all adds five glen roses');
 ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove', 'isle']) === 30, 'earlier totals unchanged (20, 25, 30)');
 {
   const save = {};
@@ -314,7 +314,7 @@ ok(/landPads\[GARDEN\.land\]/.test(world) && /landCenters\[GARDEN\.land\]/.test(
 ok(/garden\.dry\(/.test(world), 'treasures stay out of the pool and fountain');
 ok(NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1 && NPC_ORDER.indexOf('jasmine') === NPC_ORDER.indexOf('moana') + 1, 'Jasmine follows Moana in NPC_ORDER: world.js spawns her on the garden pad like the others');
 ok(/jasmine:\s*\{[^}]*land: 'garden'/.test(world), 'NPC_DEFS.jasmine.land is the garden (K9 spawns her on the stored pad)');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne: jasmine and ese: anna in source');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana',\s*ene:\s*'aurora'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne: jasmine and ese: anna in source');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne'(,\s*harbor:\s*'ese')?(,\s*bayou:\s*'wsw')?,\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden)');
 ok(/import \{ buildGarden \} from '\.\/garden\.js\?v=20261027e2'/.test(world), 'world imports garden.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(garden), 'garden.js shares the cove\'s merger with the existing stamp');

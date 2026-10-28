@@ -154,7 +154,7 @@ export function tileBuilder({ tiles, target, onWrong, onDone, speak }) {
 // the item stays; onEvent('__sortwrong', hint) per wrong tap, '__sortdone' when all are sorted.
 const _an = (n) => (/^[aeiou]/.test(n) ? 'an' : 'a');
 const _itemLine = (i) => `${_an(i.name) === 'an' ? 'An' : 'A'} ${i.name}.`;
-function _sortBins(items, pid, prompt, onEvent) {
+function _sortBins(items, pid, prompt, onEvent, wordSort = false) {
   const wrap = el('div', 'zsq-sort');
   const card = el('div', 'zsq-sort-card');
   const pic = el('div', 'zsq-sort-pic');
@@ -170,7 +170,7 @@ function _sortBins(items, pid, prompt, onEvent) {
     b.dataset.living = living ? '1' : '0';
     return { b, tally };
   };
-  const L = mk(true, '🌱 Living', 'zsq-bin-yes'), N = mk(false, '🪨 Not living', 'zsq-bin-no');
+  const L = mk(true, wordSort ? 'Naming' : '🌱 Living', 'zsq-bin-yes'), N = mk(false, wordSort ? 'Action' : '🪨 Not living', 'zsq-bin-no');
   bins.append(L.b, N.b);
   const hint = el('div', 'zsq-sort-hint');
   hint.setAttribute('aria-live', 'polite');
@@ -180,24 +180,25 @@ function _sortBins(items, pid, prompt, onEvent) {
   const say = (t) => { _els._lastLine = { princessId: pid || null, text: `${prompt} ${t}` }; };
   const show1 = (speak) => {
     const it = items[idx];
-    pic.textContent = it.pic;
+    pic.textContent = it.pic || '';
     nm.textContent = it.name;
     cnt.textContent = `${idx + 1} of ${items.length}`;
     card.className = 'zsq-sort-card';
     card.style.transform = '';
     card.style.opacity = '';
     hint.textContent = '';
-    say(_itemLine(it));
-    if (speak) Narrator.speakExact(pid || 'rapunzel', _itemLine(it));
+    const line = wordSort ? it.name : _itemLine(it);
+    say(line);
+    if (speak) Narrator.speakExact(pid || 'rapunzel', line);
   };
   [L, N].forEach(({ b }) => {
     b.onclick = () => {
       if (busy || idx >= items.length) return;
       const it = items[idx];
       const living = b.dataset.living === '1';
-      if (living !== it.living) {
+      if (living !== (wordSort ? it.naming : it.living)) {
         SoundFX.pop();
-        const h = it.living ? `Good try! ${_an(it.name) === 'an' ? 'An' : 'A'} ${it.name} needs water to grow. Is it living?`
+        const h = wordSort ? 'Good try! A naming word names a thing. An action word tells what it does.' : it.living ? `Good try! ${_an(it.name) === 'an' ? 'An' : 'A'} ${it.name} needs water to grow. Is it living?`
           : `Good try! Does ${_an(it.name)} ${it.name} need water to grow?`;
         hint.textContent = h;
         say(h);
@@ -213,7 +214,7 @@ function _sortBins(items, pid, prompt, onEvent) {
         card.style.opacity = '0';
       }
       setTimeout(() => {
-        side.tally.textContent += it.pic;
+        side.tally.textContent += wordSort ? (side.tally.textContent ? ', ' : '') + it.name : it.pic;
         idx++;
         busy = false;
         if (idx >= items.length) {
@@ -225,7 +226,7 @@ function _sortBins(items, pid, prompt, onEvent) {
     };
   });
   show1(false);
-  wrap.firstItemLine = _itemLine(items[0]);
+  wrap.firstItemLine = wordSort ? items[0].name : _itemLine(items[0]);
   return wrap;
 }
 const ZOE_PORTRAIT = PORTRAIT_ZOE;
@@ -1324,7 +1325,7 @@ export const UI = {
     if (data.sort && data.sort.items && data.sort.items.length) {
       const sb = _sortBins(data.sort.items, data.princessId, data.prompt || '', (id, h) => {
         if (typeof onChoose === 'function') onChoose(id, h);
-      });
+      }, data.sort.kind === 'words');
       modal.appendChild(sb);
       if (data.voiceText) data = { ...data, voiceText: `${data.voiceText} ${sb.firstItemLine}` };
     }

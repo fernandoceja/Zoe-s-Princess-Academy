@@ -65,7 +65,7 @@ export const PLANNED_SLOTS = {
 
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
-export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana', nne: 'jasmine', ese: 'anna', wsw: 'tiana' };   // K5: Seashell Cove, K7: Wayfinder Isle, K9: Moonlit Palace Garden, K11: Sunny Fjord Harbor, K13: Firefly Bayou (their princesses' quests exist)
+export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana', nne: 'jasmine', ese: 'anna', wsw: 'tiana', ene: 'aurora' };   // K5: Seashell Cove, K7: Wayfinder Isle, K9: Moonlit Palace Garden, K11: Sunny Fjord Harbor, K13: Firefly Bayou (their princesses' quests exist)
 
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));

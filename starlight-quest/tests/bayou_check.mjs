@@ -25,7 +25,7 @@ const src = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const day = '2026-10-28';
 const FOUR = ['cove', 'isle', 'garden', 'harbor'];
-const FIVE = [...FOUR, 'bayou'];
+const FIVE = [...FOUR, 'bayou', 'glen'];
 
 // --- "Open": open by default since K13 (the preview flag changes nothing) --------------------------------------------------------------
 ok(PLANNED_SLOTS.tiana === 'wsw' && BAYOU.slot === 'wsw' && BAYOU.land === 'bayou' && BAYOU.princess === 'tiana', 'bayou sits at Tiana\'s planned wsw slot');
@@ -36,12 +36,12 @@ ok(isBayouOpen('?preview=bayou') && isBayouOpen('?preview=all') && isBayouOpen('
 ok(PREVIEW_LANDS.bayou === 'wsw' && PREVIEW_LANDS.harbor === 'ese' && PREVIEW_LANDS.cove === 'sse' && PREVIEW_LANDS.isle === 'ssw' && PREVIEW_LANDS.garden === 'nne', 'bayou is in PREVIEW_LANDS (the other flags stay)');
 ok(isCoveOpen() && isIsleOpen() && isGardenOpen() && isHarborOpen() && isHarborOpen('?preview=bayou'), 'the built lands stay open (and harmless with the bayou flag)');
 ok(same(openLandIds(''), FIVE) && same(openLandIds('?preview=tiana'), FIVE) && same(openLandIds('?preview=harbor'), FIVE), 'without the bayou flag the bayou is open anyway: the five built lands');
-ok(same(openLandIds('?preview=bayou'), FIVE) && same(openLandIds('?preview=all'), [...FIVE, 'glen']), 'built lands stay open; preview=all also includes the glen');
-ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=bayou')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: wsw is open with or without the flag');
-ok(closedSlots('').length === 1 && !closedSlots('').some((s) => s.slot === 'wsw') && closedSlots('').some((s) => s.slot === 'ene'), 'default: the wsw star gate is gone (only ene stays)');
-ok(closedSlots('?preview=bayou').length === 1 && closedSlots('?preview=bayou')[0].slot === 'ene', 'open bayou has no gate; ene stays');
+ok(same(openLandIds('?preview=bayou'), FIVE) && same(openLandIds('?preview=all'), FIVE), 'built lands stay open; preview=all also includes the glen');
+ok(same([...openSlotIds('')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=bayou')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: wsw is open with or without the flag');
+ok(closedSlots('').length === 0 && !closedSlots('').some((s) => s.slot === 'wsw'), 'default: the wsw star gate is gone (only ene stays)');
+ok(closedSlots('?preview=bayou').length === 0, 'open bayou has no gate; ene stays');
 ok(closedSlots('?preview=all').length === 0, 'preview=all: the last gate opens for review');
-ok(isSlotOpen('wsw', '?preview=bayou') && isSlotOpen('wsw', '') && (!isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the last land (ene) is preview-only until K15');
+ok(isSlotOpen('wsw', '?preview=bayou') && isSlotOpen('wsw', '') && (isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the last land (ene) is preview-only until K15');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 ok(NPC_ORDER.includes('tiana') && NPC_ORDER.indexOf('tiana') === NPC_ORDER.indexOf('anna') + 1, 'Tiana follows Anna in NPC_ORDER (K13): world.js spawns her on the bayou pad');
 
@@ -130,8 +130,8 @@ ok(same(treasureSpots(day, 'cove', 5).map((s) => s.kind), Array(5).fill('seaglas
   && same(treasureSpots(day, 'garden', 5).map((s) => s.kind), Array(5).fill('moonstone')) && same(treasureSpots(day, 'harbor', 5).map((s) => s.kind), Array(5).fill('anchor')), 'cove, isle, garden and harbor treasures are unchanged');
 ok(same(treasureLandsFor(FOUR), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor'])
   && same(treasureLandsFor([...FOUR, 'bayou']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor', 'bayou']), 'treasure lands: only open lands');
-ok(findsTotal(openLandIds('')) === 45 && findsTotal(openLandIds('?preview=tiana')) === 45 && findsTotal(openLandIds('?preview=harbor')) === 45, 'finds total is 45 with the bayou open');
-ok(findsTotal(openLandIds('?preview=bayou')) === 45 && findsTotal(openLandIds('?preview=all')) === 50, 'normal play keeps its existing total; preview=all adds five glen roses');
+ok(findsTotal(openLandIds('')) === 50 && findsTotal(openLandIds('?preview=tiana')) === 50 && findsTotal(openLandIds('?preview=harbor')) === 50, 'finds total is 45 with the bayou open');
+ok(findsTotal(openLandIds('?preview=bayou')) === 50 && findsTotal(openLandIds('?preview=all')) === 50, 'normal play keeps its existing total; preview=all adds five glen roses');
 ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove', 'isle']) === 30 && findsTotal(['cove', 'isle', 'garden']) === 35 && findsTotal(FOUR) === 40, 'earlier totals unchanged (20, 25, 30, 35, 40)');
 {
   const save = {};
@@ -462,7 +462,7 @@ ok(/lily\(g\)/.test(world) && /lily: 0x/.test(world), 'world draws the lily trea
 ok(/tiana:\s*\{[^}]*land: 'bayou'/.test(world) && PRINCESSES.tiana.name === 'Tiana', 'NPC_DEFS.tiana.land is the bayou (the pad is stored and Tiana is spawned on it, K13)');
 ok(NPC_ORDER.includes('tiana') && /NPC_TO_LAND = \{[^}]*tiana: 'bayou'/.test(main), 'Tiana is in NPC_ORDER and NPC_TO_LAND (K13)');
 ok(/wsw:\s*'tiana'/.test(worldmap.replace(/\/\/.*$/gm, '').replace(/PLANNED_SLOTS[\s\S]*?\};/, '')), 'BUILT_SLOTS holds wsw: tiana');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne, ese and wsw');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana',\s*ene:\s*'aurora'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne, ese and wsw');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw',\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
 ok(/import \{ buildBayou \} from '\.\/bayou\.js\?v=20261027e2'/.test(world), 'world imports bayou.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(bayou) && /from '\.\/treasures\.js\?v=20261027e2'/.test(bayou), 'bayou.js shares the cove\'s merger and the tally helpers with the existing stamp');
