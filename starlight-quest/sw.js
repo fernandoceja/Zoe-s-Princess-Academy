@@ -20,6 +20,7 @@ const PRECACHE_URLS = [
   './js/bayou.js?v=20261027e2',
   './js/cove.js?v=20261027e2',
   './js/garden.js?v=20261027e2',
+  './js/glen.js?v=20261027e2',
   './js/harbor.js?v=20261027e2',
   './js/input.js?v=20261027e2',
   './js/isle.js?v=20261027e2',

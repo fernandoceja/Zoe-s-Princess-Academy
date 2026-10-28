@@ -14,10 +14,12 @@ import { buildCove } from './cove.js?v=20261027e2';
 import { buildIsle } from './isle.js?v=20261027e2';
 import { buildGarden } from './garden.js?v=20261027e2';
 import { buildHarbor } from './harbor.js?v=20261027e2';
+import { buildGlen } from './glen.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261027e2';
 import { buildBayou } from './bayou.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU, isGlenOpen, glenGeometry, GLEN,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -496,6 +498,13 @@ export function createWorld(container, hooks) {
     const bg = bayouGeometry();
     landCenters[BAYOU.land] = new THREE.Vector3(bg.center.x, 0, bg.center.z);
     landPads[BAYOU.land] = new THREE.Vector3(bg.pad.x, 0, bg.pad.z);
+  }
+
+  const glenOpen = isGlenOpen();
+  if (glenOpen) {
+    const gg = glenGeometry();
+    landCenters[GLEN.land] = new THREE.Vector3(gg.center.x, 0, gg.center.z);
+    landPads[GLEN.land] = new THREE.Vector3(gg.pad.x, 0, gg.pad.z);
   }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
@@ -1545,6 +1554,10 @@ export function createWorld(container, hooks) {
       THREE, scene, center: landCenters[BAYOU.land], pad: landPads[BAYOU.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
     });
   }
+  let glen = null;
+  if (glenOpen) {
+    glen = buildGlen({ THREE, scene, center: landCenters[GLEN.land], pad: landPads[GLEN.land], G, M, addCollider, addTappable, calmMotion });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
@@ -1590,7 +1603,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff, anchor: 0xbfe0ff, lily: 0xffc8e0 };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff, anchor: 0xbfe0ff, lily: 0xffc8e0, rose: 0xffb1ca };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1644,6 +1657,14 @@ export function createWorld(container, hooks) {
       }
       tapPart(g, G('trLilyMid', () => new THREE.SphereGeometry(0.07, 6, 5)), tapStd('trLilyMid', 0xffd24d), 0, 0.04, 0);
     },
+    rose(g) { // glen only: original rose with a green stem; one merged mesh
+      const m = makeMerger(THREE);
+      const ball = G('coveBall', () => new THREE.SphereGeometry(1, 8, 6));
+      m.add(G('covePole', () => new THREE.CylinderGeometry(1, 1, 1, 7)), 0x579655, 0, -0.1, 0, 0, 0, 0, 0.025, 0.4, 0.025);
+      for (let i = 0; i < 7; i++) { const a = i * Math.PI * 2 / 7; m.add(ball, i % 2 ? 0xff92b0 : 0xdb527e, Math.cos(a) * 0.12, 0.13, Math.sin(a) * 0.12, 0, a, 0, 0.12, 0.11, 0.08); }
+      m.add(ball, 0xffd98a, 0, 0.18, 0, 0, 0, 0, 0.06);
+      g.add(new THREE.Mesh(m.build(), M('trRoseVC', () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }))));
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1672,6 +1693,7 @@ export function createWorld(container, hooks) {
         const dryIsle = (x, z) => !(isle && landId === ISLE.land) || !isle.wet(x, z);                                        // isle: keep finds off the lagoon
         const dryGarden = (x, z) => !(garden && landId === GARDEN.land) || garden.dry(x, z);                                // garden: keep finds out of the pool and off the beds
         if (harbor && landId === HARBOR.land) [px, pz] = harbor.settle(wx, wz, treasureFree);   // the harbor always finds a clear dry spot (see harbor.js)
+        else if (glen && landId === GLEN.land) [px, pz] = glen.settle(wx, wz, treasureFree);
         else if (bayou && landId === BAYOU.land) [px, pz] = bayou.settle(wx, wz, treasureFree);   // and so does the bayou (see bayou.js)
         else for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz) && dryGarden(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();

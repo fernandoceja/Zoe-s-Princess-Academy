@@ -77,7 +77,7 @@
   Only clear-cut sentences are used, so a period and an exclamation mark are never both right.
 - **Example round:** *"Which mark ends this sentence?"* showing `Where is the cat?` — choices: `. period`, `? question mark`, `! exclamation mark`.
 
-## 🪷 Tiana — "The Tally Stand" · Firefly Bayou
+## 🌸 Tiana — "The Tally Stand" · Firefly Bayou
 
 - **Standard:** Math Measurement and Data — CA CCSS **1.MD.C.4** (organize, represent and interpret data), with K.CC and 1.NBT counting by 5s
 - **What the child practices:** Counting tally marks at a vegetable stand.

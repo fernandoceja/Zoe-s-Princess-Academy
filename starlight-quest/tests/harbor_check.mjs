@@ -13,7 +13,7 @@ import {
 import {
   todayKey, treasureSpots, collectTreasure, treasureBookModel, treasureLandsFor, findsTotal, findsToday, awardRowStar,
   TREASURE_KINDS, ALL_TREASURE_KINDS, ALL_TREASURE_LANDS, HARBOR_KIND, HARBOR_LAND, TREASURES_PER_LAND, TREASURE_INFO, TREASURE_LAND_NAMES,
-  SECRETS, COVE_SECRETS, ISLE_SECRETS, GARDEN_SECRETS, HARBOR_SECRETS, BAYOU_SECRETS, ALL_SECRETS, sanitizeSecrets, foundSecret, createSecretTracker, sentenceLine, SENTENCE_FLAGS, END_MARKS,
+  SECRETS, COVE_SECRETS, ISLE_SECRETS, GARDEN_SECRETS, HARBOR_SECRETS, BAYOU_SECRETS, GLEN_SECRETS, ALL_SECRETS, sanitizeSecrets, foundSecret, createSecretTracker, sentenceLine, SENTENCE_FLAGS, END_MARKS,
 } from '../js/treasures.js';
 import { buildHarbor, harborWet, HARBOR_SPOTS, HARBOR_STATICS, HARBOR_R, WATER, DOCK, SENTENCE_FLAG_KEYS, PINES } from '../js/harbor.js';
 import { NPC_ORDER, PRINCESSES } from '../js/quests.js';
@@ -33,12 +33,12 @@ ok(isHarborOpen('?preview=harbor') && isHarborOpen('?preview=all') && isHarborOp
 ok(PREVIEW_LANDS.harbor === 'ese' && PREVIEW_LANDS.cove === 'sse' && PREVIEW_LANDS.isle === 'ssw' && PREVIEW_LANDS.garden === 'nne', 'harbor is in PREVIEW_LANDS (the other flags stay)');
 ok(isCoveOpen() && isIsleOpen() && isGardenOpen() && isCoveOpen('?preview=harbor') && isGardenOpen('?preview=harbor'), 'the built lands stay open (and harmless with the harbor flag)');
 ok(same(openLandIds(''), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=tiana'), ['cove', 'isle', 'garden', 'harbor', 'bayou']), 'without the harbor flag the harbor is open anyway (K11)');
-ok(same(openLandIds('?preview=harbor'), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou']), 'with the flag the harbor is a fourth open land (the bayou is open too since K13)');
+ok(same(openLandIds('?preview=harbor'), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'built lands stay open; preview=all also includes the glen');
 ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=harbor')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: ese is open with or without the flag');
 ok(closedSlots('').length === 1 && !closedSlots('').some((s) => s.slot === 'ese'), 'default: the ese star gate is gone (1 gate left)');
 ok(closedSlots('?preview=harbor').length === 1 && !closedSlots('?preview=harbor').some((s) => s.slot === 'ese'), 'open harbor has no gate; the last one stays');
-ok(closedSlots('?preview=all').length === 1 && closedSlots('?preview=all')[0].slot === 'ene' && closedSlots('?preview=harbor').length === 1, 'only the ene gate stays closed, with or without preview flags (the bayou is built, K13)');
-ok(isSlotOpen('wsw', '') && !isSlotOpen('ene', '?preview=all'), 'the bayou is built (K13); the last land is not');
+ok(closedSlots('?preview=all').length === 0 && closedSlots('?preview=harbor').length === 1, 'ene stays closed normally; preview=all opens the glen');
+ok(isSlotOpen('wsw', '') && (!isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the bayou is built (K13); the last land is preview-only');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 
 // --- Geometry: the path reaches the land, Anna's pad is stored, clear of Frostfall, the castle, the plaza paths and the other lands ---
@@ -104,9 +104,9 @@ ok(HARBOR_KIND === 'anchor' && HARBOR_LAND === 'harbor' && ALL_TREASURE_KINDS.in
 ok(TREASURE_INFO.anchor && TREASURE_INFO.anchor.emoji === '⚓' && TREASURE_INFO.anchor.label === 'Anchors', 'anchor has Treasure Book info');
 {
   const emojis = Object.values(TREASURE_INFO).map((i) => i.emoji);
-  ok(new Set(emojis).size === emojis.length && emojis.length === 10, 'every treasure kind has its own emoji');
+  ok(new Set(emojis).size === emojis.length && emojis.length === 11, 'every treasure kind has its own emoji');
   const stickers = ALL_SECRETS.map((s) => s.emoji);
-  ok(new Set(stickers).size === stickers.length && stickers.length === 9, 'every sticker has its own emoji');
+  ok(new Set(stickers).size === stickers.length && stickers.length === 10, 'every sticker has its own emoji');
 }
 ok(TREASURE_LAND_NAMES.harbor === 'Sunny Fjord Harbor' && PRINCESSES.anna.landName === 'Sunny Fjord Harbor', 'harbor has a book name');
 const a = treasureSpots(day, HARBOR_LAND, TREASURES_PER_LAND);
@@ -120,7 +120,7 @@ ok(same(treasureSpots(day, 'cove', 5).map((s) => s.kind), Array(5).fill('seaglas
 ok(same(treasureLandsFor(['cove', 'isle', 'garden']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden'])
   && same(treasureLandsFor(['cove', 'isle', 'garden', 'harbor']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor']), 'treasure lands: only open lands');
 ok(findsTotal(openLandIds('')) === 45 && findsTotal(openLandIds('?preview=tiana')) === 45, 'finds total is 45 with the harbor and bayou open');
-ok(findsTotal(openLandIds('?preview=harbor')) === 45 && findsTotal(openLandIds('?preview=all')) === 45, 'finds total is 45 whatever the flags say (the harbor and the bayou are open)');
+ok(findsTotal(openLandIds('?preview=harbor')) === 45 && findsTotal(openLandIds('?preview=all')) === 50, 'normal play keeps its existing total; preview=all adds five glen roses');
 ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove', 'isle']) === 30 && findsTotal(['cove', 'isle', 'garden']) === 35, 'earlier totals unchanged (20, 25, 30, 35)');
 {
   const save = {};
@@ -148,7 +148,7 @@ ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove'
 
 // --- Secret: capital letter, then words, then an end mark -----------------------------------------------------------------
 ok(SECRETS.length === 4 && COVE_SECRETS.length === 1 && ISLE_SECRETS.length === 1 && GARDEN_SECRETS.length === 1 && HARBOR_SECRETS.length === 1
-  && same(ALL_SECRETS, [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS, ...GARDEN_SECRETS, ...HARBOR_SECRETS, ...BAYOU_SECRETS]), 'earlier secrets unchanged, one harbor secret after them (then the bayou one)');
+  && same(ALL_SECRETS, [...SECRETS, ...COVE_SECRETS, ...ISLE_SECRETS, ...GARDEN_SECRETS, ...HARBOR_SECRETS, ...BAYOU_SECRETS, ...GLEN_SECRETS]), 'earlier secrets unchanged, one harbor secret after them (then the bayou one)');
 ok(HARBOR_SECRETS[0].id === 'sentenceflags' && HARBOR_SECRETS[0].npc === 'anna' && HARBOR_SECRETS[0].emoji && HARBOR_SECRETS[0].label && HARBOR_SECRETS[0].land === 'harbor', 'harbor secret has a sticker, an owner and a label');
 ok(same(sanitizeSecrets(['sentenceflags', 'x', 'clock']), ['clock', 'sentenceflags']), 'sticker id is a known id');
 { const s = {}; ok(foundSecret(s, 'sentenceflags') && !foundSecret(s, 'sentenceflags'), 'sticker is earned once'); }
@@ -383,7 +383,7 @@ ok(NPC_ORDER.includes('anna') && NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf
 ok(/anna:\s*\{[^}]*land: 'harbor'/.test(world), 'NPC_DEFS.anna.land is the harbor (K11 spawns her on the stored pad)');
 ok(/ese:\s*'anna'/.test(worldmap.replace(/\/\/.*$/gm, '').replace(/PLANNED_SLOTS[\s\S]*?\};/, '')), 'BUILT_SLOTS holds ese: anna');
 ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne and ese');
-ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
+ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw',\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
 ok(/import \{ buildHarbor \} from '\.\/harbor\.js\?v=20261027e2'/.test(world), 'world imports harbor.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(harbor), 'harbor.js shares the cove\'s merger with the existing stamp');
 ok(/'\.\/js\/harbor\.js\?v=20261027e2'/.test(sw), 'harbor.js is precached with the existing stamp');

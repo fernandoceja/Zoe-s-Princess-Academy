@@ -213,7 +213,7 @@ ok(!shouldRunFinale(NPC_ORDER.slice(0, -1), NPC_ORDER, NEW_LAND_SLOTS.length), '
 { const src = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   const main = src('js/main.js'), ui = src('js/ui.js'), sw = src('sw.js'), ci = readFileSync(new URL('../../.github/workflows/starlight-tests.yml', import.meta.url), 'utf8');
   ok(/tiana: 'bayou'/.test(main) && /tallyCardHtml\(round\.visual\)/.test(main) && /npcId === 'tiana'\) && !round\.noChoiceSay/.test(main), 'main wires the land, the tally card and read-aloud choices');
-  ok(/Bayou/.test(ui) && /🪷/.test(ui), 'the new-kingdom card has a bayou emoji');
+  ok(/Bayou/.test(ui) && /🌸/.test(ui), 'the new-kingdom card has a bayou emoji');
   ok(/\.\/js\/tally\.js\?v=\w+/.test(sw), 'tally.js is precached');
   ok(/tiana_check\.mjs/.test(ci), 'the check runs in CI'); }
 
