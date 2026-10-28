@@ -480,8 +480,8 @@ export function createWorld(container, hooks) {
     landCenters[GARDEN.land] = new THREE.Vector3(gg.center.x, 0, gg.center.z);
     landPads[GARDEN.land] = new THREE.Vector3(gg.pad.x, 0, gg.pad.z);
   }
-  // Sunny Fjord Harbor (K10): only when its slot is open (?preview=harbor, or really built when Anna's quests land in K11). Centre and Anna's
-  // pad are stored like the others so the scatter and every spot check stay clear of them; Anna is NOT spawned (not in NPC_ORDER until K11).
+  // Sunny Fjord Harbor (K10): only when its slot is open (built for real since K11, or ?preview=harbor). Centre and Anna's
+  // pad are stored like the others so the scatter and every spot check stay clear of them; Anna is in NPC_ORDER (K11), so the spawn loop puts her on this pad.
   const harborOpen = isHarborOpen();
   if (harborOpen) {
     const hg = harborGeometry();

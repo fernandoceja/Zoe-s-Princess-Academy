@@ -39,7 +39,7 @@ expect('voices distinct', new Set(vs).size === vs.length);
 const cs = all.map(([, p]) => p.color.toLowerCase());
 expect('colors distinct', new Set(cs).size === cs.length);
 // Not in the game yet.
-expect('NPC_ORDER is the original four plus Ariel (K5), Moana (K7) and Jasmine (K9); the other three are not in it yet', JSON.stringify(NPC_ORDER) === JSON.stringify(['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine']));
+expect('NPC_ORDER is the original four plus Ariel (K5), Moana (K7), Jasmine (K9) and Anna (K11); the other two are not in it yet', JSON.stringify(NPC_ORDER) === JSON.stringify(['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna']));
 // Planned slots.
 expect('PLANNED_SLOTS covers exactly the six', JSON.stringify(Object.keys(PLANNED_SLOTS).sort()) === JSON.stringify([...ids].sort()));
 const valid = new Set(NEW_LAND_SLOTS.map((s) => s.slot));

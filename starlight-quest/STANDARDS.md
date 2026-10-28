@@ -67,6 +67,16 @@
   Stretch: pick the right order ("first sprout, then plant, last flower") or listen to a three-sentence story and say what happened first or last.
 - **Example round:** *"What comes first?"* with three picture cards (a chick, an egg, a hen) — choices: `egg`, `baby chick`, `big hen`.
 
+## ⚓ Anna — "The Harbor Signs" · Sunny Fjord Harbor
+
+- **Standard:** ELA Language — CA CCSS **L.1.2.a** (capitalize dates and names of people), **L.1.2.b** (end punctuation), and L.K.2.a (capitalize the first word and the pronoun I)
+- **What the child practices:** Fixing short sentences on harbor signs.
+  Easy: which mark ends the sentence (period for telling, question mark for asking, exclamation mark for excited).
+  Core: which word needs a capital letter in a sentence written in lowercase (the first word, a name like Zoe or Sam, or the word I).
+  Stretch: which of three versions of a sentence is written the right way (capital letter plus the right end mark).
+  Only clear-cut sentences are used, so a period and an exclamation mark are never both right.
+- **Example round:** *"Which mark ends this sentence?"* showing `Where is the cat?` — choices: `. period`, `? question mark`, `! exclamation mark`.
+
 ## 👑 Starlight Finale
 
 - Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates

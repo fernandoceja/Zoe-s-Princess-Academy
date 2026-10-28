@@ -181,7 +181,7 @@ ok(QUESTS.jasmine.rounds.length === 5, 'five fallback rounds');
   ok(f.every((r) => !(r.hint.toLowerCase().includes(r.answer.toLowerCase()))), 'fallback hints do not give the answer'); }
 
 // Wiring and story lines
-ok(NPC_ORDER.includes('jasmine') && NPC_ORDER[NPC_ORDER.length - 1] === 'jasmine' && NPC_ORDER.indexOf('jasmine') === NPC_ORDER.indexOf('moana') + 1, 'jasmine follows moana in NPC_ORDER');
+ok(NPC_ORDER.includes('jasmine') && NPC_ORDER.indexOf('jasmine') === NPC_ORDER.indexOf('moana') + 1, 'jasmine follows moana in NPC_ORDER (Anna comes after her since K11)');
 ok(NO_CLIP_IDS.includes('jasmine'), 'jasmine uses the speech voice (no clips)');
 ok(PRINCESSES.jasmine.landName === 'Moonlit Palace Garden' && QUESTS.jasmine.title === 'The Story Lanterns', 'land name and title');
 ok(/Jasmine/.test(PARENT_CORNER_HTML) && /RL\.1\.2/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');
@@ -200,13 +200,13 @@ ok(!FILM.test(jasText), 'film word in Jasmine text: ' + (jasText.match(FILM) || 
 ok(!/whole new world/i.test(jasText) && !/\blamp\b/i.test(jasText), 'no film phrases');
 
 // Opening the garden: new-kingdom card, saves, finale.
-ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw'])) === '["nne"]', 'a save that saw cove and isle gets a card for the garden only');
-ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne']).length === 0, 'once seen, no card again');
+ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw']).sort()) === '["ese","nne"]', 'a save that saw cove and isle gets a card for the garden (and the harbor, K11)');
+ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese']).length === 0, 'once seen, no card again');
 { const m = merge({ done: ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana'], seenNewKingdoms: true, seenKingdoms: ['sse', 'ssw'], shards: { moana: 5 } });
   ok(m.shards.jasmine === 0 && !m.done.includes('jasmine') && m.done.length === 6 && m.shards.moana === 5, 'existing saves keep progress; Jasmine starts fresh'); }
-ok(!shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Jasmine alone never runs the crown finale (three kingdoms still closed)');
+ok(!shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Jasmine never runs the crown finale (two kingdoms still closed)');
 { const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
-  ok(/jasmine: 'garden'/.test(main) && /storyCardsHtml\(round\.visual\)/.test(main) && /npcId === 'jasmine'\) && !round\.noChoiceSay/.test(main), 'main wires the land, the story cards and read-aloud choices'); }
+  ok(/jasmine: 'garden'/.test(main) && /storyCardsHtml\(round\.visual\)/.test(main) && /npcId === 'jasmine'( \|\| npcId === 'anna')?\) && !round\.noChoiceSay/.test(main), 'main wires the land, the story cards and read-aloud choices'); }
 
 console.log(`jasmine_check: ${n} rounds`, JSON.stringify(kinds), 'problems', bad.size);
 for (const k of [...bad.keys()].slice(0, 25)) console.log(' ', k);
