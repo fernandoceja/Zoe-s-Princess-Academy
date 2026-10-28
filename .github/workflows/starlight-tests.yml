@@ -76,3 +76,5 @@ jobs:
         run: node starlight-quest/tests/garden_check.mjs
       - name: Sunny Fjord Harbor check
         run: node starlight-quest/tests/harbor_check.mjs
+      - name: Firefly Bayou check
+        run: node starlight-quest/tests/bayou_check.mjs

@@ -17,6 +17,7 @@ const PRECACHE_URLS = [
   './icons/icon-192-maskable.png',
   './icons/icon-512-maskable.png',
   './js/audio.js?v=20261027e2',
+  './js/bayou.js?v=20261027e2',
   './js/cove.js?v=20261027e2',
   './js/garden.js?v=20261027e2',
   './js/harbor.js?v=20261027e2',

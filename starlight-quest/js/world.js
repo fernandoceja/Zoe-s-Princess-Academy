@@ -14,9 +14,10 @@ import { buildCove } from './cove.js?v=20261027e2';
 import { buildIsle } from './isle.js?v=20261027e2';
 import { buildGarden } from './garden.js?v=20261027e2';
 import { buildHarbor } from './harbor.js?v=20261027e2';
+import { buildBayou } from './bayou.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -487,6 +488,14 @@ export function createWorld(container, hooks) {
     const hg = harborGeometry();
     landCenters[HARBOR.land] = new THREE.Vector3(hg.center.x, 0, hg.center.z);
     landPads[HARBOR.land] = new THREE.Vector3(hg.pad.x, 0, hg.pad.z);
+  }
+  // Firefly Bayou (K12): only when its slot is open (?preview=bayou, or really built when Tiana's quests land in K13). Centre and Tiana's
+  // pad are stored like the others so the scatter and every spot check stay clear of them; Tiana is NOT spawned (not in NPC_ORDER until K13).
+  const bayouOpen = isBayouOpen();
+  if (bayouOpen) {
+    const bg = bayouGeometry();
+    landCenters[BAYOU.land] = new THREE.Vector3(bg.center.x, 0, bg.center.z);
+    landPads[BAYOU.land] = new THREE.Vector3(bg.pad.x, 0, bg.pad.z);
   }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
@@ -1529,6 +1538,13 @@ export function createWorld(container, hooks) {
       THREE, scene, center: landCenters[HARBOR.land], pad: landPads[HARBOR.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
     });
   }
+  // Firefly Bayou (K12): scenery + six tap surprises + the tally-marks secret, only when the slot is open.
+  let bayou = null;
+  if (bayouOpen) {
+    bayou = buildBayou({
+      THREE, scene, center: landCenters[BAYOU.land], pad: landPads[BAYOU.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
+    });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
@@ -1574,7 +1590,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff, anchor: 0xbfe0ff };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff, anchor: 0xbfe0ff, lily: 0xffc8e0 };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1618,6 +1634,16 @@ export function createWorld(container, hooks) {
       tapPart(g, tip, iron, -0.2, -0.12, 0).rotation.z = 0.5;
       tapPart(g, tip, iron, 0.2, -0.12, 0).rotation.z = -0.5;
     },
+    lily(g) { // bayou only: a pink water lily (eight petals round a golden middle, on a little green pad)
+      tapPart(g, G('trLilyPad', () => new THREE.CylinderGeometry(0.3, 0.3, 0.04, 10)), tapStd('trLilyPad', 0x5fae5e), 0, -0.14, 0);
+      const petal = G('trLilyPetal', () => new THREE.SphereGeometry(0.12, 6, 5));
+      const pm = tapStd('trLily', 0xff9fc4, 0xc9578a);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        tapPart(g, petal, pm, Math.cos(a) * 0.12, 0.02, Math.sin(a) * 0.12, 0.8, 1.7, 0.8).rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
+      }
+      tapPart(g, G('trLilyMid', () => new THREE.SphereGeometry(0.07, 6, 5)), tapStd('trLilyMid', 0xffd24d), 0, 0.04, 0);
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1637,7 +1663,8 @@ export function createWorld(container, hooks) {
       const c = landCenters[landId];
       if (!c) continue;
       // (the harbor asks for spots on dry land, so a find never starts out in the fjord; every other land is unchanged)
-      const avoidWater = harbor && landId === HARBOR.land ? (lx, lz) => !harbor.dry(c.x + lx, c.z + lz) : null;
+      const avoidWater = harbor && landId === HARBOR.land ? (lx, lz) => !harbor.dry(c.x + lx, c.z + lz)
+        : bayou && landId === BAYOU.land ? (lx, lz) => !bayou.dry(c.x + lx, c.z + lz) : null;   // (the bayou does too: finds stay out of the channels)
       for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND, undefined, avoidWater)) {
         const wx = c.x + sp.x, wz = c.z + sp.z;
         let px = wx, pz = wz;
@@ -1645,6 +1672,7 @@ export function createWorld(container, hooks) {
         const dryIsle = (x, z) => !(isle && landId === ISLE.land) || !isle.wet(x, z);                                        // isle: keep finds off the lagoon
         const dryGarden = (x, z) => !(garden && landId === GARDEN.land) || garden.dry(x, z);                                // garden: keep finds out of the pool and off the beds
         if (harbor && landId === HARBOR.land) [px, pz] = harbor.settle(wx, wz, treasureFree);   // the harbor always finds a clear dry spot (see harbor.js)
+        else if (bayou && landId === BAYOU.land) [px, pz] = bayou.settle(wx, wz, treasureFree);   // and so does the bayou (see bayou.js)
         else for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz) && dryGarden(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();
         group.position.set(px, 0, pz);
@@ -2177,6 +2205,7 @@ export function createWorld(container, hooks) {
     if (isle) isle.update(t, dt);
     if (garden) garden.update(t, dt);
     if (harbor) harbor.update(t, dt);
+    if (bayou) bayou.update(t, dt);
     updateTreasures(dt, t);
     updateGates(dt, t);
 
