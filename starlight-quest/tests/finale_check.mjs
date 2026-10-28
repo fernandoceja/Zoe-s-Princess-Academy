@@ -1,0 +1,20 @@
+// K16: the crown and finale use the real completed-quest list, never previews.
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { shouldRunFinale, builtSlotIds, openSlotIds } from '../js/worldmap.js';
+import { FINALE_LINES } from '../js/quests.js';
+const order = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
+assert.equal(shouldRunFinale(order, order, 6), true);
+for (const id of order) assert.equal(shouldRunFinale(order.filter(x => x !== id), order, 6), false, `${id} must be complete`);
+assert.equal(shouldRunFinale(order, order, 5), false, 'a preview slot cannot replace a built slot');
+assert.equal(openSlotIds('?preview=all').length, 6);
+assert.ok(builtSlotIds().length <= 6);
+assert.match(FINALE_LINES.join(' '), /ten lands/i);
+const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+const world = readFileSync(new URL('../js/world.js', import.meta.url), 'utf8');
+assert.match(main, /setCastleCrown\(shouldRunFinale\(Save\.data\.done, NPC_IDS, builtSlotIds\(\)\.length\)\)/);
+assert.match(main, /setCastleCrown\(true\)/);
+assert.match(main, /NPC_IDS\.forEach\(\(id, i\) => setTimeout\(\(\) => world\.celebrate\(NPC_TO_LAND\[id\]\), i \* 120\)\)/);
+assert.match(world, /new THREE\.InstancedMesh\(new THREE\.ConeGeometry\([^\n]+, crownGold, 10\)/);
+assert.match(world, /setCastleCrown\(visible\)/);
+console.log('finale_check ok');

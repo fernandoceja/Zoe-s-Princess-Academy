@@ -631,13 +631,13 @@ export const QUESTS = {
 };
 
 // ----------------------------------------------------------------------------
-// FINALE_LINES — spoken when all four lands are complete.
+// FINALE_LINES — spoken when every land is complete.
 // ----------------------------------------------------------------------------
 export const FINALE_LINES = [
-  'You did it! Every land is glowing again.',
-  'The Starlight Crown is back on the castle!',
-  'You are the brightest star of all, Zoe.',
-  'Thank you for helping every princess. Shine on!',
+  'You did it, Zoe! All ten lands are glowing together!',
+  'Your kindness brought the Starlight Crown back to the castle.',
+  'Every friend and every kingdom shines because you kept trying.',
+  'Thank you for learning and exploring with us. Shine on!',
 ];
 
 // ----------------------------------------------------------------------------
@@ -701,7 +701,7 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
-<div style="font-size:13px;margin-top:2px;color:#374151;">Finishing every land's quest restores the Starlight Crown (the big celebration plays once all the kingdoms are open) and celebrates persistence &mdash; no fail states, ever.</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Finishing all ten lands restores the ten-point Starlight Crown on the castle and celebrates persistence &mdash; no fail states, ever.</div>
 </div>
 </div>
 <p style="margin:12px 0 0;font-size:13px;color:#374151;"><b>Tip:</b> for a clearer voice on iPhone or iPad, open Settings &rarr; Accessibility &rarr; Spoken Content &rarr; Voices &rarr; English, and download an Enhanced voice (for example Samantha). The game uses it automatically.</p>

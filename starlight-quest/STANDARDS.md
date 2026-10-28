@@ -87,7 +87,13 @@
   The tallies are drawn in the game (every mark is a line, and the fifth mark is a red slash across four), so the count on screen is always exact.
 - **Example round:** *"How many tally marks?"* showing four lines with a slash across them and three more lines — choices: `7`, `8`, `12`.
 
+## 🌹 Aurora — "The Word Garden" · Rosewood Glen
+
+- **Standard:** ELA Language — CA CCSS **L.1.1** (grammar and usage).
+- **What the child practices:** Naming words and action words: identify each kind and sort four short words into the two groups.
+- **Example round:** *"Which word is an action?"* — choices: `bird`, `run`, `rose`.
+
 ## 👑 Starlight Finale
 
-- Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates
+- Finishing all ten lands restores the ten-point Starlight Crown on the castle and celebrates
   persistence. There are no fail states anywhere in the game.

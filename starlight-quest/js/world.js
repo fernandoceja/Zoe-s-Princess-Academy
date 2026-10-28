@@ -431,6 +431,23 @@ export function createWorld(container, hooks) {
   const starGeo = starGeometry(0.9, 0.38);
   const castleStar = new THREE.Mesh(starGeo, new THREE.MeshBasicMaterial({ color: GOLD, side: THREE.DoubleSide }));
   castleStar.position.set(0, 8.4, -1.2); castle.add(castleStar);
+  // Ten points for ten restored lands. The crown is saved by deriving visibility
+  // from the existing completed-quest list, without adding a save field.
+  const castleCrown = new THREE.Group();
+  const crownGold = new THREE.MeshBasicMaterial({ color: GOLD });
+  const crownBand = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.9, 0.35, 20, 1, true), crownGold);
+  castleCrown.add(crownBand);
+  const crownPoints = new THREE.InstancedMesh(new THREE.ConeGeometry(0.18, 0.65, 5), crownGold, 10);
+  const crownGems = new THREE.InstancedMesh(new THREE.SphereGeometry(0.1, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff8fbd }), 10);
+  const crownPart = new THREE.Object3D();
+  for (let i = 0; i < 10; i++) {
+    const a = i * Math.PI * 2 / 10, x = Math.cos(a), z = Math.sin(a);
+    crownPart.position.set(x, 0.42, z); crownPart.updateMatrix(); crownPoints.setMatrixAt(i, crownPart.matrix);
+    crownPart.position.set(x * 1.02, 0.02, z * 1.02); crownPart.updateMatrix(); crownGems.setMatrixAt(i, crownPart.matrix);
+  }
+  crownPoints.instanceMatrix.needsUpdate = true; crownGems.instanceMatrix.needsUpdate = true;
+  castleCrown.add(crownPoints, crownGems);
+  castleCrown.position.set(0, 8.8, -1.2); castleCrown.visible = false; castle.add(castleCrown);
   // Off to the north-west so it never stands between the camera and Belle's path.
   castle.position.set(-11.5, 0, -8.5);
   scene.add(castle);
@@ -2350,6 +2367,7 @@ export function createWorld(container, hooks) {
   // --- Public API ---------------------------------------------------------------
   return {
     setInputEnabled(bool) { inputEnabled = !!bool; },
+    setCastleCrown(visible) { castleCrown.visible = !!visible; },
     // Frame Zoe + one princess for a conversation; unfocus returns to the normal follow.
     focus(npcId) { if (npcs[npcId]) { focusNpc = npcs[npcId]; camSnap = calmMotion; } },
     unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
