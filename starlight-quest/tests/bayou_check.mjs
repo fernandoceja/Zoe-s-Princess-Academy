@@ -1,4 +1,4 @@
-// Firefly Bayou (K12): the land is built only when its slot ('wsw') is "open" (?preview=bayou / all for now; for real when Tiana's quests land in K13),
+// Firefly Bayou (K12): the land is built only when its slot ('wsw') is "open" (built for real since K13 when Tiana's quests landed; ?preview=bayou / all is harmless now),
 // has its own treasure kind (lilies) and one secret (the tally board: four lines and a slash, then two more = 7; tap the board, then the basket of 7),
 // respects calm motion, stays inside the draw-call budget, stays clear of Glass Slipper Village / the other lands / the castle / the paths, and uses no
 // film characters, songs or iconic props. Pure helpers are imported; bayou.js itself runs here against the vendored three.js with a tiny stand-in for
@@ -25,24 +25,25 @@ const src = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const day = '2026-10-28';
 const FOUR = ['cove', 'isle', 'garden', 'harbor'];
+const FIVE = [...FOUR, 'bayou'];
 
-// --- "Open": closed by default, open with the preview flag --------------------------------------------------------------
+// --- "Open": open by default since K13 (the preview flag changes nothing) --------------------------------------------------------------
 ok(PLANNED_SLOTS.tiana === 'wsw' && BAYOU.slot === 'wsw' && BAYOU.land === 'bayou' && BAYOU.princess === 'tiana', 'bayou sits at Tiana\'s planned wsw slot');
-ok(!('wsw' in BUILT_SLOTS) && !builtSlotIds().includes('wsw'), 'wsw is NOT built yet (Tiana\'s quests come in K13)');
-ok(!isBayouOpen() && !isBayouOpen('') && !isBayouOpen('?x=1') && !isBayouOpen('?preview=cove') && !isBayouOpen('?preview=harbor') && !isBayouOpen('?preview=tiana'), 'bayou is CLOSED by default and with other flags');
-ok(!isBayouOpen('?preview=aurora') && !isBayouOpen('?preview=wsw') && !isBayouOpen('?preview=jasmine,moana') && !isBayouOpen('?preview=firefly'), 'unknown / other preview names are harmless');
-ok(isBayouOpen('?preview=bayou') && isBayouOpen('?preview=all') && isBayouOpen('?a=1&preview=Bayou') && isBayouOpen('?preview=cove,bayou') && isBayouOpen('?preview=harbor,all'), 'preview=bayou / all / lists open it');
+ok(BUILT_SLOTS.wsw === 'tiana' && builtSlotIds().includes('wsw'), 'wsw is built (Tiana\'s quests landed in K13)');
+ok(isBayouOpen() && isBayouOpen('') && isBayouOpen('?x=1') && isBayouOpen('?preview=cove') && isBayouOpen('?preview=harbor') && isBayouOpen('?preview=tiana'), 'bayou is OPEN by default (K13) whatever the flags say');
+ok(isBayouOpen('?preview=aurora') && isBayouOpen('?preview=wsw') && isBayouOpen('?preview=jasmine,moana') && isBayouOpen('?preview=firefly'), 'unknown / other preview names are harmless');
+ok(isBayouOpen('?preview=bayou') && isBayouOpen('?preview=all') && isBayouOpen('?a=1&preview=Bayou') && isBayouOpen('?preview=cove,bayou') && isBayouOpen('?preview=harbor,all'), 'preview=bayou / all / lists are harmless (the bayou is open anyway)');
 ok(PREVIEW_LANDS.bayou === 'wsw' && PREVIEW_LANDS.harbor === 'ese' && PREVIEW_LANDS.cove === 'sse' && PREVIEW_LANDS.isle === 'ssw' && PREVIEW_LANDS.garden === 'nne', 'bayou is in PREVIEW_LANDS (the other flags stay)');
 ok(isCoveOpen() && isIsleOpen() && isGardenOpen() && isHarborOpen() && isHarborOpen('?preview=bayou'), 'the built lands stay open (and harmless with the bayou flag)');
-ok(same(openLandIds(''), FOUR) && same(openLandIds('?preview=tiana'), FOUR) && same(openLandIds('?preview=harbor'), FOUR), 'without the bayou flag nothing changes: the four built lands');
-ok(same(openLandIds('?preview=bayou'), [...FOUR, 'bayou']) && same(openLandIds('?preview=all'), [...FOUR, 'bayou']), 'with the flag the bayou is a fifth open land');
-ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw']) && same([...openSlotIds('?preview=bayou')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: wsw opens only with the flag');
-ok(closedSlots('').length === 2 && closedSlots('').some((s) => s.slot === 'wsw') && closedSlots('').some((s) => s.slot === 'ene'), 'default: the wsw star gate is still there (with ene)');
+ok(same(openLandIds(''), FIVE) && same(openLandIds('?preview=tiana'), FIVE) && same(openLandIds('?preview=harbor'), FIVE), 'without the bayou flag the bayou is open anyway: the five built lands');
+ok(same(openLandIds('?preview=bayou'), FIVE) && same(openLandIds('?preview=all'), FIVE), 'with the flag nothing changes: the bayou is the fifth open land');
+ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=bayou')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: wsw is open with or without the flag');
+ok(closedSlots('').length === 1 && !closedSlots('').some((s) => s.slot === 'wsw') && closedSlots('').some((s) => s.slot === 'ene'), 'default: the wsw star gate is gone (only ene stays)');
 ok(closedSlots('?preview=bayou').length === 1 && closedSlots('?preview=bayou')[0].slot === 'ene', 'open bayou has no gate; ene stays');
 ok(closedSlots('?preview=all').length === 1 && closedSlots('?preview=all')[0].slot === 'ene', 'preview=all: only ene stays closed');
-ok(isSlotOpen('wsw', '?preview=bayou') && !isSlotOpen('wsw', '') && !isSlotOpen('ene', '?preview=all'), 'other lands are not built yet');
+ok(isSlotOpen('wsw', '?preview=bayou') && isSlotOpen('wsw', '') && !isSlotOpen('ene', '?preview=all'), 'the last land (ene) is not built yet');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
-ok(!NPC_ORDER.includes('tiana'), 'Tiana is not playable yet (not in NPC_ORDER: no pad spawn)');
+ok(NPC_ORDER.includes('tiana') && NPC_ORDER.indexOf('tiana') === NPC_ORDER.indexOf('anna') + 1, 'Tiana follows Anna in NPC_ORDER (K13): world.js spawns her on the bayou pad');
 
 // --- Geometry: the path reaches the land, Tiana's pad is stored, clear of Glass Slipper Village, the castle, the plaza paths and the other lands ---
 const { center, pad } = bayouGeometry();
@@ -129,7 +130,7 @@ ok(same(treasureSpots(day, 'cove', 5).map((s) => s.kind), Array(5).fill('seaglas
   && same(treasureSpots(day, 'garden', 5).map((s) => s.kind), Array(5).fill('moonstone')) && same(treasureSpots(day, 'harbor', 5).map((s) => s.kind), Array(5).fill('anchor')), 'cove, isle, garden and harbor treasures are unchanged');
 ok(same(treasureLandsFor(FOUR), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor'])
   && same(treasureLandsFor([...FOUR, 'bayou']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor', 'bayou']), 'treasure lands: only open lands');
-ok(findsTotal(openLandIds('')) === 40 && findsTotal(openLandIds('?preview=tiana')) === 40 && findsTotal(openLandIds('?preview=harbor')) === 40, 'finds total is 40 with the bayou closed');
+ok(findsTotal(openLandIds('')) === 45 && findsTotal(openLandIds('?preview=tiana')) === 45 && findsTotal(openLandIds('?preview=harbor')) === 45, 'finds total is 45 with the bayou open');
 ok(findsTotal(openLandIds('?preview=bayou')) === 45 && findsTotal(openLandIds('?preview=all')) === 45, 'finds total is 45 when the bayou is open');
 ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove', 'isle']) === 30 && findsTotal(['cove', 'isle', 'garden']) === 35 && findsTotal(FOUR) === 40, 'earlier totals unchanged (20, 25, 30, 35, 40)');
 {
@@ -458,16 +459,16 @@ ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (an o
 ok(/landPads\[BAYOU\.land\]/.test(world) && /landCenters\[BAYOU\.land\]/.test(world), 'the bayou centre and Tiana\'s pad are stored like the harbor\'s');
 ok(/bayou\.dry\(/.test(world) && /bayou\.settle\(/.test(world), 'treasures stay out of the water (the bayou settles every find on clear dry ground)');
 ok(/lily\(g\)/.test(world) && /lily: 0x/.test(world), 'world draws the lily treasure and gives it a glow colour');
-ok(/tiana:\s*\{[^}]*land: 'bayou'/.test(world) && PRINCESSES.tiana.name === 'Tiana', 'NPC_DEFS.tiana.land is the bayou (the pad is stored; Tiana is not spawned until K13)');
-ok(!NPC_ORDER.includes('tiana') && !/NPC_TO_LAND = \{[^}]*tiana/.test(main), 'Tiana is not in NPC_ORDER or NPC_TO_LAND yet (K13 adds her quests)');
-ok(!/wsw:\s*'tiana'/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS does not hold wsw yet');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS still holds just sse, ssw, nne and ese');
+ok(/tiana:\s*\{[^}]*land: 'bayou'/.test(world) && PRINCESSES.tiana.name === 'Tiana', 'NPC_DEFS.tiana.land is the bayou (the pad is stored and Tiana is spawned on it, K13)');
+ok(NPC_ORDER.includes('tiana') && /NPC_TO_LAND = \{[^}]*tiana: 'bayou'/.test(main), 'Tiana is in NPC_ORDER and NPC_TO_LAND (K13)');
+ok(/wsw:\s*'tiana'/.test(worldmap.replace(/\/\/.*$/gm, '').replace(/PLANNED_SLOTS[\s\S]*?\};/, '')), 'BUILT_SLOTS holds wsw: tiana');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne, ese and wsw');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
 ok(/import \{ buildBayou \} from '\.\/bayou\.js\?v=20261027e2'/.test(world), 'world imports bayou.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(bayou) && /from '\.\/treasures\.js\?v=20261027e2'/.test(bayou), 'bayou.js shares the cove\'s merger and the tally helpers with the existing stamp');
 ok(/'\.\/js\/bayou\.js\?v=20261027e2'/.test(sw), 'bayou.js is precached with the existing stamp');
 ok(!/CACHE_VERSION\s*=\s*['"][^'"]*bayou/i.test(sw) && !/\?v=2026\d+(?!e2)\w*/.test(bayou.replace(/\?v=20261027e2/g, '')), 'cache version and stamps untouched');
-ok(/findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main), 'main counts only open lands (40 now, 45 with the bayou)');
+ok(/findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main), 'main counts only open lands (45 now)');
 ok(/id === 'tallymarks'\) line = tallyLine\(\)\.say/.test(main) && /Narrator\.speakExact\(def\.npc, line\)/.test(main), 'the tally line is spoken with Tiana\'s voice via speakExact');
 ok(/bayouOpen: isBayouOpen\(\)/.test(ui), 'Treasure Book asks for the bayou only when open');
 ok(/zsq-tb-ten/.test(ui) && /zsq-tb-vast/.test(ui) && /zsq-tb-ninest/.test(ui) && /zsq-tb-nine/.test(ui) && /zsq-tb-tight/.test(ui), 'Treasure Book has the compact 10-tile / 9-row / 9-sticker layout');

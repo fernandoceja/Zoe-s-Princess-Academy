@@ -1662,7 +1662,7 @@ export const UI = {
   showNewKingdoms(onDone, landNames) {
     // First time: the big announcement. Later (a land opened after she saw it): a short card naming the new land(s).
     if (Array.isArray(landNames) && landNames.length) {
-      UI.showMilestone({ title: landNames.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!', sub: `${landNames.join(' and ')} ${landNames.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`, emoji: landNames.length === 1 && /Garden/.test(landNames[0]) ? '🌟🌙🌟' : landNames.length === 1 && /Harbor/.test(landNames[0]) ? '🌟⚓🌟' : '🌟🏝️🌟' }, onDone);
+      UI.showMilestone({ title: landNames.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!', sub: `${landNames.join(' and ')} ${landNames.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`, emoji: landNames.length === 1 && /Garden/.test(landNames[0]) ? '🌟🌙🌟' : landNames.length === 1 && /Harbor/.test(landNames[0]) ? '🌟⚓🌟' : landNames.length === 1 && /Bayou/.test(landNames[0]) ? '🌟🪷🌟' : '🌟🏝️🌟' }, onDone);
       return;
     }
     UI.showMilestone({ title: 'New kingdoms appeared beyond the Starlight Hub!', sub: 'Follow the sparkly paths to find them.', emoji: '🌟🏰🌟' }, onDone);

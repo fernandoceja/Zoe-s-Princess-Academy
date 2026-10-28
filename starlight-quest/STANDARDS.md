@@ -77,6 +77,16 @@
   Only clear-cut sentences are used, so a period and an exclamation mark are never both right.
 - **Example round:** *"Which mark ends this sentence?"* showing `Where is the cat?` — choices: `. period`, `? question mark`, `! exclamation mark`.
 
+## 🪷 Tiana — "The Tally Stand" · Firefly Bayou
+
+- **Standard:** Math Measurement and Data — CA CCSS **1.MD.C.4** (organize, represent and interpret data), with K.CC and 1.NBT counting by 5s
+- **What the child practices:** Counting tally marks at a vegetable stand.
+  Easy: how many tally marks (1 to 10); four lines and a slash make a group of five.
+  Core: groups of five plus singles (up to 20), and counting by fives.
+  Stretch: reading a tiny tally chart of 2 or 3 rows: which row has the most, how many in one row, how many more one row has than another.
+  The tallies are drawn in the game (every mark is a line, and the fifth mark is a red slash across four), so the count on screen is always exact.
+- **Example round:** *"How many tally marks?"* showing four lines with a slash across them and three more lines — choices: `7`, `8`, `12`.
+
 ## 👑 Starlight Finale
 
 - Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates

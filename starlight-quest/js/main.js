@@ -14,12 +14,13 @@ import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTr
 import { Input } from './input.js?v=20261027e2';
 import { builtSlotIds, unseenKingdomSlots, shouldRunFinale, openLandIds, BUILT_SLOTS } from './worldmap.js?v=20261027e2';
 import { shapeSVG } from './shapes.js?v=20261027e2';
+import { tallyCardHtml } from './tally.js?v=20261027e2';
 import { startPadNav } from './padnav.js?v=20261027e2';
 import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
 
 const NPC_IDS = NPC_ORDER;
 const OPEN_LANDS = openLandIds(); // new lands are drawn only when built or previewed (Wayfinder Isle: ?preview=isle); today's finds count only open lands
-const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle', jasmine: 'garden', anna: 'harbor' };
+const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle', jasmine: 'garden', anna: 'harbor', tiana: 'bayou' };
 
 // Let the star burst and happy hop play out before a full-screen card covers the world.
 const CELEBRATE_VIEW_MS = 1800;
@@ -386,6 +387,7 @@ export async function main(container) {
     if (npcId === 'moana' && round.visual && round.visual.kind === 'shape') return shapeSVG(round.visual);
     if (npcId === 'jasmine' && round.visual && round.visual.kind === 'story') return storyCardsHtml(round.visual);
     if (npcId === 'anna' && round.visual && round.visual.kind === 'sentence') return sentenceCardHtml(round.visual);
+    if (npcId === 'tiana' && round.visual && (round.visual.kind === 'tally' || round.visual.kind === 'tallychart')) return tallyCardHtml(round.visual);
     if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
     if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel' || npcId === 'moana')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
     return '';
@@ -482,7 +484,7 @@ export async function main(container) {
     const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' } : tileRound ? { arr: [], correctId: '__spelldone' } : shuffledChoices(choices, round.answer);
     // Read the choices aloud for clock + plant quests (not Belle: reading is the skill).
     let voiceText = round.say || round.prompt;
-    if ((npcId === 'cinderella' || npcId === 'rapunzel' || ((npcId === 'ariel' || npcId === 'moana' || npcId === 'jasmine' || npcId === 'anna') && !round.noChoiceSay)) && !round.sort) {
+    if ((npcId === 'cinderella' || npcId === 'rapunzel' || ((npcId === 'ariel' || npcId === 'moana' || npcId === 'jasmine' || npcId === 'anna' || npcId === 'tiana') && !round.noChoiceSay)) && !round.sort) {
       // Read the words only, not the picture emoji in front of them.
       const labels = arr.map((c) => (round.choiceSay && round.choiceSay[c.label]) || c.label.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim());
       voiceText += ' Is it ' + labels.slice(0, -1).join(', ') + ', or ' + labels[labels.length - 1] + '?';

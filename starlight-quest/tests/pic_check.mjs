@@ -1,4 +1,4 @@
-// Every Rapunzel/Belle/Ariel/Moana/Jasmine/Anna round: a pic must not match any choice, nor (Belle) the target word.
+// Every Rapunzel/Belle/Ariel/Moana/Jasmine/Anna/Tiana round: a pic must not match any choice, nor (Belle) the target word.
 import { QUESTS, buildRounds } from '../js/quests.js';
 const strip = (t) => String(t).replace(/[\p{Extended_Pictographic}️‍]/gu, '').trim();
 const WORD = { '🐱': 'cat', '🐷': 'pig', '🐸': 'frog', '🐟': 'fish', '🚢': 'ship', '🦆': 'duck', '🦀': 'crab', '🎩': 'hat', '🌿': 'leaf', '🪴': 'plant', '💡': 'light', '🦇': 'bat', '🐀': 'rat', '🚐': 'van', '☀️': 'sun', '🐛': 'bug', '🐔': 'hen', '🖊️': 'pen', '✈️': 'jet', '🐶': 'dog', '🪵': 'log', '🗺️': 'map', '🧢': 'cap', '📌': 'pin', '🗑️': 'bin', '🔟': 'ten', '⚽': 'ball', '🎲': 'dice', '🥫': 'can', '🥁': 'drum' };
@@ -20,6 +20,21 @@ function check(npc, r) {
     if (!r.visual.text || strip(r.visual.text) !== r.visual.text) bad.push([npc, r.prompt, 'sentence has a picture or is empty', r.visual.text]);
     for (const ch of r.choices) if (strip(ch) !== ch) bad.push([npc, r.prompt, 'sentence choice has a picture', ch]);
   }
+  // Tiana's tallies (K13): a tally is a count (0-20) and a chart row is one real picture plus a plain-word name; number choices carry no picture, and
+  // the picture-and-name choices of "which has the most" are exactly the chart's own labels.
+  if (r.visual && r.visual.kind === 'tally' && !(Number.isInteger(r.visual.n) && r.visual.n >= 1 && r.visual.n <= 20)) bad.push([npc, r.prompt, 'tally count', r.visual.n]);
+  if (r.visual && r.visual.kind === 'tallychart') {
+    const rows = r.visual.rows || [];
+    if (rows.length < 2 || rows.length > 3) bad.push([npc, r.prompt, 'chart row count', rows.length]);
+    for (const row of rows) {
+      if (!/^[\p{Extended_Pictographic}\uFE0F\u200D]+$/u.test(row.e || '') || !/\p{Extended_Pictographic}/u.test(row.e || '')) bad.push([npc, r.prompt, 'chart row is not a picture', row.e]);
+      if (!row.name || strip(row.name) !== row.name || !/^[a-z]+$/.test(row.name)) bad.push([npc, r.prompt, 'chart row name is not a plain word', row.name]);
+      if (!(Number.isInteger(row.n) && row.n >= 1 && row.n <= 10)) bad.push([npc, r.prompt, 'chart row count', row.n]);
+    }
+    const labels = rows.map((row) => `${row.e} ${row.name}`);
+    for (const ch of r.choices) if (strip(ch) !== ch && !labels.includes(ch)) bad.push([npc, r.prompt, 'chart choice has a stray picture', ch]);
+    if (new Set(rows.map((row) => row.name)).size !== rows.length || new Set(rows.map((row) => row.e)).size !== rows.length) bad.push([npc, r.prompt, 'chart rows repeat']);
+  }
   if (!r.pic) return;
   pics++;
   for (const c of r.choices) {
@@ -30,7 +45,7 @@ function check(npc, r) {
     if (!w || r.prompt.toLowerCase().includes(w) || String(r.answer).toLowerCase() === w) bad.push([npc, r.prompt, r.pic, 'word']);
   }
 }
-for (const npc of ['rapunzel', 'belle', 'ariel', 'moana', 'jasmine', 'anna']) {
+for (const npc of ['rapunzel', 'belle', 'ariel', 'moana', 'jasmine', 'anna', 'tiana']) {
   for (const r of QUESTS[npc].rounds) check(npc, r);
   for (let tier = 1; tier <= 3; tier++) {
     for (let seed = 1; seed <= 3000; seed++) {
