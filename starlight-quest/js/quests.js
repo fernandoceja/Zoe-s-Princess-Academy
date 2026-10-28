@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna', 'tiana'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -469,6 +469,13 @@ export const QUESTS = {
     ],
   },
 
+  aurora: {
+    title: 'The Word Garden', questName: 'The Word Garden',
+    intro: ['Welcome to Rosewood Glen!', 'The word garden needs your help.', 'Let us find naming words and action words together!'],
+    rounds: [{ prompt: 'Which word names a thing?', choices: ['bird', 'run', 'hop'], answer: 'bird', hint: 'A naming word names a person, animal, place, or thing.' }],
+    complete: ['The word garden is shining again!', 'You found naming words and action words. Thank you!'],
+  },
+
   // ---- ELSA: "The Frozen Bridge" — Math / operations within 20 ------------
   elsa: {
     title: 'The Frozen Bridge',
@@ -686,6 +693,11 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#129365; Tiana &mdash; The Tally Stand</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math: data &mdash; CA CCSS 1.MD.C.4 (and K.CC / 1.NBT counting by 5s)</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Tally marks: counting tally marks and groups of five (four lines and a slash), then reading a tiny tally chart to find which row has the most, how many in a row, and how many more one row has than another.</div>
+</div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff1f2;">
+<div style="font-weight:700;font-size:15px;">&#127801; Aurora &mdash; The Word Garden</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Language &mdash; L.1.1</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Identify naming words and action words, then sort words into both groups.</div>
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
@@ -2000,6 +2012,23 @@ function _tianaT3(rng) {
     ..._tallyChoices(d, [-1, 1, 2], rng, [hi.n, lo.n].filter((x) => x !== d)), answer: String(d), answerSay: _NUM_WORDS[d], hint: _TALLY_HINT.diff };
 }
 
+// Aurora: short, unambiguous first-grade naming and action words.
+export const WORD_GARDEN_NAMES = ['bird', 'rose', 'cat', 'dog', 'sun', 'hat', 'bed', 'pig', 'log', 'cup', 'fox', 'hen'];
+export const WORD_GARDEN_ACTIONS = ['run', 'hop', 'sit', 'dig', 'nap', 'hug', 'jog', 'win', 'nod', 'swim', 'jump', 'skip'];
+function _auroraPick(rng, naming) {
+  const answer = _pick(naming ? WORD_GARDEN_NAMES : WORD_GARDEN_ACTIONS, rng);
+  const others = _sample(naming ? WORD_GARDEN_ACTIONS : WORD_GARDEN_NAMES, 2, rng);
+  return { kind: naming ? 'naming' : 'action', prompt: naming ? 'Which word names a thing?' : 'Which word is an action?',
+    say: naming ? 'Which word names a thing?' : 'Which word tells an action?',
+    choices: _shuffle([answer, ...others], rng), answer,
+    hint: naming ? 'A naming word names a person, animal, place, or thing.' : 'An action word tells what someone or something does.' };
+}
+function _auroraSort(rng) {
+  const items = _shuffle([..._sample(WORD_GARDEN_NAMES, 2, rng).map(name => ({ name, naming: true })), ..._sample(WORD_GARDEN_ACTIONS, 2, rng).map(name => ({ name, naming: false }))], rng);
+  return { kind: 'wordsort', prompt: 'Sort naming and action words.', say: 'Sort the words into naming words and action words.',
+    choices: ['Naming', 'Action'], answer: 'Naming', hint: 'A naming word names a thing. An action word tells what it does.', sort: { kind: 'words', items } };
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -2048,6 +2077,7 @@ const TIERS = {
   jasmine: { 1: _jasmineT1, 2: _jasmineT2, 3: _jasmineT3 },
   anna: { 1: _annaT1, 2: _annaT2, 3: _annaT3 },
   tiana: { 1: _tianaT1, 2: _tianaT2, 3: _tianaT3 },
+  aurora: { 1: (rng) => _auroraPick(rng, true), 2: (rng) => _auroraPick(rng, false), 3: _auroraSort },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
     2: _sciOr(2, SCI_T2),

@@ -82,3 +82,5 @@ jobs:
         run: node starlight-quest/tests/bayou_check.mjs
       - name: Rosewood Glen check
         run: node starlight-quest/tests/glen_check.mjs
+      - name: Aurora naming and action words check
+        run: node starlight-quest/tests/aurora_check.mjs

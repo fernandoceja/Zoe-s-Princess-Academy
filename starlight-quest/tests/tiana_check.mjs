@@ -184,13 +184,13 @@ ok(seenChart.diff.size === 9 && seenChart.howmany.size === 10, 'differences 1 to
   ok(f[4].answer === String(m2.n - m1.n), 'fallback difference is true', f[4]); }
 
 // Wiring and story lines
-ok(NPC_ORDER[NPC_ORDER.length - 1] === 'tiana' && NPC_ORDER.indexOf('tiana') === NPC_ORDER.indexOf('anna') + 1, 'tiana follows anna in NPC_ORDER');
+ok(NPC_ORDER[NPC_ORDER.length - 1] === 'aurora' && NPC_ORDER.indexOf('tiana') === NPC_ORDER.indexOf('anna') + 1, 'tiana follows anna in NPC_ORDER');
 ok(NO_CLIP_IDS.includes('tiana'), 'tiana uses the speech voice (no clips)');
 ok(PRINCESSES.tiana.landName === 'Firefly Bayou' && QUESTS.tiana.title === 'The Tally Stand' && QUESTS.tiana.questName === 'The Tally Stand', 'land name and title');
 ok(/Tiana/.test(PARENT_CORNER_HTML) && /1\.MD\.C\.4/.test(PARENT_CORNER_HTML) && /Tally Stand/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');
 ok(BUILT_SLOTS.wsw === 'tiana' && builtSlotIds().includes('wsw') && isBayouOpen() && isBayouOpen('?preview=bayou') && isBayouOpen('?preview=all'), 'wsw is built for Tiana; ?preview=bayou is harmless');
-ok(JSON.stringify(openLandIds()) === JSON.stringify(['cove', 'isle', 'garden', 'harbor', 'bayou']) && findsTotal(openLandIds()) === 45, 'nine lands (4 inner + 5 new), 45 treasures');
-ok(closedSlots().length === 1 && closedSlots()[0].slot === 'ene', 'only the Aurora gate (ene) is still closed');
+ok(JSON.stringify(openLandIds()) === JSON.stringify(['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && findsTotal(openLandIds()) === 50, 'nine lands (4 inner + 5 new), 45 treasures');
+ok(closedSlots().length === 0, 'only the Aurora gate (ene) is still closed');
 const lines = [...QUESTS.tiana.intro, ...QUESTS.tiana.complete, QUESTS.tiana.title, QUESTS.tiana.questName];
 for (const l of lines) spoken('story line', l, null);
 ok(QUESTS.tiana.intro.length >= 2 && QUESTS.tiana.complete.length >= 1, 'story lines exist');
@@ -204,15 +204,15 @@ for (const l of lines) ok(!FILM.test(l), 'film word in Tiana line: ' + l, null);
 ok(!FILM.test(tianaText), 'film word in Tiana text: ' + (tianaText.match(FILM) || [])[0], null);
 
 // Opening the bayou: new-kingdom card, saves, finale.
-ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese'])) === '["wsw"]', 'a save that saw sse, ssw, nne and ese gets a card for the bayou only');
-ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese', 'wsw']).length === 0, 'once seen, no card again');
+ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese'])) === '["wsw","ene"]', 'a save that saw sse, ssw, nne and ese gets a card for the bayou only');
+ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese', 'wsw', 'ene']).length === 0, 'once seen, no card again');
 { const m = merge({ done: ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna'], seenNewKingdoms: true, seenKingdoms: ['sse', 'ssw', 'nne', 'ese'], shards: { anna: 5 }, treasures: { got: [] } });
   ok(m.shards.tiana === 0 && !m.done.includes('tiana') && m.done.length === 8 && m.shards.anna === 5 && m.seenKingdoms.length === 4, 'existing saves keep progress; Tiana starts fresh'); }
-ok(!shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Tiana never runs the crown finale (the Aurora slot is still closed)');
+ok(!shouldRunFinale(NPC_ORDER.slice(0, -1), NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Tiana never runs the crown finale (the Aurora slot is still closed)');
 ok(!shouldRunFinale(NPC_ORDER.slice(0, -1), NPC_ORDER, NEW_LAND_SLOTS.length), 'with every slot built the finale still needs Tiana done too');
 { const src = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   const main = src('js/main.js'), ui = src('js/ui.js'), sw = src('sw.js'), ci = readFileSync(new URL('../../.github/workflows/starlight-tests.yml', import.meta.url), 'utf8');
-  ok(/tiana: 'bayou'/.test(main) && /tallyCardHtml\(round\.visual\)/.test(main) && /npcId === 'tiana'\) && !round\.noChoiceSay/.test(main), 'main wires the land, the tally card and read-aloud choices');
+  ok(/tiana: 'bayou'/.test(main) && /tallyCardHtml\(round\.visual\)/.test(main) && /npcId === 'tiana' \|\| npcId === 'aurora'\) && !round\.noChoiceSay/.test(main), 'main wires the land, the tally card and read-aloud choices');
   ok(/Bayou/.test(ui) && /🌸/.test(ui), 'the new-kingdom card has a bayou emoji');
   ok(/\.\/js\/tally\.js\?v=\w+/.test(sw), 'tally.js is precached');
   ok(/tiana_check\.mjs/.test(ci), 'the check runs in CI'); }

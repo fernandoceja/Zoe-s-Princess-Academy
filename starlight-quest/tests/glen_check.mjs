@@ -9,19 +9,19 @@ import { NPC_ORDER } from '../js/quests.js';
 import { GLEN_KIND, GLEN_LAND, WORD_SIGNS, WORD_NAMES, WORD_ACTION, wordKind, wordLine, treasureSpots, treasureBookModel, findsTotal, findsToday, collectTreasure, sanitizeTreasures, createSecretTracker, foundSecret, awardRowStar, todayKey } from '../js/treasures.js';
 const src = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const day = '2026-10-28';
-assert.equal(isGlenOpen(''), false);
-for (const flag of ['?preview=aurora', '?preview=ene', '?preview=rose', '?preview=bayou']) assert.equal(isGlenOpen(flag), false);
+assert.equal(isGlenOpen(''), true);
+for (const flag of ['?preview=aurora', '?preview=ene', '?preview=rose', '?preview=bayou']) assert.equal(isGlenOpen(flag), true);
 for (const flag of ['?preview=glen', '?preview=all', '?preview=Glen', '?preview=cove,glen']) assert.equal(isGlenOpen(flag), true);
-assert.equal(closedSlots('').length, 1);
+assert.equal(closedSlots('').length, 0);
 assert.equal(closedSlots('?preview=all').length, 0);
-assert.equal(findsTotal(openLandIds('')), 45);
+assert.equal(findsTotal(openLandIds('')), 50);
 assert.equal(findsTotal(openLandIds('?preview=glen')), 50);
 assert.equal(findsTotal(openLandIds('?preview=all')), 50);
-assert.equal(NPC_ORDER.includes('aurora'), false);
-assert.equal(builtSlotIds().length, 5);
+assert.equal(NPC_ORDER.includes('aurora'), true);
+assert.equal(builtSlotIds().length, 6);
 for (const flag of ['', '?preview=glen', '?preview=all']) {
   assert.equal(openLandIds(flag).includes('glen'), isGlenOpen(flag));
-  assert.equal(shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length), false, 'preview cannot complete the finale');
+  assert.equal(shouldRunFinale(NPC_ORDER.slice(0, -1), NPC_ORDER, builtSlotIds().length), false, 'preview cannot complete the finale');
 }
 assert.match(src('js/main.js'), /shouldRunFinale\(Save.data.done, NPC_IDS, builtSlotIds\(\).length\)/);
 assert.equal(GLEN_KIND, 'rose'); assert.equal(GLEN_LAND, 'glen');
@@ -38,7 +38,7 @@ for (const spot of treasureSpots(day, 'glen')) {
 }
 assert.equal(save.treasures.total.lily, 3, 'old lily counts survive the icon swap');
 assert.equal(save.treasures.total.rose, 5);
-assert.equal(findsToday(save, day, openLandIds('')), 1);
+assert.equal(findsToday(save, day, openLandIds('')), 6);
 assert.equal(findsToday(save, day, openLandIds('?preview=all')), 6);
 assert.equal(awardRowStar(save, 'glen', day), true); assert.equal(awardRowStar(save, 'glen', day), false);
 assert.equal(foundSecret(save, 'wordgarden'), true); assert.equal(foundSecret(save, 'wordgarden'), false);

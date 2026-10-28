@@ -32,13 +32,13 @@ ok(isHarborOpen('?preview=tiana') && isHarborOpen('?preview=aurora') && isHarbor
 ok(isHarborOpen('?preview=harbor') && isHarborOpen('?preview=all') && isHarborOpen('?a=1&preview=Harbor') && isHarborOpen('?preview=cove,harbor'), 'preview=harbor / all / lists open it');
 ok(PREVIEW_LANDS.harbor === 'ese' && PREVIEW_LANDS.cove === 'sse' && PREVIEW_LANDS.isle === 'ssw' && PREVIEW_LANDS.garden === 'nne', 'harbor is in PREVIEW_LANDS (the other flags stay)');
 ok(isCoveOpen() && isIsleOpen() && isGardenOpen() && isCoveOpen('?preview=harbor') && isGardenOpen('?preview=harbor'), 'the built lands stay open (and harmless with the harbor flag)');
-ok(same(openLandIds(''), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=tiana'), ['cove', 'isle', 'garden', 'harbor', 'bayou']), 'without the harbor flag the harbor is open anyway (K11)');
-ok(same(openLandIds('?preview=harbor'), ['cove', 'isle', 'garden', 'harbor', 'bayou']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'built lands stay open; preview=all also includes the glen');
-ok(same([...openSlotIds('')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=harbor')].sort(), ['ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: ese is open with or without the flag');
-ok(closedSlots('').length === 1 && !closedSlots('').some((s) => s.slot === 'ese'), 'default: the ese star gate is gone (1 gate left)');
-ok(closedSlots('?preview=harbor').length === 1 && !closedSlots('?preview=harbor').some((s) => s.slot === 'ese'), 'open harbor has no gate; the last one stays');
-ok(closedSlots('?preview=all').length === 0 && closedSlots('?preview=harbor').length === 1, 'ene stays closed normally; preview=all opens the glen');
-ok(isSlotOpen('wsw', '') && (!isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the bayou is built (K13); the last land is preview-only');
+ok(same(openLandIds(''), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && same(openLandIds('?preview=tiana'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'without the harbor flag the harbor is open anyway (K11)');
+ok(same(openLandIds('?preview=harbor'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden', 'harbor', 'bayou', 'glen']), 'built lands stay open; preview=all also includes the glen');
+ok(same([...openSlotIds('')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']) && same([...openSlotIds('?preview=harbor')].sort(), ['ene', 'ese', 'nne', 'sse', 'ssw', 'wsw']), 'open slots: ese is open with or without the flag');
+ok(closedSlots('').length === 0 && !closedSlots('').some((s) => s.slot === 'ese'), 'default: the ese star gate is gone (1 gate left)');
+ok(closedSlots('?preview=harbor').length === 0 && !closedSlots('?preview=harbor').some((s) => s.slot === 'ese'), 'open harbor has no gate; the last one stays');
+ok(closedSlots('?preview=all').length === 0 && closedSlots('?preview=harbor').length === 0, 'ene stays closed normally; preview=all opens the glen');
+ok(isSlotOpen('wsw', '') && (isSlotOpen('ene', '') && isSlotOpen('ene', '?preview=all')), 'the bayou is built (K13); the last land is preview-only');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
 
 // --- Geometry: the path reaches the land, Anna's pad is stored, clear of Frostfall, the castle, the plaza paths and the other lands ---
@@ -119,8 +119,8 @@ ok(same(treasureSpots(day, 'cove', 5).map((s) => s.kind), Array(5).fill('seaglas
   && same(treasureSpots(day, 'garden', 5).map((s) => s.kind), Array(5).fill('moonstone')), 'cove, isle and garden treasures are unchanged');
 ok(same(treasureLandsFor(['cove', 'isle', 'garden']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden'])
   && same(treasureLandsFor(['cove', 'isle', 'garden', 'harbor']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle', 'garden', 'harbor']), 'treasure lands: only open lands');
-ok(findsTotal(openLandIds('')) === 45 && findsTotal(openLandIds('?preview=tiana')) === 45, 'finds total is 45 with the harbor and bayou open');
-ok(findsTotal(openLandIds('?preview=harbor')) === 45 && findsTotal(openLandIds('?preview=all')) === 50, 'normal play keeps its existing total; preview=all adds five glen roses');
+ok(findsTotal(openLandIds('')) === 50 && findsTotal(openLandIds('?preview=tiana')) === 50, 'finds total is 45 with the harbor and bayou open');
+ok(findsTotal(openLandIds('?preview=harbor')) === 50 && findsTotal(openLandIds('?preview=all')) === 50, 'normal play keeps its existing total; preview=all adds five glen roses');
 ok(findsTotal(false) === 20 && findsTotal(['cove']) === 25 && findsTotal(['cove', 'isle']) === 30 && findsTotal(['cove', 'isle', 'garden']) === 35, 'earlier totals unchanged (20, 25, 30, 35)');
 {
   const save = {};
@@ -382,7 +382,7 @@ ok(/anchor\(g\)/.test(world) && /anchor: 0x/.test(world), 'world draws the ancho
 ok(NPC_ORDER.includes('anna') && NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1, 'Anna follows Jasmine in NPC_ORDER (K11), so world.js spawns her on the harbor pad');
 ok(/anna:\s*\{[^}]*land: 'harbor'/.test(world), 'NPC_DEFS.anna.land is the harbor (K11 spawns her on the stored pad)');
 ok(/ese:\s*'anna'/.test(worldmap.replace(/\/\/.*$/gm, '').replace(/PLANNED_SLOTS[\s\S]*?\};/, '')), 'BUILT_SLOTS holds ese: anna');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne and ese');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana',\s*ene:\s*'aurora'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne and ese');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw',\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
 ok(/import \{ buildHarbor \} from '\.\/harbor\.js\?v=20261027e2'/.test(world), 'world imports harbor.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(harbor), 'harbor.js shares the cove\'s merger with the existing stamp');
