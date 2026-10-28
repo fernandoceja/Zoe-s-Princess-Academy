@@ -84,3 +84,5 @@ jobs:
         run: node starlight-quest/tests/glen_check.mjs
       - name: Aurora naming and action words check
         run: node starlight-quest/tests/aurora_check.mjs
+      - name: Ten-land finale check
+        run: node starlight-quest/tests/finale_check.mjs

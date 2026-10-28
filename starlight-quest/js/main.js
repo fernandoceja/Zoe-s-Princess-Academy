@@ -172,6 +172,7 @@ export async function main(container) {
   for (const id of Save.data.done) {
     if (NPC_IDS.includes(id)) world.setNPCState(id, 'done');
   }
+  world.setCastleCrown(shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length));
   UI.updateStars(Save.data.stars);
   UI.updateFinds(findsToday(Save.data, todayKey(), OPEN_LANDS), findsTotal(OPEN_LANDS));
   world.setOutfit(Save.data.outfit);
@@ -641,7 +642,7 @@ export async function main(container) {
       () => {
         dlg(npcId, P.name, P.color, P.portrait, quest.complete, 'praise', () => {
           afterQuest(npcId, () => {
-            // The big finale waits until every kingdom is open and restored (K16 builds the 10-land one).
+            // The big finale waits until every kingdom is open and restored (the ten-land finale rewards every completed kingdom).
             // Until then each new land just gets its own "land is glowing" celebration (above) and a rest.
             // It only ever runs from here, never on load, so opening a land never replays or wipes anything.
             if (shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)) runFinale();
@@ -654,8 +655,9 @@ export async function main(container) {
 
   function runFinale() {
     state = 'finale';
+    world.setCastleCrown(true);
     UI.setRoamUI(false);
-    NPC_IDS.forEach((id, i) => setTimeout(() => world.celebrate(NPC_TO_LAND[id]), i * 650));
+    NPC_IDS.forEach((id, i) => setTimeout(() => world.celebrate(NPC_TO_LAND[id]), i * 120));
     SoundFX.fanfare();
     setTimeout(() => UI.showFinale(
       FINALE_LINES.map((t) => ({ princessId: 'belle', kind: 'praise', text: t })),
