@@ -1,4 +1,4 @@
-// Every Rapunzel/Belle/Ariel/Moana/Jasmine round: a pic must not match any choice, nor (Belle) the target word.
+// Every Rapunzel/Belle/Ariel/Moana/Jasmine/Anna round: a pic must not match any choice, nor (Belle) the target word.
 import { QUESTS, buildRounds } from '../js/quests.js';
 const strip = (t) => String(t).replace(/[\p{Extended_Pictographic}️‍]/gu, '').trim();
 const WORD = { '🐱': 'cat', '🐷': 'pig', '🐸': 'frog', '🐟': 'fish', '🚢': 'ship', '🦆': 'duck', '🦀': 'crab', '🎩': 'hat', '🌿': 'leaf', '🪴': 'plant', '💡': 'light', '🦇': 'bat', '🐀': 'rat', '🚐': 'van', '☀️': 'sun', '🐛': 'bug', '🐔': 'hen', '🖊️': 'pen', '✈️': 'jet', '🐶': 'dog', '🪵': 'log', '🗺️': 'map', '🧢': 'cap', '📌': 'pin', '🗑️': 'bin', '🔟': 'ten', '⚽': 'ball', '🎲': 'dice', '🥫': 'can', '🥁': 'drum' };
@@ -15,6 +15,11 @@ function check(npc, r) {
     }
     for (const ch of r.choices) if (strip(ch) !== ch) bad.push([npc, r.prompt, 'story choice has a picture', ch]);
   }
+  // Anna's sign (K11): a sentence card has plain text only (no picture), and no choice carries a picture.
+  if (r.visual && r.visual.kind === 'sentence') {
+    if (!r.visual.text || strip(r.visual.text) !== r.visual.text) bad.push([npc, r.prompt, 'sentence has a picture or is empty', r.visual.text]);
+    for (const ch of r.choices) if (strip(ch) !== ch) bad.push([npc, r.prompt, 'sentence choice has a picture', ch]);
+  }
   if (!r.pic) return;
   pics++;
   for (const c of r.choices) {
@@ -25,7 +30,7 @@ function check(npc, r) {
     if (!w || r.prompt.toLowerCase().includes(w) || String(r.answer).toLowerCase() === w) bad.push([npc, r.prompt, r.pic, 'word']);
   }
 }
-for (const npc of ['rapunzel', 'belle', 'ariel', 'moana', 'jasmine']) {
+for (const npc of ['rapunzel', 'belle', 'ariel', 'moana', 'jasmine', 'anna']) {
   for (const r of QUESTS[npc].rounds) check(npc, r);
   for (let tier = 1; tier <= 3; tier++) {
     for (let seed = 1; seed <= 3000; seed++) {

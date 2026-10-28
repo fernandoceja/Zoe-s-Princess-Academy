@@ -54,7 +54,7 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
-  // --- New-kingdom princesses (K3). Ariel (K5), Moana (K7) and Jasmine (K9) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
+  // --- New-kingdom princesses (K3). Ariel (K5), Moana (K7), Jasmine (K9) and Anna (K11) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
   // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
   // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
   ariel: {
@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -340,6 +340,69 @@ export const QUESTS = {
     ],
   },
 
+  // ---- ANNA: "The Harbor Signs" — ELA / capital letters and end marks -----------------
+  // (Original story. Static rounds below are only the fallback; buildRounds uses TIERS.anna.)
+  anna: {
+    title: 'The Harbor Signs',
+    questName: 'The Harbor Signs',
+    intro: [
+      'Hello! Welcome to Sunny Fjord Harbor.',
+      'A big wind mixed up our welcome signs, and the boats cannot read them.',
+      'Can you fix each sentence? Then the boats can sail in!',
+    ],
+    rounds: [
+      {
+        prompt: 'Which mark ends this sentence?',
+        say: 'Listen. Can we go? Which mark ends this sentence?',
+        visual: { kind: 'sentence', text: 'Can we go?' },
+        choices: ['. period', '? question mark', '! exclamation mark'],
+        choiceSay: { '. period': 'period', '? question mark': 'question mark', '! exclamation mark': 'exclamation mark' },
+        answerSay: 'question mark',
+        answer: '? question mark',
+        hint: 'Good try! Is the sentence telling, asking, or shouting? Listen to how it sounds.',
+      },
+      {
+        prompt: 'Which mark ends this sentence?',
+        say: 'Listen. The sun is hot. Which mark ends this sentence?',
+        visual: { kind: 'sentence', text: 'The sun is hot.' },
+        choices: ['. period', '? question mark', '! exclamation mark'],
+        choiceSay: { '. period': 'period', '? question mark': 'question mark', '! exclamation mark': 'exclamation mark' },
+        answerSay: 'period',
+        answer: '. period',
+        hint: 'Good try! Is the sentence telling, asking, or shouting? Listen to how it sounds.',
+      },
+      {
+        prompt: 'Which word needs a capital letter?',
+        say: 'Listen. zoe has a red hat. Which word needs a capital letter?',
+        visual: { kind: 'sentence', text: 'zoe has a red hat.' },
+        choices: ['zoe', 'red', 'hat'],
+        answer: 'zoe',
+        hint: 'Good try! Capital letters go on the first word, on names, and on the word that means just me.',
+      },
+      {
+        prompt: 'Which word needs a capital letter?',
+        say: 'Listen. we sit in the van. Which word needs a capital letter?',
+        visual: { kind: 'sentence', text: 'we sit in the van.' },
+        choices: ['we', 'sit', 'van'],
+        answer: 'we',
+        hint: 'Good try! Capital letters go on the first word, on names, and on the word that means just me.',
+      },
+      {
+        prompt: 'Which sentence is written the right way?',
+        say: 'Which sentence is written the right way? Look at the first letter and the end mark.',
+        noChoiceSay: true,
+        choices: ['Can we go?', 'can we go?', 'Can we go.'],
+        answerSay: 'Can we go, with a capital letter and a question mark',
+        answer: 'Can we go?',
+        hint: 'Good try! Check the first letter, then check the mark at the end.',
+      },
+    ],
+    complete: [
+      'You did it! The harbor signs are fixed.',
+      'Now every boat can read them. Thank you!',
+    ],
+  },
+
   // ---- ELSA: "The Frozen Bridge" — Math / operations within 20 ------------
   elsa: {
     title: 'The Frozen Bridge',
@@ -547,6 +610,11 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#127982; Jasmine &mdash; The Story Lanterns</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Reading Literature &mdash; CA CCSS RL.1.2 (and RL.K.2 / RL.1.3)</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Story order: retelling a short story with its key details in the right order, using first, next and last (beginning, middle and end) with everyday sequences like a seed growing or getting ready for school.</div>
+</div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fef2f2;">
+<div style="font-weight:700;font-size:15px;">&#9875; Anna &mdash; The Harbor Signs</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Language &mdash; CA CCSS L.1.2.a / L.1.2.b (and L.K.2.a)</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Capital letters and end marks: capitalizing the first word of a sentence and the names of people (and the word I), and ending a sentence with a period, question mark or exclamation mark.</div>
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
@@ -1714,6 +1782,89 @@ function _jasmineT2(rng) {
 }
 function _jasmineT3(rng) { return rng() < 0.5 ? _storyOrder(rng) : _storyTell(rng); }
 
+// ---- Anna: capital letters and end marks (K11). Short sentences a first grader can read; every mark is clear-cut. ----
+// Each entry is [sentence written the right way, its end mark]. Telling sentences are plain facts (no "wow"), questions start with a question
+// word or can/is/do, and excited sentences have an excited word or an urgent command, so a period and an exclamation mark are never both fine.
+// Names are Zoe, Sam, Max, Mia and Ben only. `I` is the pronoun. All words are common sight words or short decodable words.
+export const SIGN_SENTENCES = [
+  // telling sentences (period)
+  ['The cat sat.', '.'], ['The sun is hot.', '.'], ['The dog is wet.', '.'], ['The ship is big.', '.'], ['A hen sat on a nest.', '.'],
+  ['We sit in the van.', '.'], ['Zoe has a red hat.', '.'], ['Sam can hop.', '.'], ['Max got a pen.', '.'], ['Mia has a big cup.', '.'],
+  ['Ben sat on the rug.', '.'], ['I can see a ship.', '.'], ['I like to run.', '.'], ['I see a red boat.', '.'], ['We met Sam on the dock.', '.'],
+  ['My dog can dig.', '.'], ['She has a pet fish.', '.'], ['He has a tan cap.', '.'], ['This is my bag.', '.'], ['The boat is on the bay.', '.'],
+  ['Mia and Ben sit.', '.'], ['We can run and jump.', '.'], ['Max has ten red pins.', '.'], ['The pig is in the mud.', '.'],
+  // questions (question mark)
+  ['Can you help me?', '?'], ['Is the sun hot?', '?'], ['Where is the cat?', '?'], ['Who has the hat?', '?'], ['What is in the box?', '?'],
+  ['Do you like jam?', '?'], ['Can we go?', '?'], ['Is it a fish?', '?'], ['Where is my cup?', '?'], ['Can Zoe hop?', '?'],
+  ['Is Max in the van?', '?'], ['Where did Mia go?', '?'], ['Can I have a hug?', '?'], ['Who is on the ship?', '?'], ['What can Ben see?', '?'],
+  ['Do you see the dock?', '?'], ['Is the pig in the mud?', '?'],
+  // excited sentences (exclamation mark)
+  ['Look out!', '!'], ['Watch out!', '!'], ['Stop, stop!', '!'], ['Help, help!', '!'], ['Yay, we won!', '!'], ['Wow, a big ship!', '!'],
+  ['Oh no, a bug!', '!'], ['Yay, we did it!', '!'], ['Wow, look at that!', '!'], ['Ouch, my toe!', '!'], ['Oh no, I fell!', '!'], ['Hooray, we can go!', '!'],
+];
+const _SIGN_NAMES = ['Zoe', 'Sam', 'Max', 'Mia', 'Ben'];
+const _MARK_LABEL = { '.': '. period', '?': '? question mark', '!': '! exclamation mark' };
+const _MARK_SAY = { '.': 'period', '?': 'question mark', '!': 'exclamation mark' };
+const _SIGN_HINT = {
+  mark: 'Good try! Is the sentence telling, asking, or shouting? Listen to how it sounds.',
+  word: 'Good try! Capital letters go on the first word, on names, and on the word that means just me.',
+  sentence: 'Good try! Check the first letter, then check the mark at the end.',
+};
+// Words that need a capital letter when the sentence is written all lowercase: the first word, a name, and the word I.
+const _signWords = (text) => text.split(' ');
+const _bare = (w) => w.replace(/[.,?!]/g, '');
+const _needsCap = (w, i) => i === 0 || _SIGN_NAMES.map((n) => n.toLowerCase()).includes(_bare(w).toLowerCase()) || _bare(w).toLowerCase() === 'i';
+const _sentenceVisual = (text) => ({ kind: 'sentence', text });
+function _annaT1(rng) {
+  const mark = _pick(['.', '?', '!'], rng);
+  const [text] = _pick(SIGN_SENTENCES.filter((x) => x[1] === mark), rng);
+  return {
+    kind: 'mark', prompt: 'Which mark ends this sentence?', say: `Listen. ${text} Which mark ends this sentence?`, visual: _sentenceVisual(text),
+    choices: ['.', '?', '!'].map((m) => _MARK_LABEL[m]), choiceSay: Object.fromEntries(Object.values(_MARK_LABEL).map((l) => [l, l.split(' ').slice(1).join(' ')])),
+    answer: _MARK_LABEL[mark], answerSay: _MARK_SAY[mark], hint: _SIGN_HINT.mark,
+  };
+}
+// Words the T2 hint uses: a round never asks for one of them, so the hint can't hand over the answer.
+const _HINT2_WORDS = new Set(_SIGN_HINT.word.toLowerCase().replace(/[.,?!]/g, '').split(/\s+/));
+// Sentences that work for "which word needs a capital?": written lowercase, exactly one word needs it. If a name or I comes after the first
+// word, the first word is shown with its capital already (so only the name / I is left to fix).
+const _T2_FORMS = SIGN_SENTENCES.map(([text]) => {
+  const ws = _signWords(text);
+  const need = ws.map((w, i) => i).filter((i) => _needsCap(ws[i], i));
+  let shown, ans;
+  if (need.length === 1) { shown = ws.map((w) => w.toLowerCase()); ans = need[0]; }
+  else if (need.length === 2 && !(_SIGN_NAMES.includes(_bare(ws[0])) || _bare(ws[0]) === 'I')) { shown = ws.map((w, i) => (i === 0 ? w : w.toLowerCase())); ans = need[1]; }
+  else return null;
+  const answer = _bare(shown[ans]);
+  const others = [...new Set(shown.map(_bare).filter((w, i) => !need.includes(i) && w.length > 1 && w !== answer && w !== 'is'))];   // no "is" as a choice: it reads as "... or is?"
+  if (others.length < 2 || _HINT2_WORDS.has(answer.toLowerCase()) || answer === 'is') return null;   // "is" would be read as "The answer is is."
+  return { text: shown.join(' '), answer, others };
+}).filter(Boolean);
+function _annaT2(rng) {
+  const f = _pick(_T2_FORMS, rng);
+  return {
+    kind: 'word', prompt: 'Which word needs a capital letter?', say: `Listen. ${f.text} Which word needs a capital letter?`, visual: _sentenceVisual(f.text),
+    choices: _shuffle([f.answer, ..._sample(f.others, 2, rng)], rng), answer: f.answer, hint: _SIGN_HINT.word,
+  };
+}
+// Three versions of one sentence: the right one, one with a lowercase letter where a capital belongs, one with the wrong or missing end mark.
+// A telling sentence never gets "!" and a question never gets "!" as the wrong mark ("The sun is hot!" could pass), so the wrong marks are clear-cut.
+function _annaT3(rng) {
+  const [text, mark] = _pick(SIGN_SENTENCES, rng);
+  const ws = _signWords(text);
+  const capIdx = ws.map((w, i) => i).filter((i) => _needsCap(ws[i], i));
+  const j = _pick(capIdx, rng);
+  const low = ws.map((w, i) => (i === j ? w[0].toLowerCase() + w.slice(1) : w)).join(' ');
+  const body = text.slice(0, -1);
+  const wrongMarks = mark === '.' ? ['?', ''] : mark === '?' ? ['.', ''] : ['?', ''];
+  const badMark = body + _pick(wrongMarks, rng);
+  const word = _MARK_SAY[mark];
+  return {
+    kind: 'sentence', prompt: 'Which sentence is written the right way?', say: 'Which sentence is written the right way? Look at the first letter and the end mark.', noChoiceSay: true,
+    choices: _shuffle([text, low, badMark], rng), answer: text, answerSay: `${body}, with a capital letter and a ${word}`, hint: _SIGN_HINT.sentence,
+  };
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -1760,6 +1911,7 @@ const TIERS = {
   },
   moana: { 1: _moanaT1, 2: _moanaT2, 3: _moanaT3 },
   jasmine: { 1: _jasmineT1, 2: _jasmineT2, 3: _jasmineT3 },
+  anna: { 1: _annaT1, 2: _annaT2, 3: _annaT3 },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
     2: _sciOr(2, SCI_T2),
