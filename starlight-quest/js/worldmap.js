@@ -74,8 +74,10 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5, the isle since K7, the garden since K9 and the harbor since K11 and the bayou since K13, so all five flags are harmless now.)
-export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese', bayou: 'wsw' };
+// (cove is built for real since K5, the isle since K7, the garden since K9, the harbor since K11 and the bayou since K13, so those five flags are harmless now.
+// glen (K14) is preview-only until Aurora's quests land: it is the LAST closed slot, so ?preview=all now opens all six kingdoms. A preview never counts as
+// "built": shouldRunFinale below is fed builtSlotIds(), not the open slots, so no preview flag can trigger the finale.)
+export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese', bayou: 'wsw', glen: 'ene' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
 export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
@@ -133,7 +135,13 @@ export const BAYOU = { slot: 'wsw', land: 'bayou', princess: 'tiana', discR: LAN
 export const isBayouOpen = (search) => isSlotOpen(BAYOU.slot, search);
 export function bayouGeometry() { return slotLandGeometry(BAYOU); }
 
-/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle', 'garden'], all four with the harbor, and the bayou when previewed. */
+// Rosewood Glen (K14) sits at the 'ene' slot (the slot planned for Aurora), east-north-east, beside Frostfall Peaks on its north side. Drawn only when 'ene' is
+// open: in BUILT_SLOTS (K15, with Aurora's quests) or ?preview=glen (or ?preview=all). Aurora is NOT spawned until K15 (not in NPC_ORDER yet).
+export const GLEN = { slot: 'ene', land: 'glen', princess: 'aurora', discR: LAND_DISC_R, padDist: 6.5 };
+export const isGlenOpen = (search) => isSlotOpen(GLEN.slot, search);
+export function glenGeometry() { return slotLandGeometry(GLEN); }
+
+/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle', 'garden'], all five built lands, and the glen when previewed. */
 export function openLandIds(search) {
   const out = [];
   if (isCoveOpen(search)) out.push(COVE.land);
@@ -141,6 +149,7 @@ export function openLandIds(search) {
   if (isGardenOpen(search)) out.push(GARDEN.land);
   if (isHarborOpen(search)) out.push(HARBOR.land);
   if (isBayouOpen(search)) out.push(BAYOU.land);
+  if (isGlenOpen(search)) out.push(GLEN.land);
   return out;
 }
 
