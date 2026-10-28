@@ -464,10 +464,10 @@ ok(NPC_ORDER.includes('tiana') && /NPC_TO_LAND = \{[^}]*tiana: 'bayou'/.test(mai
 ok(/wsw:\s*'tiana'/.test(worldmap.replace(/\/\/.*$/gm, '').replace(/PLANNED_SLOTS[\s\S]*?\};/, '')), 'BUILT_SLOTS holds wsw: tiana');
 ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana',\s*ene:\s*'aurora'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne, ese and wsw');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne',\s*harbor:\s*'ese',\s*bayou:\s*'wsw',\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden, harbor, bayou)');
-ok(/import \{ buildBayou \} from '\.\/bayou\.js\?v=20261027e2'/.test(world), 'world imports bayou.js with the existing ?v= stamp');
-ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(bayou) && /from '\.\/treasures\.js\?v=20261027e2'/.test(bayou), 'bayou.js shares the cove\'s merger and the tally helpers with the existing stamp');
-ok(/'\.\/js\/bayou\.js\?v=20261027e2'/.test(sw), 'bayou.js is precached with the existing stamp');
-ok(!/CACHE_VERSION\s*=\s*['"][^'"]*bayou/i.test(sw) && !/\?v=2026\d+(?!e2)\w*/.test(bayou.replace(/\?v=20261027e2/g, '')), 'cache version and stamps untouched');
+ok(/import \{ buildBayou \} from '\.\/bayou\.js\?v=20261028r3'/.test(world), 'world imports bayou.js with the existing ?v= stamp');
+ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261028r3'/.test(bayou) && /from '\.\/treasures\.js\?v=20261028r3'/.test(bayou), 'bayou.js shares the cove\'s merger and the tally helpers with the existing stamp');
+ok(/'\.\/js\/bayou\.js\?v=20261028r3'/.test(sw), 'bayou.js is precached with the existing stamp');
+ok(!/CACHE_VERSION\s*=\s*['"][^'"]*bayou/i.test(sw) && !/\?v=2026\d+(?!r3)\w*/.test(bayou.replace(/\?v=20261028r3/g, '')), 'cache version and stamps untouched');
 ok(/findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main), 'main counts only open lands (45 now)');
 ok(/id === 'tallymarks'\) line = tallyLine\(\)\.say/.test(main) && /Narrator\.speakExact\(def\.npc, line\)/.test(main), 'the tally line is spoken with Tiana\'s voice via speakExact');
 ok(/bayouOpen: isBayouOpen\(\)/.test(ui), 'Treasure Book asks for the bayou only when open');

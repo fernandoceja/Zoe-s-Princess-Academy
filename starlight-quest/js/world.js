@@ -6,21 +6,21 @@
 // ============================================================================
 
 import * as THREE from 'three';
-import { Input } from './input.js?v=20261027e2';
-import { OUTFIT } from './save.js?v=20261027e2';
-import { NPC_ORDER } from './quests.js?v=20261027e2';
-import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from './treasures.js?v=20261027e2';
-import { buildCove } from './cove.js?v=20261027e2';
-import { buildIsle } from './isle.js?v=20261027e2';
-import { buildGarden } from './garden.js?v=20261027e2';
-import { buildHarbor } from './harbor.js?v=20261027e2';
-import { buildGlen } from './glen.js?v=20261027e2';
-import { makeMerger } from './cove.js?v=20261027e2';
-import { buildBayou } from './bayou.js?v=20261027e2';
+import { Input } from './input.js?v=20261028r3';
+import { OUTFIT } from './save.js?v=20261028r3';
+import { NPC_ORDER } from './quests.js?v=20261028r3';
+import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from './treasures.js?v=20261028r3';
+import { buildCove } from './cove.js?v=20261028r3';
+import { buildIsle } from './isle.js?v=20261028r3';
+import { buildGarden } from './garden.js?v=20261028r3';
+import { buildHarbor } from './harbor.js?v=20261028r3';
+import { buildGlen } from './glen.js?v=20261028r3';
+import { makeMerger } from './cove.js?v=20261028r3';
+import { buildBayou } from './bayou.js?v=20261028r3';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
   closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU, isGlenOpen, glenGeometry, GLEN,
-} from './worldmap.js?v=20261027e2';
+} from './worldmap.js?v=20261028r3';
 
 // ---------------------------------------------------------------------------
 // Config

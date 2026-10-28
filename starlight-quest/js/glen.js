@@ -1,8 +1,8 @@
 // Rosewood Glen (K14): original rose arches, berry bushes and woodland friends.
 // Dry ground throughout. Six surprises + three readable word signs. Eight rest
 // draw calls: merged scenery, unlit lettering, six moving props. No lights/shadows.
-import { makeMerger } from './cove.js?v=20261027e2';
-import { WORD_SIGNS } from './treasures.js?v=20261027e2';
+import { makeMerger } from './cove.js?v=20261028r3';
+import { WORD_SIGNS } from './treasures.js?v=20261028r3';
 
 export const GLEN_R = 9.6;
 export const GLEN_SPOTS = {

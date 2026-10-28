@@ -2,8 +2,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PRINCESSES, NPC_ORDER, NO_CLIP_IDS } from '../js/quests.js?v=20261027e2';
-import { NEW_LAND_SLOTS, PLANNED_SLOTS } from '../js/worldmap.js?v=20261027e2';
+import { PRINCESSES, NPC_ORDER, NO_CLIP_IDS } from '../js/quests.js?v=20261028r3';
+import { NEW_LAND_SLOTS, PLANNED_SLOTS } from '../js/worldmap.js?v=20261028r3';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(resolve(root, p), 'utf8');
 const bad = [];

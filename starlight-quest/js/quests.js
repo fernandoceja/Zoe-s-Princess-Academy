@@ -14,12 +14,12 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
-import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261027e2';
-import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261027e2';
-import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261027e2';
-import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261027e2';
-import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261027e2';
-import { PORTRAIT_ARIEL, PORTRAIT_MOANA, PORTRAIT_JASMINE, PORTRAIT_ANNA, PORTRAIT_TIANA, PORTRAIT_AURORA } from './portraits-new.js?v=20261027e2';
+import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261028r3';
+import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261028r3';
+import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261028r3';
+import { PORTRAIT_CINDERELLA } from './portrait-cinderella.js?v=20261028r3';
+import { PORTRAIT_ZOE } from './portrait-zoe.js?v=20261028r3';
+import { PORTRAIT_ARIEL, PORTRAIT_MOANA, PORTRAIT_JASMINE, PORTRAIT_ANNA, PORTRAIT_TIANA, PORTRAIT_AURORA } from './portraits-new.js?v=20261028r3';
 
 export const PRINCESSES = {
   belle: {

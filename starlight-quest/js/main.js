@@ -5,18 +5,18 @@
  * ES module. Three.js comes from the importmap in index.html.
  */
 
-import { createWorld } from './world.js?v=20261027e2';
-import { PRINCESSES, NPC_ORDER, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261027e2';
-import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261027e2';
-import { UI } from './ui.js?v=20261027e2';
-import { Save, checkMilestones } from './save.js?v=20261027e2';
-import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine, shapeLine, storyLine, sentenceLine, tallyLine, wordLine } from './treasures.js?v=20261027e2';
-import { Input } from './input.js?v=20261027e2';
-import { builtSlotIds, unseenKingdomSlots, shouldRunFinale, openLandIds, BUILT_SLOTS } from './worldmap.js?v=20261027e2';
-import { shapeSVG } from './shapes.js?v=20261027e2';
-import { tallyCardHtml } from './tally.js?v=20261027e2';
-import { startPadNav } from './padnav.js?v=20261027e2';
-import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261027e2';
+import { createWorld } from './world.js?v=20261028r3';
+import { PRINCESSES, NPC_ORDER, QUESTS, WEEK, FINALE_LINES, buildRounds, setSchoolWords, setWeek, revealLines, BELLE_CLIP_DIR } from './quests.js?v=20261028r3';
+import { SoundFX, Narrator, setLang, installAudioCare, canBypassSilentSwitch, isIOS } from './audio.js?v=20261028r3';
+import { UI } from './ui.js?v=20261028r3';
+import { Save, checkMilestones } from './save.js?v=20261028r3';
+import { todayKey, collectTreasure, rolloverTreasures, treasuresGotToday, landTreasureCount, TREASURES_PER_LAND, findsTotal, findsToday, TREASURE_LAND_NAMES, awardRowStar, ALL_SECRETS, foundSecret, createSecretTracker, doublesLine, clockLine, spellLine, plantLine, rhymeLine, shapeLine, storyLine, sentenceLine, tallyLine, wordLine } from './treasures.js?v=20261028r3';
+import { Input } from './input.js?v=20261028r3';
+import { builtSlotIds, unseenKingdomSlots, shouldRunFinale, openLandIds, BUILT_SLOTS } from './worldmap.js?v=20261028r3';
+import { shapeSVG } from './shapes.js?v=20261028r3';
+import { tallyCardHtml } from './tally.js?v=20261028r3';
+import { startPadNav } from './padnav.js?v=20261028r3';
+import { landState, recordQuest, today, pickTodayStar } from './ladder.js?v=20261028r3';
 
 const NPC_IDS = NPC_ORDER;
 const OPEN_LANDS = openLandIds(); // new lands are drawn only when built or previewed (Wayfinder Isle: ?preview=isle); today's finds count only open lands

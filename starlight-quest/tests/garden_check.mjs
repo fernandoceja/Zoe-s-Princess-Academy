@@ -316,10 +316,10 @@ ok(NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1 && NPC_ORDER.i
 ok(/jasmine:\s*\{[^}]*land: 'garden'/.test(world), 'NPC_DEFS.jasmine.land is the garden (K9 spawns her on the stored pad)');
 ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine',\s*ese:\s*'anna',\s*wsw:\s*'tiana',\s*ene:\s*'aurora'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse, ssw, nne: jasmine and ese: anna in source');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw',\s*garden:\s*'nne'(,\s*harbor:\s*'ese')?(,\s*bayou:\s*'wsw')?,\s*glen:\s*'ene'\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle, garden)');
-ok(/import \{ buildGarden \} from '\.\/garden\.js\?v=20261027e2'/.test(world), 'world imports garden.js with the existing ?v= stamp');
-ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(garden), 'garden.js shares the cove\'s merger with the existing stamp');
-ok(/'\.\/js\/garden\.js\?v=20261027e2'/.test(sw), 'garden.js is precached with the existing stamp');
-ok(!/CACHE_VERSION\s*=\s*['"][^'"]*garden/i.test(sw) && !/\?v=2026\d+(?!e2)\w*/.test(garden.replace(/\?v=20261027e2/g, '')), 'cache version and stamps untouched');
+ok(/import \{ buildGarden \} from '\.\/garden\.js\?v=20261028r3'/.test(world), 'world imports garden.js with the existing ?v= stamp');
+ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261028r3'/.test(garden), 'garden.js shares the cove\'s merger with the existing stamp');
+ok(/'\.\/js\/garden\.js\?v=20261028r3'/.test(sw), 'garden.js is precached with the existing stamp');
+ok(!/CACHE_VERSION\s*=\s*['"][^'"]*garden/i.test(sw) && !/\?v=2026\d+(?!r3)\w*/.test(garden.replace(/\?v=20261028r3/g, '')), 'cache version and stamps untouched');
 ok(/findsTotal\(OPEN_LANDS\)/.test(main) && /findsToday\(Save\.data, todayKey\(\), OPEN_LANDS\)/.test(main), 'main counts only open lands (30 now, 35 with the garden)');
 ok(/id === 'storylanterns'\) line = storyLine\(\)\.say/.test(main) && /Narrator\.speakExact\(def\.npc, line\)/.test(main), 'the story line is spoken with Jasmine\'s voice via speakExact');
 ok(/gardenOpen: isGardenOpen\(\)/.test(ui), 'Treasure Book asks for the garden only when open');
