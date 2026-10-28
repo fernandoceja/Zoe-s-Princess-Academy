@@ -12,7 +12,7 @@ import { Save, MILESTONES, OUTFIT, BUDDY_NEED, sanitizeOutfit } from './save.js?
 import { landState, today } from './ladder.js?v=20261027e2';
 import { Input } from './input.js?v=20261027e2';
 import { todayKey, treasureBookModel } from './treasures.js?v=20261027e2';
-import { isCoveOpen, isIsleOpen, isGardenOpen } from './worldmap.js?v=20261027e2';
+import { isCoveOpen, isIsleOpen, isGardenOpen, isHarborOpen } from './worldmap.js?v=20261027e2';
 
 const GOLD = '#ebd373';
 
@@ -582,10 +582,23 @@ function injectCSS() {
   .zsq-tb-card.zsq-tb-tight .zsq-tut-title { font-size: 26px; margin-bottom: 0; }
   .zsq-tb-card.zsq-tb-tight .zsq-tb-total { margin-top: 6px; }
   .zsq-tb-card.zsq-tb-tight .zsq-tut-row { margin-top: 8px; }
+  /* Sunny Fjord Harbor open too: 9 tiles (5 + 4 on a 10-column grid), 8 land rows and 8 smaller stickers, still no scrolling at 390x844. */
+  .zsq-tb-nine { grid-template-columns: repeat(10, 1fr); gap: 5px; }
+  .zsq-tb-nine .zsq-tb-tile, .zsq-tb-nine .zsq-tb-tile:nth-child(4), .zsq-tb-nine .zsq-tb-tile:nth-child(5) { grid-column: span 2; }
+  .zsq-tb-nine .zsq-tb-tile:nth-child(6) { grid-column: 2 / span 2; }
+  .zsq-tb-card .zsq-tb-nine .zsq-tb-tile { min-height: 58px; padding: 2px 1px; }
+  .zsq-tb-nine .zsq-tb-emoji { font-size: 24px !important; }
+  .zsq-tb-nine .zsq-tb-name { font-size: 10px; line-height: 1.1; }
+  .zsq-tb-nine .zsq-tb-unfound .zsq-tb-name { font-size: 16px; }
+  .zsq-tb-stickers.zsq-tb-eightst { gap: 4px; }
+  .zsq-tb-eightst .zsq-tb-sticker { width: 38px; height: 38px; font-size: 20px; border-radius: 12px; }
+  .zsq-tb-eightst .zsq-tb-sticker.zsq-tb-unfound { font-size: 18px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-tile { min-height: 76px; padding: 4px 2px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-emoji { font-size: 34px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-land { min-height: 32px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tb-h { margin-top: 8px; }
+  .zsq-tb-card.zsq-tb-full .zsq-tb-land { min-height: 26px; }
+  .zsq-tb-card.zsq-tb-full .zsq-tb-h { margin-top: 4px; }
   .zsq-tb-card.zsq-tb-compact .zsq-tut-emoji { font-size: 38px; }
   .zsq-tb-emoji { font-size: 40px; line-height: 1.1; }
   .zsq-tb-name { font-size: 17px; font-weight: 900; color: #92400e; }
@@ -1011,10 +1024,10 @@ export const UI = {
   showTreasureBook({ onClose } = {}) {
     const wrap = _els.pauseWrap;
     wrap.innerHTML = '';
-    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen(), gardenOpen: isGardenOpen() });
-    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : '') + (m.lands.length > 6 ? ' zsq-tb-tight' : ''));
+    const m = treasureBookModel(Save.data, todayKey(), { coveOpen: isCoveOpen(), isleOpen: isIsleOpen(), gardenOpen: isGardenOpen(), harborOpen: isHarborOpen() });
+    const card = el('div', 'zsq-pause-card zsq-tb-card' + (m.lands.length > 4 ? ' zsq-tb-compact' : '') + (m.lands.length > 6 ? ' zsq-tb-tight' : '') + (m.lands.length > 7 ? ' zsq-tb-full' : ''));
     card.append(el('div', 'zsq-tut-emoji', '🧺'), el('div', 'zsq-tut-title', 'Treasure Book'));
-    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : '') + (m.kinds.length > 7 ? ' zsq-tb-eight' : ''));
+    const grid = el('div', 'zsq-tb-grid' + (m.kinds.length > 5 ? ' zsq-tb-six' : '') + (m.kinds.length > 6 ? ' zsq-tb-seven' : '') + (m.kinds.length > 7 ? ' zsq-tb-eight' : '') + (m.kinds.length > 8 ? ' zsq-tb-nine' : ''));
     for (const k of m.kinds) {
       const tile = el('div', 'zsq-tb-tile' + (k.found ? '' : ' zsq-tb-unfound'));
       tile.append(el('div', 'zsq-tb-emoji', k.emoji), el('div', 'zsq-tb-name', k.found ? `${k.label}: ${k.count}` : '?'));
@@ -1032,7 +1045,7 @@ export const UI = {
       card.appendChild(r);
     }
     card.appendChild(el('div', 'zsq-tb-h', 'Stickers'));
-    const srow = el('div', 'zsq-tb-stickers' + (m.stickers.length > 5 ? ' zsq-tb-many' : ''));
+    const srow = el('div', 'zsq-tb-stickers' + (m.stickers.length > 5 ? ' zsq-tb-many' : '') + (m.stickers.length > 7 ? ' zsq-tb-eightst' : ''));
     for (const st of m.stickers) {
       const slot = el('div', 'zsq-tb-sticker' + (st.found ? '' : ' zsq-tb-unfound'), st.found ? st.emoji : '?');
       slot.setAttribute('aria-label', st.found ? st.label : 'Secret sticker, not found yet');
