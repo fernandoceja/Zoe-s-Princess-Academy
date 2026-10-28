@@ -154,7 +154,7 @@ for (const [name, t] of Object.entries(TRUTH)) {
 ok(shapeSVG({ shape: 'nope' }).includes('<svg') && !/NaN/.test(shapeSVG({})), 'unknown shape never throws');
 
 // Wiring and story lines
-ok(NPC_ORDER.includes('moana') && NPC_ORDER[NPC_ORDER.length - 1] === 'moana' && NPC_ORDER.indexOf('moana') === NPC_ORDER.indexOf('ariel') + 1, 'moana follows ariel in NPC_ORDER');
+ok(NPC_ORDER.includes('moana') && NPC_ORDER.indexOf('moana') === NPC_ORDER.indexOf('ariel') + 1, 'moana follows ariel in NPC_ORDER');
 ok(NO_CLIP_IDS.includes('moana'), 'moana uses the speech voice (no clips)');
 ok(PRINCESSES.moana.landName === 'Wayfinder Isle' && QUESTS.moana.title === 'The Shape Stones', 'land name and title');
 ok(/Moana/.test(PARENT_CORNER_HTML) && /1\.G\.A\.1/.test(PARENT_CORNER_HTML) && /1\.G\.A\.2/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');

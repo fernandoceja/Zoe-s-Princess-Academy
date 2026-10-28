@@ -29,10 +29,10 @@ ok(BUILT_SLOTS.ssw === 'moana' && builtSlotIds().includes('ssw'), 'ssw is built 
 ok(isIsleOpen() && isIsleOpen('') && isIsleOpen('?x=1') && isIsleOpen('?preview=cove') && isIsleOpen('?preview=moana'), 'isle is open by default (built, no flag needed)');
 ok(isIsleOpen('?preview=isle') && isIsleOpen('?preview=all') && isIsleOpen('?a=1&preview=Isle') && isIsleOpen('?preview=cove,isle'), 'preview=isle / all / cove,isle still parse and keep the isle open');
 ok(isCoveOpen() && isCoveOpen('?preview=isle') && isCoveOpen('?preview=cove'), 'the cove stays open (and ?preview=cove stays harmless)');
-ok(same(openLandIds(''), ['cove', 'isle']) && same(openLandIds('?preview=isle'), ['cove', 'isle']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden']), 'open lands: cove and isle by default; preview=all also opens the garden (K8)');
-ok(same(openSlotIds(''), openSlotIds('?preview=isle')) && same([...openSlotIds('')].sort(), ['sse', 'ssw']), 'open slots: the two built lands (the isle flag changes nothing)');
-ok(closedSlots('').length === 4 && !closedSlots('').some((s) => s.slot === 'ssw'), 'default: the isle gate is gone (4 gates left)');
-ok(closedSlots('?preview=isle').length === 4 && !closedSlots('?preview=isle').some((s) => s.slot === 'ssw'), 'open isle has no gate, the other four stay');
+ok(same(openLandIds(''), ['cove', 'isle', 'garden']) && same(openLandIds('?preview=isle'), ['cove', 'isle', 'garden']) && same(openLandIds('?preview=all'), ['cove', 'isle', 'garden']), 'open lands: cove, isle and garden by default (the garden opened in K9); the flags change nothing');
+ok(same(openSlotIds(''), openSlotIds('?preview=isle')) && same([...openSlotIds('')].sort(), ['nne', 'sse', 'ssw']), 'open slots: the three built lands (the isle flag changes nothing)');
+ok(closedSlots('').length === 3 && !closedSlots('').some((s) => s.slot === 'ssw'), 'default: the isle gate is gone (3 gates left, the garden is open too since K9)');
+ok(closedSlots('?preview=isle').length === 3 && !closedSlots('?preview=isle').some((s) => s.slot === 'ssw'), 'open isle has no gate, the other three stay');
 ok(closedSlots('?preview=all').length === 3, 'preview=all also opens the garden (K8): the other three gates stay');
 ok(!isSlotOpen('ese', '?preview=all') && !isSlotOpen('wsw', '?preview=all'), 'other lands are not built yet');
 ok(previewFlags('?preview=%%%').size >= 0 && previewFlags(null).size === 0, 'bad query strings never throw');
@@ -90,9 +90,9 @@ ok(same(treasureSpots(day, 'library', 5), treasureSpots(day, 'library', 5)) && s
 ok(same(treasureLandsFor(false), ['library', 'frostfall', 'meadow', 'village']) && same(treasureLandsFor(['cove']), ['library', 'frostfall', 'meadow', 'village', 'cove'])
   && same(treasureLandsFor(['cove', 'isle']), ['library', 'frostfall', 'meadow', 'village', 'cove', 'isle']) && same(treasureLandsFor(['isle']), ['library', 'frostfall', 'meadow', 'village', 'isle']), 'treasure lands: only open lands');
 ok(findsTotal(false) === 20 && findsTotal([]) === 20, 'finds total is 20 with no new land');
-ok(findsTotal(openLandIds('')) === 30, 'finds total is 30 today (4 inner lands + cove + isle)');
+ok(findsTotal(openLandIds('')) === 35, 'finds total is 35 today (4 inner lands + cove + isle + garden)');
 ok(findsTotal(['cove']) === 25, 'finds total is 25 with only the cove open');
-ok(findsTotal(openLandIds('?preview=isle')) === 30 && findsTotal(openLandIds('?preview=all')) === 35, 'finds total is 30 with the isle open, 35 when the garden is previewed too');
+ok(findsTotal(openLandIds('?preview=isle')) === 35 && findsTotal(openLandIds('?preview=all')) === 35 && findsTotal(['cove', 'isle']) === 30, 'finds total is 35 with the garden open (30 with just the cove and the isle)');
 {
   const save = {};
   for (let i = 0; i < 5; i++) ok(collectTreasure(save, `isle-${i}`, 'blossom', day), `collect isle-${i}`);
@@ -268,7 +268,7 @@ ok(/const isleOpen = isIsleOpen\(\)/.test(world) && /if \(isleOpen\) \{\s*isle =
 ok(/const openLands = openLandIds\(\)/.test(world) && /treasureLandsFor\(openLands\)/.test(world), 'world hides isle treasures only when open');
 ok(/closedSlots\(\)\.map/.test(world), 'world draws gates from closedSlots (an open slot is skipped)');
 ok(/landPads\[ISLE\.land\]/.test(world) && /landCenters\[ISLE\.land\]/.test(world), 'the isle centre and Moana\'s pad are stored like the cove\'s');
-ok(!/NPC_ORDER\.push|NPC_ORDER = /.test(world) && NPC_ORDER[NPC_ORDER.length - 1] === 'moana' && /moana/.test(quests.slice(quests.indexOf('export const NPC_ORDER'), quests.indexOf('\n', quests.indexOf('export const NPC_ORDER')))), 'Moana is last in NPC_ORDER: world.js spawns her on the isle pad like the others');
+ok(!/NPC_ORDER\.push|NPC_ORDER = /.test(world) && NPC_ORDER.indexOf('moana') === NPC_ORDER.indexOf('ariel') + 1 && /moana/.test(quests.slice(quests.indexOf('export const NPC_ORDER'), quests.indexOf('\n', quests.indexOf('export const NPC_ORDER')))), 'Moana follows Ariel in NPC_ORDER (Jasmine follows in K9): world.js spawns her on the isle pad like the others');
 ok(PRINCESSES.moana && PRINCESSES.moana.landName === 'Wayfinder Isle', 'Moana\'s princess entry names the land');
 ok(/import \{ buildIsle \} from '\.\/isle\.js\?v=20261027e2'/.test(world), 'world imports isle.js with the existing ?v= stamp');
 ok(/import \{ makeMerger \} from '\.\/cove\.js\?v=20261027e2'/.test(isle), 'isle.js shares the cove\'s merger with the existing stamp');
@@ -278,7 +278,7 @@ ok(/openLandIds\(\)/.test(main) && /findsTotal\(OPEN_LANDS\)/.test(main) && /fin
 ok(/id === 'shapestones'\) line = shapeLine\(\)\.say/.test(main) && /Narrator\.speakExact\(def\.npc, line\)/.test(main), 'the shape fact is spoken with Moana\'s voice via speakExact');
 ok(/coveOpen: isCoveOpen\(\), isleOpen: isIsleOpen\(\)/.test(ui), 'Treasure Book asks for the isle only when open');
 ok(/zsq-tb-seven/.test(ui) && /zsq-tb-many/.test(ui), 'Treasure Book has the compact 7-tile / 6-sticker layout');
-ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse: ariel and ssw: moana in source');
+ok(/BUILT_SLOTS\s*=\s*\{\s*sse:\s*'ariel',\s*ssw:\s*'moana',\s*nne:\s*'jasmine'\s*\}/.test(worldmap.replace(/\/\/.*$/gm, '')), 'BUILT_SLOTS holds sse: ariel, ssw: moana and nne: jasmine in source');
 ok(/PREVIEW_LANDS\s*=\s*\{\s*cove:\s*'sse',\s*isle:\s*'ssw'(,\s*garden:\s*'nne')?\s*\}/.test(worldmap), 'preview flags map to slots (cove, isle)');
 // Six surprises
 for (const k of ['palm', 'canoe', 'conch', 'steps', 'bird', 'compass']) ok(new RegExp(`items\\.${k} = addTappable\\(`).test(isle), `surprise: ${k}`);

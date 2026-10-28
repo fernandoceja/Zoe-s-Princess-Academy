@@ -59,6 +59,14 @@
   Stretch: solid shapes and real things (a ball, a dice, a can), flat faces of solids, which thing can roll.
 - **Example round:** *"How many sides does a triangle have?"* — choices: `3`, `4`, `5`.
 
+## 🏮 Jasmine — "The Story Lanterns" · Moonlit Palace Garden
+
+- **Standard:** ELA Reading Literature — CA CCSS **RL.1.2** (retell stories with key details), RL.K.2 and RL.1.3
+- **What the child practices:** Putting a tiny 3-step story in order with first / next / last (beginning, middle, end), from everyday sequences she knows.
+  Easy: which picture comes first. Core: what happens last, what comes in the middle, what happens next after the first two pictures.
+  Stretch: pick the right order ("first sprout, then plant, last flower") or listen to a three-sentence story and say what happened first or last.
+- **Example round:** *"What comes first?"* with three picture cards (a chick, an egg, a hen) — choices: `egg`, `baby chick`, `big hen`.
+
 ## 👑 Starlight Finale
 
 - Finishing every land's quest (the big finale plays once all kingdoms are open) restores the Starlight Crown and celebrates
