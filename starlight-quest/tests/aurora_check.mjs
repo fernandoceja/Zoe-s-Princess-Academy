@@ -24,4 +24,12 @@ for (let tier = 1; tier <= 3; tier++) for (let seed = 1; seed <= 500; seed++) {
     }
   }
 }
+// Previously saved ambiguous rounds must not reappear; current review remains eligible.
+for (const word of ['hug', 'nap', 'run', 'rose']) {
+  assert.ok(!WORD_GARDEN_NAMES.includes(word) && !WORD_GARDEN_ACTIONS.includes(word));
+  const stale = { kind: 'naming', prompt: 'Old round', choices: [word, 'run', 'nap'], answer: word };
+  assert.ok(buildRounds('aurora', Math.random, { tier: 1, review: [{ round: stale, wins: 0 }] }).every(r => r.prompt !== 'Old round'));
+}
+const current = buildRounds('aurora', Math.random, { tier: 1, review: [] })[0];
+assert.ok(buildRounds('aurora', Math.random, { tier: 1, review: [{ round: { ...current, prompt: 'Current review' }, wins: 0 }] }).some(r => r.prompt === 'Current review' && r.review));
 console.log('aurora_check ok');
