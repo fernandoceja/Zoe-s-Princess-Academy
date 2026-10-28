@@ -72,3 +72,5 @@ jobs:
         run: node starlight-quest/tests/jasmine_check.mjs
       - name: Moonlit Palace Garden check
         run: node starlight-quest/tests/garden_check.mjs
+      - name: Sunny Fjord Harbor check
+        run: node starlight-quest/tests/harbor_check.mjs

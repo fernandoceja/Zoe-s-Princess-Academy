@@ -74,8 +74,8 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5 and the isle since K7, and the garden since K9, so all three flags are harmless now.)
-export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne' };
+// (cove is built for real since K5 and the isle since K7, and the garden since K9, so those three flags are harmless now. harbor (K10) is preview-only until Anna's quests land.)
+export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
 export function previewFlags(search = (typeof location !== 'undefined' && location && location.search) || '') {
@@ -121,12 +121,19 @@ export const GARDEN = { slot: 'nne', land: 'garden', princess: 'jasmine', discR:
 export const isGardenOpen = (search) => isSlotOpen(GARDEN.slot, search);
 export function gardenGeometry() { return slotLandGeometry(GARDEN); }
 
-/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle'] or ['cove', 'isle', 'garden']. */
+// Sunny Fjord Harbor (K10) sits at the 'ese' slot (the slot reserved for Anna), right beside Elsa's Frostfall Peaks. Drawn only when 'ese' is
+// open: in BUILT_SLOTS (K11, with Anna's quests) or ?preview=harbor (or ?preview=all). Anna is NOT spawned until K11.
+export const HARBOR = { slot: 'ese', land: 'harbor', princess: 'anna', discR: LAND_DISC_R, padDist: 6.5 };
+export const isHarborOpen = (search) => isSlotOpen(HARBOR.slot, search);
+export function harborGeometry() { return slotLandGeometry(HARBOR); }
+
+/** Ids of the optional (new-kingdom) lands that are open right now, e.g. ['cove'], ['cove', 'isle', 'garden'] or all four with the harbor. */
 export function openLandIds(search) {
   const out = [];
   if (isCoveOpen(search)) out.push(COVE.land);
   if (isIsleOpen(search)) out.push(ISLE.land);
   if (isGardenOpen(search)) out.push(GARDEN.land);
+  if (isHarborOpen(search)) out.push(HARBOR.land);
   return out;
 }
 

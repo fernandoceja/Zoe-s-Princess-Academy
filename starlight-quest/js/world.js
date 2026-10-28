@@ -13,9 +13,10 @@ import { todayKey, treasureSpots, treasureLandsFor, TREASURES_PER_LAND } from '.
 import { buildCove } from './cove.js?v=20261027e2';
 import { buildIsle } from './isle.js?v=20261027e2';
 import { buildGarden } from './garden.js?v=20261027e2';
+import { buildHarbor } from './harbor.js?v=20261027e2';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
-  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN,
+  closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR,
 } from './worldmap.js?v=20261027e2';
 
 // ---------------------------------------------------------------------------
@@ -478,6 +479,14 @@ export function createWorld(container, hooks) {
     const gg = gardenGeometry();
     landCenters[GARDEN.land] = new THREE.Vector3(gg.center.x, 0, gg.center.z);
     landPads[GARDEN.land] = new THREE.Vector3(gg.pad.x, 0, gg.pad.z);
+  }
+  // Sunny Fjord Harbor (K10): only when its slot is open (?preview=harbor, or really built when Anna's quests land in K11). Centre and Anna's
+  // pad are stored like the others so the scatter and every spot check stay clear of them; Anna is NOT spawned (not in NPC_ORDER until K11).
+  const harborOpen = isHarborOpen();
+  if (harborOpen) {
+    const hg = harborGeometry();
+    landCenters[HARBOR.land] = new THREE.Vector3(hg.center.x, 0, hg.center.z);
+    landPads[HARBOR.land] = new THREE.Vector3(hg.pad.x, 0, hg.pad.z);
   }
 
   // ---- (1) Whispering Library: book-tree woods -----------------------------
@@ -1513,6 +1522,13 @@ export function createWorld(container, hooks) {
       THREE, scene, center: landCenters[GARDEN.land], pad: landPads[GARDEN.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
     });
   }
+  // Sunny Fjord Harbor (K10): scenery + six tap surprises + the sentence-flags secret, only when the slot is open.
+  let harbor = null;
+  if (harborOpen) {
+    harbor = buildHarbor({
+      THREE, scene, center: landCenters[HARBOR.land], pad: landPads[HARBOR.land], G, M, addCollider, addTappable, starGeometry, softDot, calmMotion,
+    });
+  }
   // One reaction frame. Pure on its inputs (no allocation): hop + wiggle + expanding sparkle glow,
   // or, under calm motion, only a soft scale pulse and a fixed-size glow fade (no bouncing or turning).
   const TAP_GROW = 1.25;
@@ -1558,7 +1574,7 @@ export function createWorld(container, hooks) {
   const treasureList = [];   // { id, kind, landId, group, body, glow, hit, phase, t } t < 0 = waiting, else seconds into the pickup
   const treasureHits = [];   // invisible hit meshes (tap raycast)
   const TREASURE_PICKUP = 1.2, TREASURE_DUR = 0.6, TREASURE_Y = 0.85;
-  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff };
+  const TREASURE_GLOW = { shell: 0xffc4dc, gem: 0xbfe9ff, feather: 0xe3d6ff, star: 0xfff3a8, ribbon: 0xffb3d1, seaglass: 0xbff5ea, blossom: 0xffc0cf, moonstone: 0xdfe9ff, anchor: 0xbfe0ff };
   const TREASURE_KINDS_3D = {
     shell(g) {
       const m = tapStd('trShell', 0xffd9e8);
@@ -1592,6 +1608,16 @@ export function createWorld(container, hooks) {
       tapPart(g, G('trMoonstone', () => new THREE.IcosahedronGeometry(0.27, 0)), tapStd('trMoonstone', 0xe6eeff, 0x9fb4ff), 0, 0, 0, 1.15, 0.85, 1);
       tapPart(g, G('trMoonShine', () => new THREE.TorusGeometry(0.16, 0.035, 5, 10, Math.PI * 1.2)), tapStd('trMoonShine', 0xffffff, 0xdfe9ff), 0.02, 0.1, 0.2).rotation.set(0.5, 0, 0.6);
     },
+    anchor(g) { // harbor only: a small iron-blue anchor (ring on top, a shank with a cross-bar, curved arms with two points)
+      const iron = tapStd('trAnchor', 0x3f6fb5, 0x1d3d73);
+      tapPart(g, G('trAnchorShank', () => new THREE.CylinderGeometry(0.035, 0.035, 0.5, 6)), iron, 0, 0, 0);
+      tapPart(g, G('trAnchorBar', () => new THREE.CylinderGeometry(0.03, 0.03, 0.3, 6)), iron, 0, 0.15, 0).rotation.z = Math.PI / 2;
+      tapPart(g, G('trAnchorRing', () => new THREE.TorusGeometry(0.07, 0.025, 5, 10)), iron, 0, 0.3, 0);
+      tapPart(g, G('trAnchorArms', () => new THREE.TorusGeometry(0.2, 0.035, 5, 10, Math.PI)), iron, 0, -0.14, 0).rotation.z = Math.PI;
+      const tip = G('trAnchorTip', () => new THREE.ConeGeometry(0.06, 0.12, 5));
+      tapPart(g, tip, iron, -0.2, -0.12, 0).rotation.z = 0.5;
+      tapPart(g, tip, iron, 0.2, -0.12, 0).rotation.z = -0.5;
+    },
     ribbon(g) {
       const m = tapStd('trRibbon', 0xff7fb0);
       const cone = G('trBowCone', () => new THREE.ConeGeometry(0.17, 0.32, 6));
@@ -1610,13 +1636,16 @@ export function createWorld(container, hooks) {
     for (const landId of treasureLandsFor(openLands)) {
       const c = landCenters[landId];
       if (!c) continue;
-      for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND)) {
+      // (the harbor asks for spots on dry land, so a find never starts out in the fjord; every other land is unchanged)
+      const avoidWater = harbor && landId === HARBOR.land ? (lx, lz) => !harbor.dry(c.x + lx, c.z + lz) : null;
+      for (const sp of treasureSpots(todayKey(), landId, TREASURES_PER_LAND, undefined, avoidWater)) {
         const wx = c.x + sp.x, wz = c.z + sp.z;
         let px = wx, pz = wz;
         const dry = (x, z) => !(cove && landId === COVE.land) || (!cove.wet(x, z) && Math.hypot(x - c.x, z - c.z) < 9.6); // cove: keep finds on dry sand
         const dryIsle = (x, z) => !(isle && landId === ISLE.land) || !isle.wet(x, z);                                        // isle: keep finds off the lagoon
         const dryGarden = (x, z) => !(garden && landId === GARDEN.land) || garden.dry(x, z);                                // garden: keep finds out of the pool and off the beds
-        for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz) && dryGarden(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
+        if (harbor && landId === HARBOR.land) [px, pz] = harbor.settle(wx, wz, treasureFree);   // the harbor always finds a clear dry spot (see harbor.js)
+        else for (let k = 0; k < 60 && !(treasureFree(px, pz) && dry(px, pz) && dryIsle(px, pz) && dryGarden(px, pz)); k++) { px = wx + Math.cos(k * 2.4) * 0.4 * k; pz = wz + Math.sin(k * 2.4) * 0.4 * k; }
         const group = new THREE.Group();
         group.position.set(px, 0, pz);
         const body = new THREE.Group();
@@ -2147,6 +2176,7 @@ export function createWorld(container, hooks) {
     if (cove) cove.update(t, dt);
     if (isle) isle.update(t, dt);
     if (garden) garden.update(t, dt);
+    if (harbor) harbor.update(t, dt);
     updateTreasures(dt, t);
     updateGates(dt, t);
 
