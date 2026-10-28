@@ -472,7 +472,7 @@ export const QUESTS = {
   aurora: {
     title: 'The Word Garden', questName: 'The Word Garden',
     intro: ['Welcome to Rosewood Glen!', 'The word garden needs your help.', 'Let us find naming words and action words together!'],
-    rounds: [{ prompt: 'Which word names a thing?', choices: ['bird', 'run', 'hop'], answer: 'bird', hint: 'A naming word names a person, animal, place, or thing.' }],
+    rounds: [{ prompt: 'Which word names a thing?', choices: ['kitten', 'I hop', 'I dig'], answer: 'kitten', hint: 'A naming word names a person, animal, place, or thing.' }],
     complete: ['The word garden is shining again!', 'You found naming words and action words. Thank you!'],
   },
 
@@ -2013,19 +2013,20 @@ function _tianaT3(rng) {
 }
 
 // Aurora: short, unambiguous first-grade naming and action words.
-export const WORD_GARDEN_NAMES = ['bird', 'rose', 'cat', 'dog', 'sun', 'hat', 'bed', 'pig', 'log', 'cup', 'fox', 'hen'];
-export const WORD_GARDEN_ACTIONS = ['run', 'hop', 'sit', 'dig', 'nap', 'hug', 'jog', 'win', 'nod', 'swim', 'jump', 'skip'];
+export const WORD_GARDEN_NAMES = ['kitten', 'rabbit', 'apple', 'baby', 'pencil', 'carrot', 'spider', 'tiger', 'turtle', 'puppy', 'monkey', 'banana'];
+// A short subject makes the action reading clear even when a verb also has a noun meaning.
+export const WORD_GARDEN_ACTIONS = ['I hop', 'I sit', 'I dig', 'I jog', 'I nod', 'I swim', 'I jump', 'I skip', 'I clap', 'I sing', 'I wave', 'I grin'];
 function _auroraPick(rng, naming) {
   const answer = _pick(naming ? WORD_GARDEN_NAMES : WORD_GARDEN_ACTIONS, rng);
   const others = _sample(naming ? WORD_GARDEN_ACTIONS : WORD_GARDEN_NAMES, 2, rng);
-  return { kind: naming ? 'naming' : 'action', prompt: naming ? 'Which word names a thing?' : 'Which word is an action?',
-    say: naming ? 'Which word names a thing?' : 'Which word tells an action?',
+  return { kind: naming ? 'naming' : 'action', prompt: naming ? 'Which word names a thing?' : 'Which shows an action?',
+    say: naming ? 'Which word names a thing?' : 'Which shows an action?',
     choices: _shuffle([answer, ...others], rng), answer,
     hint: naming ? 'A naming word names a person, animal, place, or thing.' : 'An action word tells what someone or something does.' };
 }
 function _auroraSort(rng) {
   const items = _shuffle([..._sample(WORD_GARDEN_NAMES, 2, rng).map(name => ({ name, naming: true })), ..._sample(WORD_GARDEN_ACTIONS, 2, rng).map(name => ({ name, naming: false }))], rng);
-  return { kind: 'wordsort', prompt: 'Sort naming and action words.', say: 'Sort the words into naming words and action words.',
+  return { kind: 'wordsort', prompt: 'Sort names and actions.', say: 'Sort the naming words and actions.',
     choices: ['Naming', 'Action'], answer: 'Naming', hint: 'A naming word names a thing. An action word tells what it does.', sort: { kind: 'words', items } };
 }
 
@@ -2129,7 +2130,15 @@ export function buildRounds(npcId, rng = Math.random, ladder = null) {
     const add = (r) => { if (r && !seen.has(r.key)) { seen.add(r.key); out.push(r); return true; } return false; };
     const fresh = (t) => { for (let k = 0; k < 40; k++) { if (add(_tagged(npcId, t, rng))) return; } add({ ..._tagged(npcId, t, rng), key: `x${out.length}` }); };
     fresh(below);
-    const review = ((ladder && ladder.review) || []).filter((x) => x && x.round && x.round.prompt);
+    // Older Aurora review items can contain words with both noun and verb meanings.
+    // Keep the stored queue intact, but never serve an obsolete ambiguous round.
+    const currentAuroraRound = (r) => {
+      if (r.kind === 'wordsort') return r.sort && Array.isArray(r.sort.items) && r.sort.items.length === 4 && r.sort.items.every((i) => i && (i.naming ? WORD_GARDEN_NAMES : WORD_GARDEN_ACTIONS).includes(i.name));
+      if (r.kind !== 'naming' && r.kind !== 'action') return false;
+      const allowed = [...WORD_GARDEN_NAMES, ...WORD_GARDEN_ACTIONS];
+      return Array.isArray(r.choices) && r.choices.includes(r.answer) && r.choices.every((w) => allowed.includes(w)) && (r.kind === 'naming' ? WORD_GARDEN_NAMES : WORD_GARDEN_ACTIONS).includes(r.answer);
+    };
+    const review = ((ladder && ladder.review) || []).filter((x) => x && x.round && x.round.prompt && (npcId !== 'aurora' || currentAuroraRound(x.round)));
     const rv = review.length ? _pick(review, rng).round : null;
     fresh(tier);
     if (!(rv && add({ ...rv, key: roundKey(rv), review: true }))) fresh(tier);
