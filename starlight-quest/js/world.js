@@ -489,8 +489,8 @@ export function createWorld(container, hooks) {
     landCenters[HARBOR.land] = new THREE.Vector3(hg.center.x, 0, hg.center.z);
     landPads[HARBOR.land] = new THREE.Vector3(hg.pad.x, 0, hg.pad.z);
   }
-  // Firefly Bayou (K12): only when its slot is open (?preview=bayou, or really built when Tiana's quests land in K13). Centre and Tiana's
-  // pad are stored like the others so the scatter and every spot check stay clear of them; Tiana is NOT spawned (not in NPC_ORDER until K13).
+  // Firefly Bayou (K12): only when its slot is open (built for real since K13, or ?preview=bayou). Centre and Tiana's
+  // pad are stored like the others so the scatter and every spot check stay clear of them; Tiana is in NPC_ORDER (K13), so the spawn loop puts her on this pad.
   const bayouOpen = isBayouOpen();
   if (bayouOpen) {
     const bg = bayouGeometry();

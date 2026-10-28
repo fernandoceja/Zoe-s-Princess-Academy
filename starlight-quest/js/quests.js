@@ -54,7 +54,7 @@ export const PRINCESSES = {
     color: '#f59e0b',
     voice: { pitch: 1.05, rate: 0.9 },
   },
-  // --- New-kingdom princesses (K3). Ariel (K5), Moana (K7), Jasmine (K9) and Anna (K11) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
+  // --- New-kingdom princesses (K3). Ariel (K5), Moana (K7), Jasmine (K9), Anna (K11) and Tiana (K13) are in NPC_ORDER now; the rest are NOT yet: each kingdom PR
   // appends her id to NPC_ORDER (and BUILT_SLOTS) when her land exists. Original art, no recorded
   // voice clips (see NO_CLIP_IDS), so they use the speech voice below.
   ariel: {
@@ -123,7 +123,7 @@ export const PRINCESSES = {
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
 export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 
-export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna'];
+export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna', 'tiana'];
 
 // ----------------------------------------------------------------------------
 // DOLCH_1ST — Dolch first-grade sight words (~40).
@@ -403,6 +403,72 @@ export const QUESTS = {
     ],
   },
 
+  // ---- TIANA: "The Tally Stand" — Math / tally marks and data -------------------------
+  // (Original story. Static rounds below are only the fallback; buildRounds uses TIERS.tiana.)
+  tiana: {
+    title: 'The Tally Stand',
+    questName: 'The Tally Stand',
+    intro: [
+      'Hello! Welcome to Firefly Bayou.',
+      'I run the vegetable stand. The rain smudged my tally board!',
+      'Can you help me count with tally marks? Then every basket is counted!',
+    ],
+    rounds: [
+      {
+        prompt: 'How many tally marks?',
+        say: 'Count the tally marks. How many are there?',
+        visual: { kind: 'tally', n: 3 },
+        choices: ['2', '3', '4'],
+        choiceSay: { '2': 'two', '3': 'three', '4': 'four' },
+        answerSay: 'three',
+        answer: '3',
+        hint: 'Good try! Touch each line and count them in order.',
+      },
+      {
+        prompt: 'How many tally marks?',
+        say: 'Count the tally marks. How many are there?',
+        visual: { kind: 'tally', n: 5 },
+        choices: ['4', '5', '6'],
+        choiceSay: { '4': 'four', '5': 'five', '6': 'six' },
+        answerSay: 'five',
+        answer: '5',
+        hint: 'Good try! A slash across the lines makes a group. Count the whole group.',
+      },
+      {
+        prompt: 'How many tally marks in all?',
+        say: 'Count the tally marks. How many are there in all?',
+        visual: { kind: 'tally', n: 13 },
+        choices: ['12', '13', '18'],
+        choiceSay: { '12': 'twelve', '13': 'thirteen', '18': 'eighteen' },
+        answerSay: 'thirteen',
+        answer: '13',
+        hint: 'Good try! Count the slashed groups first, then add the single lines.',
+      },
+      {
+        prompt: 'Which has the most?',
+        say: 'Look at the tally chart. Which has the most?',
+        visual: { kind: 'tallychart', title: 'Vegetable stand', rows: [{ e: '🥕', name: 'carrots', n: 7 }, { e: '🍅', name: 'tomatoes', n: 3 }, { e: '🌽', name: 'corn', n: 10 }] },
+        choices: ['🥕 carrots', '🍅 tomatoes', '🌽 corn'],
+        answer: '🌽 corn',
+        hint: 'Good try! Count the marks in each row. The longest row has the most.',
+      },
+      {
+        prompt: 'How many more corn than tomatoes?',
+        say: 'Look at the tally chart. How many more corn than tomatoes?',
+        visual: { kind: 'tallychart', title: 'Vegetable stand', rows: [{ e: '🥕', name: 'carrots', n: 7 }, { e: '🍅', name: 'tomatoes', n: 3 }, { e: '🌽', name: 'corn', n: 10 }] },
+        choices: ['3', '7', '10'],
+        choiceSay: { '3': 'three', '7': 'seven', '10': 'ten' },
+        answerSay: 'seven',
+        answer: '7',
+        hint: 'Good try! Count each row. Then see how many extra the longer row has.',
+      },
+    ],
+    complete: [
+      'You did it! Every basket is counted.',
+      'My tally board is as good as new. Thank you!',
+    ],
+  },
+
   // ---- ELSA: "The Frozen Bridge" — Math / operations within 20 ------------
   elsa: {
     title: 'The Frozen Bridge',
@@ -615,6 +681,11 @@ export const PARENT_CORNER_HTML = `<div style="font-family:system-ui,-apple-syst
 <div style="font-weight:700;font-size:15px;">&#9875; Anna &mdash; The Harbor Signs</div>
 <div style="font-size:13px;margin-top:4px;"><b>Standard:</b> ELA Language &mdash; CA CCSS L.1.2.a / L.1.2.b (and L.K.2.a)</div>
 <div style="font-size:13px;margin-top:2px;color:#374151;">Capital letters and end marks: capitalizing the first word of a sentence and the names of people (and the word I), and ending a sentence with a period, question mark or exclamation mark.</div>
+</div>
+<div style="padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#faf5ff;">
+<div style="font-weight:700;font-size:15px;">&#129365; Tiana &mdash; The Tally Stand</div>
+<div style="font-size:13px;margin-top:4px;"><b>Standard:</b> Math: data &mdash; CA CCSS 1.MD.C.4 (and K.CC / 1.NBT counting by 5s)</div>
+<div style="font-size:13px;margin-top:2px;color:#374151;">Tally marks: counting tally marks and groups of five (four lines and a slash), then reading a tiny tally chart to find which row has the most, how many in a row, and how many more one row has than another.</div>
 </div>
 <div style="padding:12px;border:2px solid #ebd373;border-radius:12px;background:#fefce8;">
 <div style="font-weight:700;font-size:15px;">&#128081; Starlight Finale</div>
@@ -1865,6 +1936,70 @@ function _annaT3(rng) {
   };
 }
 
+// ---- Tiana: tally marks (K13). A tally is four upright lines and a slash across them (a group of five), then single lines. ----
+// Pictures come from tally.js (one <line> per mark). Rounds carry plain data: { kind: 'tally', n } or { kind: 'tallychart', rows }.
+const _NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+  'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five'];
+// Hints use no number words at all, so a hint can never hand over the answer.
+const _TALLY_HINT = {
+  count: 'Good try! Touch each line and count them in order.',
+  group: 'Good try! Count the slashed groups first, then add the single lines.',
+  fives: 'Good try! Each slashed group counts the same. Count group after group.',
+  most: 'Good try! Count the marks in each row. The longest row has the most.',
+  howmany: 'Good try! Count the groups in that row, then the single lines.',
+  diff: 'Good try! Count each row. Then see how many extra the longer row has.',
+};
+export const TALLY_VEGGIES = [['🥕', 'carrots'], ['🍅', 'tomatoes'], ['🌽', 'corn'], ['🥦', 'broccoli'], ['🥔', 'potatoes']];
+// Number choices: the answer plus two near numbers, all positive and different. `offsets` lists the nearby numbers to draw from.
+function _tallyChoices(answer, offsets, rng, extra = []) {
+  const near = [...new Set([...offsets.map((o) => answer + o), ...extra])].filter((x) => x > 0 && x !== answer);
+  const picks = _sample(near, 2, rng);
+  return { choices: _shuffle([answer, ...picks].map(String), rng), choiceSay: Object.fromEntries([answer, ...picks].map((x) => [String(x), _NUM_WORDS[x]])) };
+}
+function _tallyNumRound(n, kind, prompt, say, offsets, rng) {
+  const c = _tallyChoices(n, offsets, rng);
+  return { kind, prompt, say, visual: { kind: 'tally', n }, ...c, answer: String(n), answerSay: _NUM_WORDS[n], hint: _TALLY_HINT[kind] };
+}
+function _tianaT1(rng) {
+  const n = 1 + Math.floor(rng() * 10);
+  return _tallyNumRound(n, 'count', 'How many tally marks?', 'Count the tally marks. How many are there?', n >= 5 ? [-1, 1, -2, 2] : [-1, 1, 2, 3], rng);
+}
+function _tianaT2(rng) {
+  if (rng() < 0.3) {   // only full groups: count by fives
+    const n = 5 * (1 + Math.floor(rng() * 4));
+    return _tallyNumRound(n, 'fives', 'Count by fives. How many tally marks?', 'Count by fives. How many tally marks are there?', [-5, 5, -1, 1], rng);
+  }
+  const n = 6 + Math.floor(rng() * 15);   // 6-20
+  return _tallyNumRound(n, 'group', 'How many tally marks in all?', 'Count the tally marks. How many are there in all?', [-5, 5, -1, 1], rng);
+}
+function _tallyChart(rng, rows, distinct) {
+  for (;;) {
+    const veg = _sample(TALLY_VEGGIES, rows, rng);
+    const counts = veg.map(() => 1 + Math.floor(rng() * 10));
+    if (distinct && new Set(counts).size !== counts.length) continue;
+    return { kind: 'tallychart', title: 'Vegetable stand', rows: veg.map(([e, name], i) => ({ e, name, n: counts[i] })) };
+  }
+}
+function _tianaT3(rng) {
+  const x = rng();
+  if (x < 0.34) {   // which has the most (no ties)
+    const v = _tallyChart(rng, 3, true), top = v.rows.reduce((a, b) => (b.n > a.n ? b : a));
+    const label = (r) => `${r.e} ${r.name}`;
+    return { kind: 'most', prompt: 'Which has the most?', say: 'Look at the tally chart. Which has the most?', visual: v, choices: _shuffle(v.rows.map(label), rng), answer: label(top), hint: _TALLY_HINT.most };
+  }
+  if (x < 0.67) {   // how many in one row
+    const v = _tallyChart(rng, rng() < 0.5 ? 2 : 3, false), r = _pick(v.rows, rng);
+    return { kind: 'howmany', prompt: `How many ${r.name}?`, say: `Look at the tally chart. How many ${r.name} are there?`, visual: v,
+      ..._tallyChoices(r.n, [-1, 1, -5, 5, 2, -2], rng), answer: String(r.n), answerSay: _NUM_WORDS[r.n], hint: _TALLY_HINT.howmany };
+  }
+  // how many more: the longer row has 1-9 more
+  let v, hi, lo;
+  for (;;) { v = _tallyChart(rng, rng() < 0.5 ? 2 : 3, true); const s = [...v.rows].sort((a, b) => b.n - a.n); hi = s[0]; lo = s[s.length - 1]; if (hi.n - lo.n <= 9) break; }
+  const d = hi.n - lo.n;
+  return { kind: 'diff', prompt: `How many more ${hi.name} than ${lo.name}?`, say: `Look at the tally chart. How many more ${hi.name} than ${lo.name}?`, visual: v,
+    ..._tallyChoices(d, [-1, 1, 2], rng, [hi.n, lo.n].filter((x) => x !== d)), answer: String(d), answerSay: _NUM_WORDS[d], hint: _TALLY_HINT.diff };
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -1912,6 +2047,7 @@ const TIERS = {
   moana: { 1: _moanaT1, 2: _moanaT2, 3: _moanaT3 },
   jasmine: { 1: _jasmineT1, 2: _jasmineT2, 3: _jasmineT3 },
   anna: { 1: _annaT1, 2: _annaT2, 3: _annaT3 },
+  tiana: { 1: _tianaT1, 2: _tianaT2, 3: _tianaT3 },
   rapunzel: {
     1: _sciOr(1, SCI_T1),
     2: _sciOr(2, SCI_T2),

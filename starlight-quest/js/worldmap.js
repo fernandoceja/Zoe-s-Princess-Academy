@@ -65,7 +65,7 @@ export const PLANNED_SLOTS = {
 
 // Later kingdom PRs mark a slot as built by adding  slot -> landId  here, e.g. { ese: 'anna' }.
 // A slot listed here no longer shows its closed star gate (the new land replaces it).
-export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana', nne: 'jasmine', ese: 'anna' };   // K5: Seashell Cove, K7: Wayfinder Isle, K9: Moonlit Palace Garden, K11: Sunny Fjord Harbor (their princesses' quests exist)
+export const BUILT_SLOTS = { sse: 'ariel', ssw: 'moana', nne: 'jasmine', ese: 'anna', wsw: 'tiana' };   // K5: Seashell Cove, K7: Wayfinder Isle, K9: Moonlit Palace Garden, K11: Sunny Fjord Harbor, K13: Firefly Bayou (their princesses' quests exist)
 
 export function builtSlotIds() {
   return NEW_LAND_SLOTS.map((s) => s.slot).filter((id) => Object.prototype.hasOwnProperty.call(BUILT_SLOTS, id));
@@ -74,8 +74,7 @@ export function builtSlotIds() {
 // Preview flags (K4+): a land can be drawn BEFORE its princess's quests exist, only when the owner asks for it
 // with  ?preview=isle  (or  ?preview=all  /  ?preview=cove,isle). In normal play (no flag) nothing changes.
 // previewable land flag -> slot id. Add a line here when another land gets built ahead of its quests.
-// (cove is built for real since K5, the isle since K7, the garden since K9 and the harbor since K11, so those four flags are harmless now.
-// bayou (K12) is preview-only until Tiana's quests land.)
+// (cove is built for real since K5, the isle since K7, the garden since K9 and the harbor since K11 and the bayou since K13, so all five flags are harmless now.)
 export const PREVIEW_LANDS = { cove: 'sse', isle: 'ssw', garden: 'nne', harbor: 'ese', bayou: 'wsw' };
 
 /** Set of preview flags in a query string such as "?preview=cove,all". Never throws. */
@@ -129,7 +128,7 @@ export const isHarborOpen = (search) => isSlotOpen(HARBOR.slot, search);
 export function harborGeometry() { return slotLandGeometry(HARBOR); }
 
 // Firefly Bayou (K12) sits at the 'wsw' slot (the slot planned for Tiana), west-south-west, near Glass Slipper Village. Drawn only when 'wsw' is
-// open: in BUILT_SLOTS (K13, with Tiana's quests) or ?preview=bayou (or ?preview=all). Tiana is NOT spawned until K13.
+// open: in BUILT_SLOTS (K13, with Tiana's quests) or ?preview=bayou (or ?preview=all). Built for real since K13: Tiana is in NPC_ORDER and stands on her pad.
 export const BAYOU = { slot: 'wsw', land: 'bayou', princess: 'tiana', discR: LAND_DISC_R, padDist: 6.5 };
 export const isBayouOpen = (search) => isSlotOpen(BAYOU.slot, search);
 export function bayouGeometry() { return slotLandGeometry(BAYOU); }

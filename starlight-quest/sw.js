@@ -35,6 +35,7 @@ const PRECACHE_URLS = [
   './js/quests.js?v=20261027e2',
   './js/save.js?v=20261027e2',
   './js/shapes.js?v=20261027e2',
+  './js/tally.js?v=20261027e2',
   './js/treasures.js?v=20261027e2',
   './js/ui.js?v=20261027e2',
   './js/world.js?v=20261027e2',

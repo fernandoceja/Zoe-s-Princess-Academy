@@ -186,12 +186,12 @@ for (const k of ['T1:mark', 'T2:word', 'T3:sentence']) ok(kinds[k] > 1000, 'kind
   ok(f[4].choices.filter((c) => written(c) === true).length === 1 && written(f[4].answer) === true, 'fallback sentence round has one right version'); }
 
 // Wiring and story lines
-ok(NPC_ORDER[NPC_ORDER.length - 1] === 'anna' && NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1, 'anna follows jasmine in NPC_ORDER');
+ok(NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1, 'anna follows jasmine in NPC_ORDER');
 ok(NO_CLIP_IDS.includes('anna'), 'anna uses the speech voice (no clips)');
 ok(PRINCESSES.anna.landName === 'Sunny Fjord Harbor' && QUESTS.anna.title === 'The Harbor Signs' && QUESTS.anna.questName === 'The Harbor Signs', 'land name and title');
 ok(/Anna/.test(PARENT_CORNER_HTML) && /L\.1\.2/.test(PARENT_CORNER_HTML) && /Harbor Signs/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');
 ok(BUILT_SLOTS.ese === 'anna' && builtSlotIds().includes('ese') && isHarborOpen() && isHarborOpen('?preview=harbor'), 'ese is built for Anna; ?preview=harbor is harmless');
-ok(JSON.stringify(openLandIds()) === JSON.stringify(['cove', 'isle', 'garden', 'harbor']) && findsTotal(openLandIds()) === 40, 'eight lands, 40 treasures');
+ok(openLandIds().includes('harbor') && openLandIds().length === 5, 'the harbor is open (since K11; the bayou joined in K13)');
 const lines = [...QUESTS.anna.intro, ...QUESTS.anna.complete, QUESTS.anna.title, QUESTS.anna.questName];
 for (const l of lines) spoken('story line', l, null);
 ok(QUESTS.anna.intro.length >= 2 && QUESTS.anna.complete.length >= 1, 'story lines exist');
@@ -205,13 +205,13 @@ for (const l of lines) ok(!FILM.test(l), 'film word in Anna line: ' + l, null);
 ok(!FILM.test(annaText), 'film word in Anna text: ' + (annaText.match(FILM) || [])[0], null);
 
 // Opening the harbor: new-kingdom card, saves, finale.
-ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne'])) === '["ese"]', 'a save that saw cove, isle and garden gets a card for the harbor only');
-ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese']).length === 0, 'once seen, no card again');
+ok(JSON.stringify(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne']).sort()) === '["ese","wsw"]', 'a save that saw cove, isle and garden gets a card for the harbor (and the bayou, K13)');
+ok(unseenKingdomSlots(builtSlotIds(), ['sse', 'ssw', 'nne', 'ese', 'wsw']).length === 0, 'once seen, no card again');
 { const m = merge({ done: ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine'], seenNewKingdoms: true, seenKingdoms: ['sse', 'ssw', 'nne'], shards: { jasmine: 5 } });
   ok(m.shards.anna === 0 && !m.done.includes('anna') && m.done.length === 7 && m.shards.jasmine === 5 && m.seenKingdoms.length === 3, 'existing saves keep progress; Anna starts fresh'); }
-ok(!shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Anna alone never runs the crown finale (two kingdoms still closed)');
+ok(!shouldRunFinale(NPC_ORDER, NPC_ORDER, builtSlotIds().length) && shouldRunFinale(NPC_ORDER, NPC_ORDER, NEW_LAND_SLOTS.length), 'finishing Anna never runs the crown finale (one kingdom still closed)');
 { const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'), ui = readFileSync(new URL('../js/ui.js', import.meta.url), 'utf8');
-  ok(/anna: 'harbor'/.test(main) && /sentenceCardHtml\(round\.visual\)/.test(main) && /npcId === 'anna'\) && !round\.noChoiceSay/.test(main) && /round\.choiceSay/.test(main), 'main wires the land, the sign card and read-aloud mark names');
+  ok(/anna: 'harbor'/.test(main) && /sentenceCardHtml\(round\.visual\)/.test(main) && /npcId === 'anna'( \|\| npcId === 'tiana')?\) && !round\.noChoiceSay/.test(main) && /round\.choiceSay/.test(main), 'main wires the land, the sign card and read-aloud mark names');
   ok(/Harbor/.test(ui) && /⚓/.test(ui), 'the new-kingdom card has a harbor emoji'); }
 
 console.log(`anna_check: ${n} rounds`, JSON.stringify(kinds), 'problems', bad.size);

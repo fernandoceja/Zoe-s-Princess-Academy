@@ -72,6 +72,8 @@ jobs:
         run: node starlight-quest/tests/jasmine_check.mjs
       - name: Anna capital-letter and end-mark quests check
         run: node starlight-quest/tests/anna_check.mjs
+      - name: Tiana tally-mark quests check
+        run: node starlight-quest/tests/tiana_check.mjs
       - name: Moonlit Palace Garden check
         run: node starlight-quest/tests/garden_check.mjs
       - name: Sunny Fjord Harbor check
