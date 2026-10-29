@@ -80,7 +80,8 @@ import { CelebrationModal } from './components/CelebrationModal';
 import { PauseMenu } from './components/PauseMenu';
 import { WardrobeModal } from './components/WardrobeModal';
 import { TreasureBookModal } from './components/TreasureBookModal';
-import { ParentCorner } from './components/ParentCorner';
+import { ParentCorner, type WeekForm } from './components/ParentCorner';
+import { applyWeek, resetWeek, applyWords } from './flow/parent.js';
 import { VirtualJoystick } from './components/VirtualJoystick';
 import { PrincessId } from './types';
 
@@ -220,7 +221,11 @@ export const App: React.FC = () => {
 
   // Toggle Pause
   const handleTogglePause = () => {
-    if (phaseRef.current !== 'roam') return;
+    if (phaseRef.current !== 'roam') {
+      // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
+      showToast('Finish talking first, then you can pause! ⏸️', 2200);
+      return;
+    }
     const nextPaused = !pausedRef.current;
     pausedRef.current = nextPaused;
     setPaused(nextPaused);
@@ -639,13 +644,14 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Save Custom Words (Parent Corner)
-  const handleSaveCustomWords = (words: string[]) => {
-    Save.data.schoolWords = words;
-    Save.save();
-    setSchoolWords(words);
+  // Parent Corner editors: the flow saves, the App keeps its copy of the class words in state.
+  const handleSaveCustomWords = (input: string) => {
+    const words = applyWords(Save.data, input);
     setSchoolWordsState(words);
+    return words;
   };
+  const handleSaveWeek = (form: WeekForm) => applyWeek(Save.data, form);
+  const handleResetWeek = () => resetWeek(Save.data);
 
   // Wardrobe Outfit Changed
   const handleSelectOutfit = (newOutfit: any) => {
@@ -801,6 +807,8 @@ export const App: React.FC = () => {
               ladderState={ladderState}
               schoolWords={schoolWords}
               onSaveWords={handleSaveCustomWords}
+              onSaveWeek={handleSaveWeek}
+              onResetWeek={handleResetWeek}
               onBack={() => setPauseTab('menu')}
             />
           )}

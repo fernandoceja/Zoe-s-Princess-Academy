@@ -1,57 +1,54 @@
 import React, { useState } from 'react';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
+import {
+  gateQuestion,
+  wordsStatus,
+  wordsSavedNote,
+} from '../flow/parent.js';
+import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState } from '../engine-core.js';
+
+export interface WeekForm {
+  spelling: string;
+  sight: string;
+  dictation: string;
+  vowels: string;
+}
+
+// Field labels and placeholders copied from ui.js _weekBlock (1517-1523).
+const WEEK_FIELDS: { key: keyof WeekForm; label: string; placeholder: string }[] = [
+  { key: 'spelling', label: 'Spelling words', placeholder: 'lend, send, fast' },
+  { key: 'sight', label: 'Sight words', placeholder: 'of, he' },
+  { key: 'dictation', label: 'Dictation sentence', placeholder: WEEK_DEFAULT.dictation },
+  { key: 'vowels', label: 'Short-vowel words', placeholder: 'sat, hip, pen' },
+];
+
+// Typing must never reach the game's key controls (ui.js stops keydown in every editor field).
+const stopKey = (e: React.KeyboardEvent) => e.stopPropagation();
+
+export interface WeekPack {
+  spelling: string[];
+  sight: string[];
+  dictation: string;
+  vowels: string[];
+}
+
+const weekToForm = (w: WeekPack): WeekForm => ({
+  spelling: w.spelling.join(', '),
+  sight: w.sight.join(', '),
+  dictation: w.dictation,
+  vowels: w.vowels.join(', '),
+});
 
 interface ParentCornerProps {
   stars: number;
   doneLands: string[];
   ladderState: Record<string, any>;
   schoolWords: string[];
-  onSaveWords: (words: string[]) => void;
+  onSaveWords: (input: string) => string[];
+  onSaveWeek: (form: WeekForm) => WeekPack;
+  onResetWeek: () => WeekPack;
   onBack: () => void;
 }
-
-const STANDARDS_MAP: Record<string, { standard: string; desc: string }> = {
-  belle: {
-    standard: 'CCSS ELA RF.1.3 & RF.1.4',
-    desc: 'Sight words (Dolch 1st Grade) & decoding short-vowel CVC phonics.',
-  },
-  elsa: {
-    standard: 'CCSS Math 1.OA, 1.OA.5/6',
-    desc: 'Addition & subtraction within 20, counting on from larger addends, doubles.',
-  },
-  rapunzel: {
-    standard: 'NGSS 1-LS1 & CCSS Math 1.MD.1-2',
-    desc: 'Plant needs, living vs nonliving, flower height measuring and sorting.',
-  },
-  cinderella: {
-    standard: 'CCSS Math 1.MD.3',
-    desc: 'Telling time to the hour and half-hour using analog clock faces.',
-  },
-  ariel: {
-    standard: 'CCSS ELA RF.1.2 & RF.1.3',
-    desc: 'Rhyming patterns, word families, and short-vowel auditory discrimination.',
-  },
-  moana: {
-    standard: 'CCSS Math 1.G.A.1 & 1.G.A.2',
-    desc: '2D & 3D geometry, shape recognition, counting sides and corners.',
-  },
-  jasmine: {
-    standard: 'CCSS ELA RL.1.2 & RL.1.3',
-    desc: 'Story sequencing with first / next / last (beginning, middle, end).',
-  },
-  anna: {
-    standard: 'CCSS ELA L.1.2.a & L.1.2.b',
-    desc: 'Capitalization of names / sentences and sentence end punctuation (. ? !).',
-  },
-  tiana: {
-    standard: 'CCSS Math 1.MD.C.4',
-    desc: 'Tally marks, counting by 5s, interpreting vegetable stand picture data.',
-  },
-  aurora: {
-    standard: 'CCSS ELA L.1.1',
-    desc: 'Grammar fundamentals: identifying and sorting naming words and action words.',
-  },
-};
 
 export const ParentCorner: React.FC<ParentCornerProps> = ({
   stars,
@@ -59,34 +56,49 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   ladderState,
   schoolWords,
   onSaveWords,
+  onSaveWeek,
+  onResetWeek,
   onBack,
 }) => {
-  // Simple grown-up gate check
+  // Grown-up gate (ui.js showParentGate): a random sum, three answer buttons, a new question after a miss.
   const [locked, setLocked] = useState(true);
-  const [parentAnswer, setParentAnswer] = useState('');
+  const [gate, setGate] = useState(() => gateQuestion());
   const [lockError, setLockError] = useState(false);
-  const [customWordsInput, setCustomWordsInput] = useState(schoolWords.join(', '));
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [weekFields, setWeekFields] = useState<WeekForm>(() => weekToForm(WEEK));
+  const [weekStat, setWeekStat] = useState('');
+  const [wordsInput, setWordsInput] = useState(schoolWords.join(', '));
+  const [wordsStat, setWordsStat] = useState(() => wordsStatus(schoolWords));
 
-  // R4-FIX F3: gate answer check (fixed in P4)
-  const checkAnswer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (parentAnswer.trim() === '14') {
+  const checkAnswer = (n: number) => {
+    if (n === gate.sum) {
       setLocked(false);
       setLockError(false);
     } else {
       setLockError(true);
+      setGate(gateQuestion());
     }
   };
 
+  const handleSaveWeek = () => {
+    setWeekFields(weekToForm(onSaveWeek(weekFields)));
+    setWeekStat('Saved. Anything left blank or not valid uses the default.');
+  };
+
+  const handleResetWeek = () => {
+    setWeekFields(weekToForm(onResetWeek()));
+    setWeekStat('Back to the default list.');
+  };
+
   const handleSaveWords = () => {
-    const parsed = customWordsInput
-      .split(',')
-      .map((w) => w.trim().toLowerCase())
-      .filter((w) => w.length > 0);
-    onSaveWords(parsed);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
+    const words = onSaveWords(wordsInput);
+    setWordsInput(words.join(', '));
+    setWordsStat(wordsStatus(words, wordsSavedNote(words)));
+  };
+
+  const handleClearWords = () => {
+    const words = onSaveWords('');
+    setWordsInput('');
+    setWordsStat(wordsStatus(words, 'Cleared.'));
   };
 
   if (locked) {
@@ -99,42 +111,31 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
             Please answer this quick question to enter:
           </p>
 
-          <form onSubmit={checkAnswer} className="flex flex-col gap-3">
-            <label className="text-base font-bold text-slate-700">
-              What is <span className="text-amber-600 font-black">8 + 6</span>?
-            </label>
-            <input
-              type="text"
-              pattern="[0-9]*"
-              inputMode="numeric"
-              placeholder="Enter number"
-              value={parentAnswer}
-              onChange={(e) => setParentAnswer(e.target.value)}
-              className="px-4 py-2.5 rounded-xl border-2 border-slate-300 text-center text-lg font-bold text-slate-800 focus:outline-none focus:border-amber-400"
-              autoFocus
-            />
-            {/* R4-FIX F3: gate hint line (fixed in P4) */}
-            {lockError && (
-              <span className="text-xs font-bold text-red-500">
-                Oops, try again! (Hint: 14)
-              </span>
-            )}
-            <div className="flex gap-2 mt-2">
+          <p className="text-base font-bold text-slate-700">
+            Tap the answer to <span className="text-amber-600 font-black">{gate.a} + {gate.b}</span>
+          </p>
+          <div className="flex flex-col gap-2">
+            {gate.options.map((n) => (
               <button
+                key={n}
                 type="button"
-                onClick={onBack}
-                className="flex-1 py-2.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm"
+                onClick={() => checkAnswer(n)}
+                className="py-2.5 rounded-xl border-2 border-slate-300 bg-white hover:border-amber-400 text-lg font-black text-slate-800"
               >
-                Cancel
+                {n}
               </button>
-              <button
-                type="submit"
-                className="flex-1 py-2.5 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm shadow-sm"
-              >
-                Enter
-              </button>
-            </div>
-          </form>
+            ))}
+          </div>
+          {lockError && (
+            <span className="text-xs font-bold text-red-500">Oops, try again!</span>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full py-2.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     );
@@ -185,71 +186,114 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
             </div>
           </div>
 
-          {/* Teacher's Weekly Sight Words Input */}
+          {/* This week's school pack (ui.js _weekBlock) */}
           <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
-            <h3 className="text-sm font-black text-indigo-950 mb-1 flex items-center gap-1.5">
-              <span>✏️</span>
-              <span>Classroom / Weekly Sight Words</span>
-            </h3>
+            <h3 className="text-sm font-black text-indigo-950 mb-1">This week</h3>
             <p className="text-xs text-slate-600 mb-2">
-              Enter custom words (separated by commas) to inject into Belle's reading practice:
+              This week's school list. Separate words with commas.
             </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customWordsInput}
-                onChange={(e) => setCustomWordsInput(e.target.value)}
-                placeholder="e.g. said, there, what, about"
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
-              />
+            <div className="flex flex-col gap-2">
+              {WEEK_FIELDS.map((f) => (
+                <label key={f.key} className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+                  {f.label}
+                  <input
+                    type="text"
+                    value={weekFields[f.key]}
+                    placeholder={f.placeholder}
+                    autoComplete="off"
+                    autoCapitalize={f.key === 'dictation' ? 'sentences' : 'off'}
+                    spellCheck={false}
+                    onKeyDown={stopKey}
+                    onChange={(e) => setWeekFields({ ...weekFields, [f.key]: e.target.value })}
+                    className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={handleSaveWeek}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs active:scale-95"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleResetWeek}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95"
+              >
+                Back to defaults
+              </button>
+            </div>
+            {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* Class sight words (ui.js _wordsBlock) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">This week's class words</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              Type the sight words from school, separated by commas. Belle's Core level will use them (3 or more).
+            </p>
+            <input
+              type="text"
+              value={wordsInput}
+              onChange={(e) => setWordsInput(e.target.value)}
+              onKeyDown={stopKey}
+              placeholder="jump, look, play"
+              aria-label="Class sight words, separated by commas"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+            />
+            <div className="flex gap-2 mt-3">
               <button
                 onClick={handleSaveWords}
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs active:scale-95"
               >
                 Save
               </button>
+              <button
+                onClick={handleClearWords}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95"
+              >
+                Clear
+              </button>
             </div>
-            {savedSuccess && (
-              <p className="text-xs font-bold text-emerald-600 mt-1">Saved successfully!</p>
-            )}
+            <p className="text-xs font-bold text-emerald-600 mt-1">{wordsStat}</p>
           </div>
 
-          {/* Curriculum Standards Table */}
+          {/* Each land: portrait, name, tier chip (landState, as ui.js _progressHtml) */}
           <div className="bg-white rounded-2xl border-2 border-amber-200 p-3 sm:p-4 shadow-xs">
-            <h3 className="text-sm font-black text-amber-950 mb-2">
-              California Grade 1 Standards Alignment
-            </h3>
+            <h3 className="text-sm font-black text-amber-950 mb-2">Zoe's progress</h3>
             <div className="flex flex-col gap-2">
               {NPC_ORDER.map((id) => {
                 const p = PRINCESSES[id];
-                const info = STANDARDS_MAP[id];
                 const isComplete = doneLands.includes(id);
-                const tier = ladderState[id]?.tier || 1;
+                const tier = landState(ladderState[id]).tier;
                 return (
                   <div
                     key={id}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-start gap-2.5 text-xs"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center gap-2.5 text-xs"
                   >
                     <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-amber-300 bg-white">
                       <img src={p?.portrait} alt={p?.name} className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className="font-black text-slate-900 truncate">
-                          {p?.name} · {p?.landName}
-                        </span>
-                        <span className="font-extrabold text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 shrink-0">
-                          Tier {tier} {isComplete ? '✨ Glowing' : ''}
-                        </span>
-                      </div>
-                      <div className="font-bold text-indigo-700">{info?.standard}</div>
-                      <div className="text-slate-600 mt-0.5">{info?.desc}</div>
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
+                      <span className="font-black text-slate-900 truncate">
+                        {p?.name} · {p?.landName}
+                      </span>
+                      <span className="font-extrabold text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 shrink-0">
+                        Tier {tier} {isComplete ? '✨ Glowing' : ''}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {/* Standards and what each land practices: the engine's own Parent Corner text */}
+          <div dangerouslySetInnerHTML={{ __html: PARENT_CORNER_HTML }} />
         </div>
 
         {/* Back Button */}
