@@ -2,8 +2,9 @@
 // and the ladder (js/ladder.js) moves up or down from those results. Plain Node, no browser.
 import { createQuestbook, roundView, pick, nextRound } from '../src/flow/questbook.js';
 import { visualHtml } from '../src/flow/visuals.js';
+import { questStart, questComplete, afterQuestCard, nextAfterQuest, kingdomsToAnnounce, markKingdomsSeen, finaleLines } from '../src/flow/outcomes.js';
 import { voiceText } from '../src/flow/voice.js';
-import { buildRounds, landState, recordQuest, NPC_ORDER } from '../src/engine-core.js';
+import { buildRounds, landState, recordQuest, NPC_ORDER, NEW_LAND_SLOTS } from '../src/engine-core.js';
 
 // Seeded rng so every run plays the same quests.
 function rngFrom(seed) {
@@ -72,6 +73,56 @@ function playQuest(npc, ladderRaw, rng, saveData, wrongsFor) {
   check(next.tier === 1, `hinted: tier ${next.tier}, expected 1`);
   check(save.stars === qb.rounds.length, `hinted: stars ${save.stars}, expected ${qb.rounds.length} (one star per correct pick, re-asks included)`);
   check(qb.rounds.length > 5, `hinted: expected re-asked rounds in the queue, got ${qb.rounds.length}`);
+}
+
+// 3. Outcomes (P3.3): the once-a-day check, questComplete (ladder, lastPlay, done, +3 stars only the first time),
+//    the milestone card, the finale decision and the new-kingdom card.
+{
+  const day = '2026-10-29';
+  const save = freshSave();
+  const first = playQuest('belle', null, rngFrom(1), save, () => 0);
+  check(questStart(save, 'belle', {}, day).kind === 'start', 'start: a land not yet played today should start');
+  const won = questComplete(save, 'belle', first.results, day);
+  check(won.kind === 'celebrate', `complete: first completion should celebrate, got ${won.kind}`);
+  check(save.done.includes('belle'), 'complete: belle should be in done');
+  check(save.stars === 5 + 3, `complete: stars ${save.stars}, expected 8 (5 picks + 3 for the first completion)`);
+  check(save.lastPlay.belle === day, 'complete: lastPlay not set to today');
+  check(save.ladder.belle && save.ladder.belle.tier === 2, `complete: ladder tier ${save.ladder.belle && save.ladder.belle.tier}, expected 2`);
+  check(questStart(save, 'belle', {}, day).kind === 'rest', 'once a day: a second visit the same day should rest');
+  check(questStart(save, 'belle', { again: true }, day).kind === 'start', 'once a day: "one more" should start a quest');
+  const nextDay = questStart(save, 'belle', {}, '2026-10-30');
+  check(nextDay.kind === 'start' && nextDay.practice === true, 'once a day: next day should start a practice quest');
+  check(nextDay.dialogue.kind === 'praise', 'practice: opening line should be praise');
+
+  // A replay of a glowing land: no new shard, no stars, straight to rest.
+  const starsBefore = save.stars;
+  const replay = playQuest('belle', save.ladder.belle, rngFrom(2), freshSave(), () => 0);
+  const again = questComplete(save, 'belle', replay.results, '2026-10-30');
+  check(again.kind === 'practice', `replay: kind ${again.kind}, expected practice`);
+  check(save.stars === starsBefore + 0 && save.done.length === 1, `replay: stars ${save.stars} or done ${save.done.length} changed`);
+  check(nextAfterQuest(save, 'belle', { practice: true, npcIds: NPC_ORDER, builtCount: NEW_LAND_SLOTS.length }).kind === 'rest', 'replay: next should be rest');
+
+  // Milestones: crossing 10 stars unlocks the sparkle trail once; the card is shown once.
+  save.stars = 10;
+  const m1 = afterQuestCard(save, 'belle');
+  check(m1 && m1.kind === 'milestone' && m1.emoji === '✨', 'milestone: crossing 10 stars should give the trail card');
+  check(afterQuestCard(save, 'belle') === null, 'milestone: the same unlock must not be celebrated twice');
+  check(save.milestones.includes('trail-10'), 'milestone: trail-10 not saved');
+
+  // Finale: every land done and every kingdom built runs the finale; otherwise rest.
+  const all = { done: [...NPC_ORDER], stars: 0, ladder: {}, lastPlay: {} };
+  check(nextAfterQuest(all, 'aurora', { practice: false, npcIds: NPC_ORDER, builtCount: NEW_LAND_SLOTS.length }).kind === 'finale', 'finale: all lands should run the finale');
+  check(nextAfterQuest(all, 'aurora', { practice: false, npcIds: NPC_ORDER, builtCount: 0 }).kind === 'rest', 'finale: not all kingdoms built should rest');
+  check(finaleLines().length > 0 && finaleLines()[0].princessId === 'belle', 'finale: lines missing');
+
+  // New kingdoms: announced once, then not again until another opens.
+  const kingSave = { seenKingdoms: [], seenNewKingdoms: false };
+  const k1 = kingdomsToAnnounce(kingSave, ['sse']);
+  check(k1 && k1.first === true && k1.names === null, 'kingdom: the first built kingdom is the big announcement');
+  markKingdomsSeen(kingSave, ['sse']);
+  check(kingdomsToAnnounce(kingSave, ['sse']) === null, 'kingdom: a seen kingdom is not announced again');
+  const k2 = kingdomsToAnnounce(kingSave, ['sse', 'ssw']);
+  check(k2 && k2.first === false && k2.names.length === 1, 'kingdom: a later kingdom gets a short card naming it');
 }
 
 // 3. Parity (P3.2): every land, tiers 1-3, seeds 1-20. Each round builds its picture and spoken text without

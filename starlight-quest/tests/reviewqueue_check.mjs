@@ -2,6 +2,7 @@
 // first-try answers in a row, and a miss in between resets the count. Plain Node, no browser.
 import { createQuestbook, roundView, pick, nextRound } from '../src/flow/questbook.js';
 import { buildRounds, landState, recordQuest, roundKey } from '../src/engine-core.js';
+import { questComplete } from '../src/flow/outcomes.js';
 
 function rngFrom(seed) {
   let a = seed >>> 0;
@@ -74,6 +75,19 @@ plays.forEach((outcome, p) => {
   check(step(false).wins === 0, 'reset: a miss should reset wins to 0');
   check(step(true).wins === 1, 'reset: ok after a reset should give wins 1');
   check(step(true) === undefined, 'reset: second ok in a row should leave the queue');
+}
+
+// The same queue, driven through questComplete (the outcome path the App uses): miss, then first try.
+{
+  const save = { stars: 0, shards: { belle: 0 }, done: [], ladder: {}, lastPlay: {} };
+  const key = { value: null };
+  const miss = playQuest(null, rngFrom(31), (round) => { if (key.value === null) { key.value = roundKey(round); return true; } return false; });
+  questComplete(save, 'belle', miss.results, '2026-10-29');
+  check(save.ladder.belle.review.length === 1 && save.ladder.belle.review[0].wins === 0, 'questComplete: the missed round should be in review with wins 0');
+  const okPlay = playQuest(save.ladder.belle, rngFrom(32), () => false);
+  questComplete(save, 'belle', okPlay.results, '2026-10-30');
+  check(okPlay.results.some((r) => roundKey(r.round) === key.value), 'questComplete: the review round should be served in play 2');
+  check(save.ladder.belle.review.length === 1 && save.ladder.belle.review[0].wins === 1, 'questComplete: one first-try answer should give wins 1');
 }
 
 for (const p of problems) console.log(p);
