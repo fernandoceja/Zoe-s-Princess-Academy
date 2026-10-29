@@ -25,7 +25,14 @@ const WEEK_FIELDS: { key: keyof WeekForm; label: string; placeholder: string }[]
 // Typing must never reach the game's key controls (ui.js stops keydown in every editor field).
 const stopKey = (e: React.KeyboardEvent) => e.stopPropagation();
 
-const weekToForm = (w: { spelling: string[]; sight: string[]; dictation: string; vowels: string[] }): WeekForm => ({
+export interface WeekPack {
+  spelling: string[];
+  sight: string[];
+  dictation: string;
+  vowels: string[];
+}
+
+const weekToForm = (w: WeekPack): WeekForm => ({
   spelling: w.spelling.join(', '),
   sight: w.sight.join(', '),
   dictation: w.dictation,
@@ -38,8 +45,8 @@ interface ParentCornerProps {
   ladderState: Record<string, any>;
   schoolWords: string[];
   onSaveWords: (input: string) => string[];
-  onSaveWeek: (form: WeekForm) => WeekForm;
-  onResetWeek: () => WeekForm;
+  onSaveWeek: (form: WeekForm) => WeekPack;
+  onResetWeek: () => WeekPack;
   onBack: () => void;
 }
 
@@ -73,12 +80,12 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   };
 
   const handleSaveWeek = () => {
-    setWeekFields(onSaveWeek(weekFields));
+    setWeekFields(weekToForm(onSaveWeek(weekFields)));
     setWeekStat('Saved. Anything left blank or not valid uses the default.');
   };
 
   const handleResetWeek = () => {
-    setWeekFields(onResetWeek());
+    setWeekFields(weekToForm(onResetWeek()));
     setWeekStat('Back to the default list.');
   };
 
