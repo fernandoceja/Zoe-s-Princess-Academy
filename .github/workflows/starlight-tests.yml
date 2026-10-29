@@ -113,3 +113,5 @@ jobs:
         run: node starlight-quest/tests/reveal_check.mjs
       - name: Pad roots check (R4 T10)
         run: node starlight-quest/tests/padroots_check.mjs
+      - name: Grown-up gate check (R4 T9)
+        run: node starlight-quest/tests/gate_check.mjs

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
+import { gateQuestion } from '../flow/parent.js';
 
 interface ParentCornerProps {
   stars: number;
@@ -61,21 +62,20 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   onSaveWords,
   onBack,
 }) => {
-  // Simple grown-up gate check
+  // Grown-up gate (ui.js showParentGate): a random sum, three answer buttons, a new question after a miss.
   const [locked, setLocked] = useState(true);
-  const [parentAnswer, setParentAnswer] = useState('');
+  const [gate, setGate] = useState(() => gateQuestion());
   const [lockError, setLockError] = useState(false);
   const [customWordsInput, setCustomWordsInput] = useState(schoolWords.join(', '));
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // R4-FIX F3: gate answer check (fixed in P4)
-  const checkAnswer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (parentAnswer.trim() === '14') {
+  const checkAnswer = (n: number) => {
+    if (n === gate.sum) {
       setLocked(false);
       setLockError(false);
     } else {
       setLockError(true);
+      setGate(gateQuestion());
     }
   };
 
@@ -99,42 +99,31 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
             Please answer this quick question to enter:
           </p>
 
-          <form onSubmit={checkAnswer} className="flex flex-col gap-3">
-            <label className="text-base font-bold text-slate-700">
-              What is <span className="text-amber-600 font-black">8 + 6</span>?
-            </label>
-            <input
-              type="text"
-              pattern="[0-9]*"
-              inputMode="numeric"
-              placeholder="Enter number"
-              value={parentAnswer}
-              onChange={(e) => setParentAnswer(e.target.value)}
-              className="px-4 py-2.5 rounded-xl border-2 border-slate-300 text-center text-lg font-bold text-slate-800 focus:outline-none focus:border-amber-400"
-              autoFocus
-            />
-            {/* R4-FIX F3: gate hint line (fixed in P4) */}
-            {lockError && (
-              <span className="text-xs font-bold text-red-500">
-                Oops, try again! (Hint: 14)
-              </span>
-            )}
-            <div className="flex gap-2 mt-2">
+          <p className="text-base font-bold text-slate-700">
+            Tap the answer to <span className="text-amber-600 font-black">{gate.a} + {gate.b}</span>
+          </p>
+          <div className="flex flex-col gap-2">
+            {gate.options.map((n) => (
               <button
+                key={n}
                 type="button"
-                onClick={onBack}
-                className="flex-1 py-2.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm"
+                onClick={() => checkAnswer(n)}
+                className="py-2.5 rounded-xl border-2 border-slate-300 bg-white hover:border-amber-400 text-lg font-black text-slate-800"
               >
-                Cancel
+                {n}
               </button>
-              <button
-                type="submit"
-                className="flex-1 py-2.5 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm shadow-sm"
-              >
-                Enter
-              </button>
-            </div>
-          </form>
+            ))}
+          </div>
+          {lockError && (
+            <span className="text-xs font-bold text-red-500">Oops, try again!</span>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full py-2.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     );
