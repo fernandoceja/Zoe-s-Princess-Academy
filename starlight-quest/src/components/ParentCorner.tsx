@@ -1,13 +1,45 @@
 import React, { useState } from 'react';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
-import { gateQuestion } from '../flow/parent.js';
+import {
+  gateQuestion,
+  wordsStatus,
+  wordsSavedNote,
+} from '../flow/parent.js';
+import { WEEK, WEEK_DEFAULT } from '../engine-core.js';
+
+export interface WeekForm {
+  spelling: string;
+  sight: string;
+  dictation: string;
+  vowels: string;
+}
+
+// Field labels and placeholders copied from ui.js _weekBlock (1517-1523).
+const WEEK_FIELDS: { key: keyof WeekForm; label: string; placeholder: string }[] = [
+  { key: 'spelling', label: 'Spelling words', placeholder: 'lend, send, fast' },
+  { key: 'sight', label: 'Sight words', placeholder: 'of, he' },
+  { key: 'dictation', label: 'Dictation sentence', placeholder: WEEK_DEFAULT.dictation },
+  { key: 'vowels', label: 'Short-vowel words', placeholder: 'sat, hip, pen' },
+];
+
+// Typing must never reach the game's key controls (ui.js stops keydown in every editor field).
+const stopKey = (e: React.KeyboardEvent) => e.stopPropagation();
+
+const weekToForm = (w: { spelling: string[]; sight: string[]; dictation: string; vowels: string[] }): WeekForm => ({
+  spelling: w.spelling.join(', '),
+  sight: w.sight.join(', '),
+  dictation: w.dictation,
+  vowels: w.vowels.join(', '),
+});
 
 interface ParentCornerProps {
   stars: number;
   doneLands: string[];
   ladderState: Record<string, any>;
   schoolWords: string[];
-  onSaveWords: (words: string[]) => void;
+  onSaveWords: (input: string) => string[];
+  onSaveWeek: (form: WeekForm) => WeekForm;
+  onResetWeek: () => WeekForm;
   onBack: () => void;
 }
 
@@ -60,14 +92,18 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   ladderState,
   schoolWords,
   onSaveWords,
+  onSaveWeek,
+  onResetWeek,
   onBack,
 }) => {
   // Grown-up gate (ui.js showParentGate): a random sum, three answer buttons, a new question after a miss.
   const [locked, setLocked] = useState(true);
   const [gate, setGate] = useState(() => gateQuestion());
   const [lockError, setLockError] = useState(false);
-  const [customWordsInput, setCustomWordsInput] = useState(schoolWords.join(', '));
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [weekFields, setWeekFields] = useState<WeekForm>(() => weekToForm(WEEK));
+  const [weekStat, setWeekStat] = useState('');
+  const [wordsInput, setWordsInput] = useState(schoolWords.join(', '));
+  const [wordsStat, setWordsStat] = useState(() => wordsStatus(schoolWords));
 
   const checkAnswer = (n: number) => {
     if (n === gate.sum) {
@@ -79,14 +115,26 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
     }
   };
 
+  const handleSaveWeek = () => {
+    setWeekFields(onSaveWeek(weekFields));
+    setWeekStat('Saved. Anything left blank or not valid uses the default.');
+  };
+
+  const handleResetWeek = () => {
+    setWeekFields(onResetWeek());
+    setWeekStat('Back to the default list.');
+  };
+
   const handleSaveWords = () => {
-    const parsed = customWordsInput
-      .split(',')
-      .map((w) => w.trim().toLowerCase())
-      .filter((w) => w.length > 0);
-    onSaveWords(parsed);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
+    const words = onSaveWords(wordsInput);
+    setWordsInput(words.join(', '));
+    setWordsStat(wordsStatus(words, wordsSavedNote(words)));
+  };
+
+  const handleClearWords = () => {
+    const words = onSaveWords('');
+    setWordsInput('');
+    setWordsStat(wordsStatus(words, 'Cleared.'));
   };
 
   if (locked) {
@@ -174,33 +222,80 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
             </div>
           </div>
 
-          {/* Teacher's Weekly Sight Words Input */}
+          {/* This week's school pack (ui.js _weekBlock) */}
           <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
-            <h3 className="text-sm font-black text-indigo-950 mb-1 flex items-center gap-1.5">
-              <span>✏️</span>
-              <span>Classroom / Weekly Sight Words</span>
-            </h3>
+            <h3 className="text-sm font-black text-indigo-950 mb-1">This week</h3>
             <p className="text-xs text-slate-600 mb-2">
-              Enter custom words (separated by commas) to inject into Belle's reading practice:
+              This week's school list. Separate words with commas.
             </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customWordsInput}
-                onChange={(e) => setCustomWordsInput(e.target.value)}
-                placeholder="e.g. said, there, what, about"
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
-              />
+            <div className="flex flex-col gap-2">
+              {WEEK_FIELDS.map((f) => (
+                <label key={f.key} className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+                  {f.label}
+                  <input
+                    type="text"
+                    value={weekFields[f.key]}
+                    placeholder={f.placeholder}
+                    autoComplete="off"
+                    autoCapitalize={f.key === 'dictation' ? 'sentences' : 'off'}
+                    spellCheck={false}
+                    onKeyDown={stopKey}
+                    onChange={(e) => setWeekFields({ ...weekFields, [f.key]: e.target.value })}
+                    className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={handleSaveWeek}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs active:scale-95"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleResetWeek}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95"
+              >
+                Back to defaults
+              </button>
+            </div>
+            {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* Class sight words (ui.js _wordsBlock) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">This week's class words</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              Type the sight words from school, separated by commas. Belle's Core level will use them (3 or more).
+            </p>
+            <input
+              type="text"
+              value={wordsInput}
+              onChange={(e) => setWordsInput(e.target.value)}
+              onKeyDown={stopKey}
+              placeholder="jump, look, play"
+              aria-label="Class sight words, separated by commas"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+            />
+            <div className="flex gap-2 mt-3">
               <button
                 onClick={handleSaveWords}
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs active:scale-95"
               >
                 Save
               </button>
+              <button
+                onClick={handleClearWords}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95"
+              >
+                Clear
+              </button>
             </div>
-            {savedSuccess && (
-              <p className="text-xs font-bold text-emerald-600 mt-1">Saved successfully!</p>
-            )}
+            <p className="text-xs font-bold text-emerald-600 mt-1">{wordsStat}</p>
           </div>
 
           {/* Curriculum Standards Table */}
