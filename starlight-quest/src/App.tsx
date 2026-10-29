@@ -8,6 +8,7 @@ import {
   installAudioCare,
   isIOS,
   canBypassSilentSwitch,
+  startPadNav,
 } from './engine-dom.js';
 import {
   PRINCESSES,
@@ -222,11 +223,8 @@ export const App: React.FC = () => {
     pausedRef.current = nextPaused;
     setPaused(nextPaused);
     setPauseTab('menu');
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(!nextPaused);
-      if (nextPaused) worldRef.current.pause();
-      else worldRef.current.resume();
-    }
+    // The world keeps running under the pause menu (it delivers the gamepad resume key); see the cover rule at boot.
+    if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused);
     if (nextPaused) {
       Narrator.stop();
     }
@@ -443,17 +441,13 @@ export const App: React.FC = () => {
     if (worldRef.current) {
       worldRef.current.setInputEnabled(true);
       worldRef.current.unfocus();
-      worldRef.current.resume();
     }
   };
 
   // Title -> world (main.js enterWorld).
   const enterWorld = () => {
     setPhase('roam');
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(true);
-      worldRef.current.resume();
-    }
+    if (worldRef.current) worldRef.current.setInputEnabled(true);
     showToast('Walk to a princess and say hello! 👑');
     // New kingdoms: the big card the first time, a short card when a kingdom opens later.
     const k = kingdomsToAnnounce(Save.data);
@@ -505,6 +499,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     Save.load();
     const day = todayKey();
+    let coverObserver: MutationObserver | null = null;
     rolloverTreasures(Save.data, day);
     setSchoolWords(Save.data.schoolWords);
     setWeek(Save.data.week);
@@ -532,6 +527,7 @@ export const App: React.FC = () => {
 
     // Init Input, audio care and the 3D Canvas
     Input.init();
+    startPadNav();
     installAudioCare();
     Input.onGamepadChange = (connected: boolean) => {
       showToast(connected
@@ -609,9 +605,26 @@ export const App: React.FC = () => {
         shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)
       );
       world.setOutfit(Save.data.outfit);
+
+      // Stop drawing the 3D world while a full-screen card covers it (saves battery, keeps the phone cool).
+      // The pause menu is left out on purpose: it is translucent and the world loop delivers its resume key.
+      // Same selector and rule as js/main.js (155-168).
+      const COVER_SELECTOR = '.zsq-title, .zsq-tutorial, .zsq-modal-wrap, .zsq-celebrate, .zsq-finale, .zsq-parent-wrap';
+      const syncWorldCover = () => {
+        if (!worldRef.current) return;
+        const covered = Array.from(document.querySelectorAll(COVER_SELECTOR))
+          .some((n) => !n.classList.contains('zsq-hidden') && !n.classList.contains('zsq-leaving'));
+        if (covered) worldRef.current.pause(); else worldRef.current.resume();
+      };
+      coverObserver = new MutationObserver(syncWorldCover);
+      coverObserver.observe(document.getElementById('root') || document.body, {
+        subtree: true, childList: true, attributes: true, attributeFilter: ['class'],
+      });
+      syncWorldCover();
     }
 
     return () => {
+      if (coverObserver) coverObserver.disconnect();
       if (worldRef.current) {
         worldRef.current.dispose();
       }

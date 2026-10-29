@@ -111,3 +111,5 @@ jobs:
         run: node starlight-quest/tests/reviewqueue_check.mjs
       - name: Reveal and miss rules check (R4 T3)
         run: node starlight-quest/tests/reveal_check.mjs
+      - name: Pad roots check (R4 T10)
+        run: node starlight-quest/tests/padroots_check.mjs
