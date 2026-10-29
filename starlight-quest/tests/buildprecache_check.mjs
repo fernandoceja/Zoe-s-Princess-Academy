@@ -1,5 +1,5 @@
 // Built-shell precache check (R4 T8). Runs on _site/ after tools/assemble-site.mjs:
-// every built app file and next.html is precached, every source PRECACHE entry survives the build,
+// every built app file and index.html (the shell entry) is precached, every source PRECACHE entry survives the build,
 // and the manifest is byte-identical to the source.
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
@@ -37,7 +37,7 @@ const appFiles = existsSync(appDir)
   ? readdirSync(appDir).filter((f) => statSync(join(appDir, f)).isFile())
   : [];
 if (!appFiles.length) bad.push('no files in _site/starlight-quest/app/ (did the shell build run?)');
-const shellUrls = [...appFiles.map((f) => './app/' + f), './next.html'];
+const shellUrls = [...appFiles.map((f) => './app/' + f), './index.html'];
 for (const u of shellUrls) {
   if (!builtAll.has(u)) bad.push(`not precached in built sw.js: ${u}`);
   if (!existsSync(join(site, u))) bad.push(`precached file missing on disk: ${u}`);
