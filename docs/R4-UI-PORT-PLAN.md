@@ -330,26 +330,26 @@ Gate P6: every §6 row checked with evidence; all CI jobs green; Fernando merges
 
 | Feature | Donor status (re-verified) | Required end state | Proof |
 |---|---|---|---|
-| 3D world, 10 lands, generators, finale | Full (engine) | Full | P2 walkthrough, finale on preview with fixture `done` = 9 + one quest |
-| Adaptive ladder up / down / review | **Broken** (F1, per-miss entries) | Full, `main.js` semantics | T1, T2 |
-| Miss handling | Reveal **+ free star**; no narrowing | Retry hint → narrow after 2 → reveal, no star | T3, P3.5 |
-| Sorting rounds (Rapunzel, Aurora) | **Soft-lock** (F6) | Full | P3.5, T1 parity loop |
-| Spelling big word / dictation replay | Missing (F12) | Full | P3.2 |
-| One quest per land per day, rest / one more | Missing (F8) | Full | T1 (`questComplete` → `rest`) |
-| Milestones 10/25/50/100 + card, wardrobe | Saved, no card (F9) | Full | P3.4 |
-| New-kingdom announcement | Missing (F10) | Full | P3.4 |
-| Daily treasures, secrets → stickers, Treasure Book | Mostly (F13 wording) | Full | P3.4 |
-| Today's star, tappable world, gate tap | Full | Full | P2 |
-| Parent Corner | Partial (F3, fixed gate answer, hard-coded standards) | Full week pack + random gate + engine standards + donor cards/chips | T4, T9 |
-| Tutorial (5 steps, spoken), pause menu | Full | Full | P2 |
-| Controls: keyboard / touch joystick | Full | Full | P1.4 |
-| Controls: gamepad incl. menus | Partial (F4) | Full | T10 + Fernando hardware |
-| Prompt wording per input | "Tap" only (F16) | Full | P3.4 |
-| Voices: recorded MP3 + TTS, iOS audio care | MP3 path changed; no audio care (F11) | Full **in the build** | P6.5, T8 (audio precached) |
-| Battery: world paused under cards | Missing (F14) | Full | P3.6 |
-| Saves | Same schema | Same key, fixture-proven | T5 + P6.2 |
-| Offline / Home Screen | Absent | Full, real SW | T8 + P6.3 + P6.5 |
-| Tests + CI | Absent | 35 unchanged + T1–T10 | CI |
+| 3D world, 10 lands, generators, finale | Full (engine) | Full | P2 walkthrough, finale on preview with fixture `done` = 9 + one quest<br>**Evidence:** P2 walkthrough (PR #119); engine tests `world_check`, `lands_check`, `finale_check` (35 unchanged); `smoke.mjs` reaches the world. Finale on preview was **not run in P6**, so this row is not fully evidenced yet. |
+| Adaptive ladder up / down / review | **Broken** (F1, per-miss entries) | Full, `main.js` semantics | T1, T2<br>**Evidence:** T1 `ladderwiring_check`, T2 `reviewqueue_check` (P3, PR #120). |
+| Miss handling | Reveal **+ free star**; no narrowing | Retry hint → narrow after 2 → reveal, no star | T3, P3.5<br>**Evidence:** T3 `reveal_check` (P3, PR #120); P3.5 (PR #120). |
+| Sorting rounds (Rapunzel, Aurora) | **Soft-lock** (F6) | Full | P3.5, T1 parity loop<br>**Evidence:** P3.5 (PR #120); T1 `ladderwiring_check` parity loop; engine test `sort_check`. |
+| Spelling big word / dictation replay | Missing (F12) | Full | P3.2<br>**Evidence:** P3.2 (PR #120); engine tests `spell_check`, `dictation_check`. |
+| One quest per land per day, rest / one more | Missing (F8) | Full | T1 (`questComplete` → `rest`)<br>**Evidence:** T1 `ladderwiring_check` (`questComplete` leads to `rest`, PR #120). |
+| Milestones 10/25/50/100 + card, wardrobe | Saved, no card (F9) | Full | P3.4<br>**Evidence:** P3.4 (PR #120); engine tests `milestone_check`, `outfit_check`. |
+| New-kingdom announcement | Missing (F10) | Full | P3.4<br>**Evidence:** P3.4 (PR #120); `smoke.mjs` sees the "New kingdoms appeared" card on a fresh save and the "A new kingdom opened!" card (P6.3 dismisses it). |
+| Daily treasures, secrets → stickers, Treasure Book | Mostly (F13 wording) | Full | P3.4<br>**Evidence:** P3.4 (PR #120); engine tests `treasure_check`, `treasurebook_check`, `secret_check`. |
+| Today's star, tappable world, gate tap | Full | Full | P2<br>**Evidence:** P2 (PR #119); engine tests `todaystar_check`, `tap_check`. |
+| Parent Corner | Partial (F3, fixed gate answer, hard-coded standards) | Full week pack + random gate + engine standards + donor cards/chips | T4, T9<br>**Evidence:** T4 `weekpack_check`, T9 `gate_check` (P4, PR #121); engine test `week_check`. |
+| Tutorial (5 steps, spoken), pause menu | Full | Full | P2<br>**Evidence:** P2 (PR #119); `smoke.mjs` P6.3 walks all 5 tutorial steps ("Let's Play!"). Pause menu was **not exercised by `smoke.mjs`**; it rests on P2 (PR #119). |
+| Controls: keyboard / touch joystick | Full | Full | P1.4<br>**Evidence:** P1.4 (PR #118); `smoke.mjs` P6.3 walks with the keyboard (ArrowUp) until Belle's prompt appears. Touch joystick was **not exercised in P6**. |
+| Controls: gamepad incl. menus | Partial (F4) | Full | T10 + Fernando hardware<br>**Evidence:** T10 `padroots_check` (menu roots, source-level, P3). **pending Fernando hardware check (P6.5)** |
+| Prompt wording per input | "Tap" only (F16) | Full | P3.4<br>**Evidence:** P3.4 (PR #120); `smoke.mjs` P6.3 sees the keyboard prompt "Click Belle (or press E)". Gamepad and touch wording: pending Fernando hardware check (P6.5). |
+| Voices: recorded MP3 + TTS, iOS audio care | MP3 path changed; no audio care (F11) | Full **in the build** | P6.5, T8 (audio precached)<br>**Evidence:** T8 `buildprecache_check` (audio entries kept in the built precache); engine tests `voice_check`, `sound_check`. **pending Fernando hardware check (P6.5)** for on-device MP3 voices. |
+| Battery: world paused under cards | Missing (F14) | Full | P3.6<br>**Evidence:** P3.6 (PR #120). Not covered by a test or by `smoke.mjs`. |
+| Saves | Same schema | Same key, fixture-proven | T5 + P6.2<br>**Evidence:** T5 `savecontinuity_check` (Node); `smoke.mjs` P6.2 (browser): HUD 137 stars and 7 lands glowing, parsed localStorage equals merge(fixture) after the Start Adventure save. |
+| Offline / Home Screen | Absent | Full, real SW | T8 + P6.3 + P6.5<br>**Evidence:** T8 `buildprecache_check`; `smoke.mjs` P6.3 (online load, SW activated, offline reload shows the title, Belle's round 1). **pending Fernando hardware check (P6.5)** for the iPhone Home Screen icon and offline relaunch on device. |
+| Tests + CI | Absent | 35 unchanged + T1–T10 | CI<br>**Evidence:** `engine_untouched_check` (35 unchanged, 0 changed locally) plus T1–T10, all 45 pass locally in P6. CI run on the P6 PR is pending. |
 
 ---
 
