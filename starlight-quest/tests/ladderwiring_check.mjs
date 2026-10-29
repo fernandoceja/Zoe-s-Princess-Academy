@@ -1,7 +1,9 @@
 // Ladder wiring (R4 T1): the shell's quest flow (src/flow/questbook.js) plays a quest the way js/main.js does,
 // and the ladder (js/ladder.js) moves up or down from those results. Plain Node, no browser.
 import { createQuestbook, roundView, pick, nextRound } from '../src/flow/questbook.js';
-import { buildRounds, landState, recordQuest } from '../src/engine-core.js';
+import { visualHtml } from '../src/flow/visuals.js';
+import { voiceText } from '../src/flow/voice.js';
+import { buildRounds, landState, recordQuest, NPC_ORDER } from '../src/engine-core.js';
 
 // Seeded rng so every run plays the same quests.
 function rngFrom(seed) {
@@ -72,9 +74,39 @@ function playQuest(npc, ladderRaw, rng, saveData, wrongsFor) {
   check(qb.rounds.length > 5, `hinted: expected re-asked rounds in the queue, got ${qb.rounds.length}`);
 }
 
+// 3. Parity (P3.2): every land, tiers 1-3, seeds 1-20. Each round builds its picture and spoken text without
+//    throwing, and (for choice rounds) the shown choices include the answer.
+let parityRounds = 0;
+for (const npc of NPC_ORDER) {
+  for (let tier = 1; tier <= 3; tier++) {
+    for (let seed = 1; seed <= 20; seed++) {
+      const rng = rngFrom(seed * 97 + tier);
+      let rounds;
+      try { rounds = buildRounds(npc, rng, { tier, review: [] }); } catch (e) { check(false, `parity ${npc} t${tier} s${seed}: buildRounds threw ${e.message}`); continue; }
+      rounds.forEach((round, i) => {
+        parityRounds++;
+        const where = `parity ${npc} t${tier} s${seed} round ${i}`;
+        try {
+          check(typeof visualHtml(npc, round) === 'string', `${where}: visualHtml did not return a string`);
+          const view = roundView(createQuestbook(npc, [round]), rng);
+          check(typeof voiceText(npc, round, view.choices) === 'string', `${where}: voiceText did not return a string`);
+          check(typeof view.bigWord === 'string' || view.bigWord === null, `${where}: bigWord missing`);
+          check(typeof view.replayText === 'string' || view.replayText === null, `${where}: replayText missing`);
+          if (!view.tileRound && !round.sort) {
+            check(view.choices.some((c) => c.label === round.answer), `${where}: choices do not include the answer`);
+          }
+        } catch (e) {
+          check(false, `${where}: threw ${e.message}`);
+        }
+      });
+    }
+  }
+}
+check(parityRounds > 0, 'parity: no rounds were built');
+
 if (problems.length) {
   for (const p of problems) console.log(p);
   console.log(`ladder wiring: ${problems.length} problem(s)`);
   process.exit(1);
 }
-console.log('ladder wiring ok: five first-try rounds raise tier 1 -> 2; three hinted rounds lower tier 2 -> 1; one result per first-asked round');
+console.log(`ladder wiring ok: five first-try rounds raise tier 1 -> 2; three hinted rounds lower tier 2 -> 1; one result per first-asked round; ${parityRounds} parity rounds build`);

@@ -25,7 +25,8 @@ export function shuffledChoices(choices, answer, rng = Math.random) {
  * What to show for the current round (main.js startRound, lines 477-486).
  * After 2 misses the choices narrow to the answer plus one other (F7). Sort rounds have no
  * choice buttons (correctId '__sortdone'); tile rounds have none either (correctId '__spelldone').
- * Returns { round, choices, correctId, tileRound }; `choices` is the shuffled [{ id, label }] list.
+ * Returns { round, choices, correctId, tileRound, bigWord, replayText }; `choices` is the shuffled [{ id, label }] list.
+ * bigWord is the Belle spelling word with its blanks (round.show); replayText is the 🔊 sentence (round.replay) (F12).
  */
 export function roundView(qb, rng = Math.random) {
   const round = qb.rounds[qb.roundIdx];
@@ -38,7 +39,7 @@ export function roundView(qb, rng = Math.random) {
   const { arr, correctId } = round.sort ? { arr: [], correctId: '__sortdone' }
     : tileRound ? { arr: [], correctId: '__spelldone' }
     : shuffledChoices(choices, round.answer, rng);
-  return { round, choices: arr, correctId, tileRound };
+  return { round, choices: arr, correctId, tileRound, bigWord: round.show || null, replayText: round.replay || null };
 }
 
 /** Ladder bookkeeping for a finished round (main.js noteResult). Re-asks don't count twice. */
