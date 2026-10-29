@@ -1,7 +1,7 @@
 // Assemble the GitHub Pages site into <repo>/_site.
 // Copy-only mode (no starlight-quest/package.json): copies every repo file byte-for-byte, preserving paths.
 // Build mode (starlight-quest/package.json present): also builds the React shell with Vite and copies
-// dist/next.html and dist/app/ into _site/starlight-quest/. The vanilla game is always copied unchanged.
+// dist/index.html and dist/app/ into _site/starlight-quest/. The vanilla game is always copied unchanged.
 import { execSync } from 'node:child_process';
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -50,9 +50,9 @@ console.log(`assemble: copied ${copied} files to _site`);
 
 if (buildMode) {
   const target = join(out, 'starlight-quest');
-  copyFileSync(join(dist, 'next.html'), join(target, 'next.html'));
+  copyFileSync(join(dist, 'index.html'), join(target, 'index.html'));
   cpSync(join(dist, 'app'), join(target, 'app'), { recursive: true });
-  console.log('assemble: copied built shell (next.html, app/) into _site/starlight-quest');
+  console.log('assemble: copied built shell (index.html, app/) into _site/starlight-quest');
 
   // Fill the BUILD_URLS hook in the built sw.js so the offline cache holds every shell file.
   const LINE = 'const BUILD_URLS = []; // filled by tools/assemble-site.mjs';
@@ -65,7 +65,7 @@ if (buildMode) {
   }
   const appFiles = readdirSync(join(target, 'app'))
     .filter((f) => statSync(join(target, 'app', f)).isFile());
-  const urls = [...appFiles.map((f) => './app/' + f), './next.html'].sort();
+  const urls = [...appFiles.map((f) => './app/' + f), './index.html'].sort();
   writeFileSync(swPath, sw.replace(LINE, `const BUILD_URLS = ${JSON.stringify(urls)}; // filled by tools/assemble-site.mjs`));
   console.log(`assemble: wrote ${urls.length} BUILD_URLS into _site/starlight-quest/sw.js`);
 }

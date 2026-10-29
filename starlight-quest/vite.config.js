@@ -29,7 +29,7 @@ export default defineConfig({
     emptyOutDir: true,
     assetsDir: 'app',
     rollupOptions: {
-      input: { next: resolve(here, 'next.html') },
+      input: { index: resolve(here, 'index.html') },
     },
   },
 });
