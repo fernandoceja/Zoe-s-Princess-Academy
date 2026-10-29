@@ -5,7 +5,7 @@ import {
   wordsStatus,
   wordsSavedNote,
 } from '../flow/parent.js';
-import { WEEK, WEEK_DEFAULT } from '../engine-core.js';
+import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState } from '../engine-core.js';
 
 export interface WeekForm {
   spelling: string;
@@ -42,49 +42,6 @@ interface ParentCornerProps {
   onResetWeek: () => WeekForm;
   onBack: () => void;
 }
-
-const STANDARDS_MAP: Record<string, { standard: string; desc: string }> = {
-  belle: {
-    standard: 'CCSS ELA RF.1.3 & RF.1.4',
-    desc: 'Sight words (Dolch 1st Grade) & decoding short-vowel CVC phonics.',
-  },
-  elsa: {
-    standard: 'CCSS Math 1.OA, 1.OA.5/6',
-    desc: 'Addition & subtraction within 20, counting on from larger addends, doubles.',
-  },
-  rapunzel: {
-    standard: 'NGSS 1-LS1 & CCSS Math 1.MD.1-2',
-    desc: 'Plant needs, living vs nonliving, flower height measuring and sorting.',
-  },
-  cinderella: {
-    standard: 'CCSS Math 1.MD.3',
-    desc: 'Telling time to the hour and half-hour using analog clock faces.',
-  },
-  ariel: {
-    standard: 'CCSS ELA RF.1.2 & RF.1.3',
-    desc: 'Rhyming patterns, word families, and short-vowel auditory discrimination.',
-  },
-  moana: {
-    standard: 'CCSS Math 1.G.A.1 & 1.G.A.2',
-    desc: '2D & 3D geometry, shape recognition, counting sides and corners.',
-  },
-  jasmine: {
-    standard: 'CCSS ELA RL.1.2 & RL.1.3',
-    desc: 'Story sequencing with first / next / last (beginning, middle, end).',
-  },
-  anna: {
-    standard: 'CCSS ELA L.1.2.a & L.1.2.b',
-    desc: 'Capitalization of names / sentences and sentence end punctuation (. ? !).',
-  },
-  tiana: {
-    standard: 'CCSS Math 1.MD.C.4',
-    desc: 'Tally marks, counting by 5s, interpreting vegetable stand picture data.',
-  },
-  aurora: {
-    standard: 'CCSS ELA L.1.1',
-    desc: 'Grammar fundamentals: identifying and sorting naming words and action words.',
-  },
-};
 
 export const ParentCorner: React.FC<ParentCornerProps> = ({
   stars,
@@ -298,42 +255,38 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
             <p className="text-xs font-bold text-emerald-600 mt-1">{wordsStat}</p>
           </div>
 
-          {/* Curriculum Standards Table */}
+          {/* Each land: portrait, name, tier chip (landState, as ui.js _progressHtml) */}
           <div className="bg-white rounded-2xl border-2 border-amber-200 p-3 sm:p-4 shadow-xs">
-            <h3 className="text-sm font-black text-amber-950 mb-2">
-              California Grade 1 Standards Alignment
-            </h3>
+            <h3 className="text-sm font-black text-amber-950 mb-2">Zoe's progress</h3>
             <div className="flex flex-col gap-2">
               {NPC_ORDER.map((id) => {
                 const p = PRINCESSES[id];
-                const info = STANDARDS_MAP[id];
                 const isComplete = doneLands.includes(id);
-                const tier = ladderState[id]?.tier || 1;
+                const tier = landState(ladderState[id]).tier;
                 return (
                   <div
                     key={id}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-start gap-2.5 text-xs"
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center gap-2.5 text-xs"
                   >
                     <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-amber-300 bg-white">
                       <img src={p?.portrait} alt={p?.name} className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className="font-black text-slate-900 truncate">
-                          {p?.name} · {p?.landName}
-                        </span>
-                        <span className="font-extrabold text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 shrink-0">
-                          Tier {tier} {isComplete ? '✨ Glowing' : ''}
-                        </span>
-                      </div>
-                      <div className="font-bold text-indigo-700">{info?.standard}</div>
-                      <div className="text-slate-600 mt-0.5">{info?.desc}</div>
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
+                      <span className="font-black text-slate-900 truncate">
+                        {p?.name} · {p?.landName}
+                      </span>
+                      <span className="font-extrabold text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 shrink-0">
+                        Tier {tier} {isComplete ? '✨ Glowing' : ''}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {/* Standards and what each land practices: the engine's own Parent Corner text */}
+          <div dangerouslySetInnerHTML={{ __html: PARENT_CORNER_HTML }} />
         </div>
 
         {/* Back Button */}
