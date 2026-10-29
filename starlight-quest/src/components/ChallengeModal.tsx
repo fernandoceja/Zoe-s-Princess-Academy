@@ -161,6 +161,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           const s = tileSound(tile);
           if (s?.tts) Narrator.speakExact(npcId, s.tts);
           else if (s?.url) Narrator.playClip(s.url, undefined, s.stopAt);
+        } else {
+          // Dictation: the word (or end mark) is read aloud as it lands (ui.js:1300).
+          const say: Record<string, string> = { '?': 'question mark', '.': 'period', '!': 'exclamation mark' };
+          Narrator.speakExact(npcId, say[tile] || tile);
         }
         if (next.length === target.length) onPick('__spelldone');
       } else {
