@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v19-20261028';
+const CACHE_VERSION = 'v20-20261029';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -101,12 +101,13 @@ const PRECACHE_URLS = [
   '../assets/audio/EN/curriculum/belle/c_k_says_kuh_clock.mp3',
   '../assets/audio/EN/curriculum/belle/n_g_says_ing_ring.mp3',
 ];
+const BUILD_URLS = []; // filled by tools/assemble-site.mjs
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
     // Cache each file on its own so one missing clip can't break install.
-    await Promise.all(PRECACHE_URLS.map(async (url) => {
+    await Promise.all([...PRECACHE_URLS, ...BUILD_URLS].map(async (url) => {
       try {
         const res = await fetch(new Request(url, { cache: 'reload' }));
         if (res.ok) await cache.put(url, res);
