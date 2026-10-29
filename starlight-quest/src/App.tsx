@@ -221,7 +221,11 @@ export const App: React.FC = () => {
 
   // Toggle Pause
   const handleTogglePause = () => {
-    if (phaseRef.current !== 'roam') return;
+    if (phaseRef.current !== 'roam') {
+      // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
+      showToast('Finish talking first, then you can pause! ⏸️', 2200);
+      return;
+    }
     const nextPaused = !pausedRef.current;
     pausedRef.current = nextPaused;
     setPaused(nextPaused);

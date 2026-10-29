@@ -56,6 +56,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
 
   // Tile builder state (for Belle spelling / dictation)
   const [placedTiles, setPlacedTiles] = useState<string[]>([]);
+  // Wrong taps in a row on the same slot; after two, the right tile glows (ui.js tileBuilder, streak).
+  const [wrongStreak, setWrongStreak] = useState(0);
 
   // Sorting state (for Aurora or Rapunzel sorting)
   const [sortedItems, setSortedItems] = useState<{ name: string; naming?: boolean; living?: boolean; bin?: string }[]>([]);
@@ -63,6 +65,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   // Each new view (a new round, or a gentle retry) is read aloud once, as main.js showChallenge does.
   useEffect(() => {
     setPlacedTiles([]);
+    setWrongStreak(0);
     setActiveBlendLetter(null);
     if (round.sort?.items) {
       setSortedItems(round.sort.items.map((it: any) => ({ ...it, bin: undefined })));
@@ -150,21 +153,41 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
       const index = placedTiles.length;
       SoundFX.pop();
       if (tile === target[index]) {
+        setWrongStreak(0);
         const next = [...placedTiles, tile];
         setPlacedTiles(next);
+        // The letter's sound when it lands in its slot (ui.js showChallenge tile builder speak).
+        if (round.spell) {
+          const s = tileSound(tile);
+          if (s?.tts) Narrator.speakExact(npcId, s.tts);
+          else if (s?.url) Narrator.playClip(s.url, undefined, s.stopAt);
+        }
         if (next.length === target.length) onPick('__spelldone');
       } else {
+        setWrongStreak(wrongStreak + 1);
         onPick('__spellwrong', { index, say: round.build ? dictationHint({ ...round.build, hint: round.hint }, index) : undefined });
       }
     };
     const handleUndo = () => {
       if (placedTiles.length > 0) {
         setPlacedTiles(placedTiles.slice(0, -1));
+        setWrongStreak(0);
       }
     };
     const handleClear = () => {
       setPlacedTiles([]);
+      setWrongStreak(0);
     };
+    // After two wrong taps in a row, the next tile in the bank glows (the first enabled copy of it).
+    const wantTile = placedTiles.length < target.length ? target[placedTiles.length] : undefined;
+    const usedAt = (i: number, t: string) => {
+      const timesPlaced = placedTiles.filter((p) => p === t).length;
+      const timesInTiles = tiles.slice(0, i + 1).filter((x: string) => x === t).length;
+      return timesInTiles <= timesPlaced;
+    };
+    const glowIndex = wrongStreak >= 2 && !locked && wantTile !== undefined
+      ? tiles.findIndex((t: string, i: number) => t === wantTile && !usedAt(i, t))
+      : -1;
     return (
       <div className="my-3 flex flex-col items-center gap-3">
         {/* Target Slots */}
@@ -188,9 +211,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         {/* Tile Bank */}
         <div className="flex flex-wrap justify-center gap-2">
           {tiles.map((t: string, i: number) => {
-            const timesPlaced = placedTiles.filter((p) => p === t).length;
-            const timesInTiles = tiles.slice(0, i + 1).filter((x: string) => x === t).length;
-            const isUsed = timesInTiles <= timesPlaced;
+            const isUsed = usedAt(i, t);
+            const isGlow = i === glowIndex;
             return (
               <button
                 key={i}
@@ -199,6 +221,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 className={`px-4 py-2.5 rounded-xl border-2 font-black text-base sm:text-lg shadow-sm transition-all active:scale-95 ${
                   isUsed
                     ? 'opacity-30 bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+                    : isGlow
+                    ? 'bg-amber-200 border-amber-400 text-amber-950 shadow-md animate-pulse'
                     : 'bg-white border-purple-300 text-purple-950 hover:border-purple-500 shadow-md'
                 }`}
               >
