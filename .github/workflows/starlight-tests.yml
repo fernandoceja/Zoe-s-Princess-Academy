@@ -105,3 +105,9 @@ jobs:
         run: npm run build
       - name: Bundle check (R4 T7)
         run: node starlight-quest/tests/bundle_check.mjs
+      - name: Ladder wiring check (R4 T1)
+        run: node starlight-quest/tests/ladderwiring_check.mjs
+      - name: Review queue check (R4 T2)
+        run: node starlight-quest/tests/reviewqueue_check.mjs
+      - name: Reveal and miss rules check (R4 T3)
+        run: node starlight-quest/tests/reveal_check.mjs
