@@ -1,4 +1,4 @@
-// Local browser smoke test for the R4 shell (P6.2 save continuity). Local only: not in CI.
+// Local browser smoke test for the R4 shell (P6.2 save continuity, P6.3 offline). Local only: not in CI.
 // It needs Chromium and Playwright, so it is not part of the `shell` job in .github/workflows/starlight-tests.yml.
 //
 // Run from the repo root, after the site is assembled:
@@ -130,11 +130,84 @@ async function saveContinuity(browser, base) {
   await context.close();
 }
 
+// --- P6.3: offline after one online visit -----------------------------------------------------
+async function offline(browser, base) {
+  const context = await browser.newContext();   // fresh profile: no save, tutorial not seen
+  const errors = [];
+  const page = await context.newPage();
+  watch(page, errors);
+  await page.goto(base);
+  const start = page.getByRole('button', { name: /Start Adventure/ });
+  await start.waitFor({ timeout: 30000 });
+
+  // The service worker is active and has cached the built app JS.
+  const cache = await poll(() => page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return null;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || !reg.active || reg.active.state !== 'activated') return null;
+    const name = (await caches.keys()).find((k) => k.startsWith('starlight-quest-'));
+    if (!name) return null;
+    const urls = (await (await caches.open(name)).keys()).map((r) => r.url);
+    const appJs = urls.filter((u) => /\/starlight-quest\/app\/[^/]+\.js$/.test(u));
+    return appJs.length ? { name, appJs: appJs.length, controlled: !!navigator.serviceWorker.controller } : null;
+  }), 90000, 'service worker activation and app cache');
+  notes.push(`cache ${cache.name} holds ${cache.appJs} app js file(s)`);
+
+  // A reload while online makes the worker control the page, so the next offline load goes through it.
+  await page.reload();
+  await start.waitFor({ timeout: 30000 });
+  await poll(() => page.evaluate(() => !!navigator.serviceWorker.controller), 30000, 'SW control of the page');
+
+  await context.setOffline(true);
+  await page.reload();
+  await start.waitFor({ timeout: 30000 });
+  check((await page.title()) === TITLE, `offline: title is "${await page.title()}"`);
+  await shot(page, 'offline-title');
+
+  // Tutorial (5 steps), then the world.
+  await start.click();
+  for (let i = 0; i < 4; i++) await page.getByRole('button', { name: /^Next/ }).click();
+  await page.getByRole('button', { name: /Let's Play/ }).click();
+  const hud = page.locator('[title$="lands glowing"]');
+  await hud.waitFor({ timeout: 30000 });
+  // A fresh save shows the "New kingdoms appeared" card once; dismiss it.
+  await page.getByRole('button', { name: /Yay/ }).click();
+
+  // Walk north to Belle (Zoe starts at the hub; Belle's land is north). The interact prompt names her when close.
+  const belle = page.locator('button', { hasText: 'Belle' });
+  await page.keyboard.down('ArrowUp');
+  const reached = await poll(async () => (await belle.count()) > 0, 30000, 'Belle interact prompt').then(() => true, () => false);
+  await page.keyboard.up('ArrowUp');
+  check(reached, 'offline: never got close enough to Belle to see her prompt');
+  // The prompt bounces (animate-bounce), so Playwright's stability wait never settles: force the click.
+  if (reached) await belle.click({ force: true });
+
+  // Her greeting: step through the lines, then start the quest.
+  const startQuest = page.getByRole('button', { name: /Start Quest/ });
+  for (let i = 0; i < 12 && !(await startQuest.count()); i++) {
+    await page.getByRole('button', { name: /Next/ }).click();
+  }
+  check((await startQuest.count()) > 0, 'offline: Belle greeting never offered "Start Quest"');
+  await startQuest.click();
+
+  // First round visible: the quest pill reads "Belle · 1/5" and the round has answer buttons.
+  const pill = page.locator('header').first();
+  await poll(async () => /Belle\s*·\s*1\/5/.test(await pill.innerText()), 30000, 'Belle 1/5 quest pill').then(() => true, () => check(false, 'offline: quest pill never showed "Belle · 1/5"'));
+  const choices = await page.locator('.zsq-modal-wrap button.rounded-2xl').count();
+  check(choices >= 2, `offline: first round shows ${choices} answer buttons, expected at least 2`);
+  await shot(page, 'offline-belle-round1');
+
+  check(errors.length === 0, `offline: page errors: ${errors.slice(0, 3).join(' | ')}`);
+  notes.push(`offline reload shows title; Belle round 1 with ${choices} choices`);
+  await context.close();
+}
+
 const server = await startServer();
 const base = `http://127.0.0.1:${server.address().port}${PREFIX}starlight-quest/`;
 const browser = await chromium.launch();
 try {
   await saveContinuity(browser, base);
+  await offline(browser, base);
 } catch (e) {
   const lines = e.message.split('\n').map((l) => l.trim()).filter(Boolean);
   problems.push(`exception: ${lines[0]} ${lines.find((l) => l.startsWith('- ') || l.startsWith('waiting for')) || ''}`.trim());
