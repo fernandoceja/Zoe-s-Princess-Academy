@@ -86,3 +86,38 @@ jobs:
         run: node starlight-quest/tests/aurora_check.mjs
       - name: Ten-land finale check
         run: node starlight-quest/tests/finale_check.mjs
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Engine untouched check (R4)
+        run: node starlight-quest/tests/engine_untouched_check.mjs
+      - name: Save continuity check (R4)
+        run: node starlight-quest/tests/savecontinuity_check.mjs
+      - name: Install shell dependencies (R4)
+        working-directory: starlight-quest
+        run: npm ci
+      - name: Build shell (R4)
+        working-directory: starlight-quest
+        run: npm run build
+      - name: Assemble site (R4 T8)
+        run: node starlight-quest/tools/assemble-site.mjs
+      - name: Built precache check (R4 T8)
+        run: node starlight-quest/tests/buildprecache_check.mjs
+      - name: Bundle check (R4 T7)
+        run: node starlight-quest/tests/bundle_check.mjs
+      - name: Ladder wiring check (R4 T1)
+        run: node starlight-quest/tests/ladderwiring_check.mjs
+      - name: Review queue check (R4 T2)
+        run: node starlight-quest/tests/reviewqueue_check.mjs
+      - name: Reveal and miss rules check (R4 T3)
+        run: node starlight-quest/tests/reveal_check.mjs
+      - name: Pad roots check (R4 T10)
+        run: node starlight-quest/tests/padroots_check.mjs
+      - name: Grown-up gate check (R4 T9)
+        run: node starlight-quest/tests/gate_check.mjs
+      - name: Week pack editor check (R4 T4)
+        run: node starlight-quest/tests/weekpack_check.mjs
