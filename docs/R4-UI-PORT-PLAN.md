@@ -430,3 +430,11 @@ Fernando's standing rule from round 3, restated for R4:
 ## Appendix B — The first task
 
 **P0.1** — tag `pre-r4` on `main` and create `feat/r4-react-shell` from it (§5, P0). It touches no files, is fully reversible, and every later phase depends on it.
+
+## 11. Fernando's decisions (Oct 29, 2026)
+
+1. Approved: React + Vite + npm as a scoped exception to the round-3 "plain JS, no build step" rule, for the `starlight-quest/` UI shell only. The engine stays plain JS and byte-untouched (T6). Haiku may self-merge green phase PRs into `feat/r4-react-shell` under the round-3 rule. P5-A and P6 target `main` and stay Fernando's merges.
+2. Approved: `main.js` and `ui.js` stay in the repo, dormant, after cutover. Migrating the 16 tests that read them is a later round with its own approval, not part of R4.
+3. Changed: P5-A runs right after P0 (pipeline first, for soak time). The P5-A PR creates `starlight-quest/tools/assemble-site.mjs` in copy-only mode; P1.6 extends it with the build step. Fernando merges P5-A and switches Settings → Pages → Source to "GitHub Actions".
+4. Approved: the Firebase merge deploy stays, with the build step added as planned. Previews are unchanged.
+5. Approved: no TypeScript type-check gate in R4.
