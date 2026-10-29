@@ -124,6 +124,8 @@ export const App: React.FC = () => {
   // Refs for the world hooks, which are created once at boot and must see the current phase.
   const phaseRef = useRef<Phase>('title');
   const pausedRef = useRef(false);
+  // The princess Zoe is near, as the world reports it (the HUD talk button uses it, as E and tapping do).
+  const nearNPCRef = useRef<PrincessId | null>(null);
 
   // Core Game State
   const [gameState, setGameStateRaw] = useState<Phase>('title');
@@ -268,6 +270,13 @@ export const App: React.FC = () => {
       secondaryLabel: 'One more? ✨',
       onSecondary: () => { setCard(null); startQuest(npcId, { again: true }); },
     });
+  };
+
+  // Talk to a princess: the same guard as js/main.js onInteractRequest. Used by E, tapping her and the HUD button.
+  const requestInteract = (npcId: string | null) => {
+    if (phaseRef.current !== 'roam' || pausedRef.current) return;
+    if (!npcId || !QUESTS[npcId]) return;
+    startQuest(npcId as PrincessId);
   };
 
   // Start Quest with NPC (main.js startQuest)
@@ -538,6 +547,7 @@ export const App: React.FC = () => {
     if (containerRef.current) {
       const world = createWorld(containerRef.current, {
         onNearNPC(npcId: string) {
+          nearNPCRef.current = npcId && PRINCESSES[npcId] ? (npcId as PrincessId) : null;
           if (phaseRef.current !== 'roam' || pausedRef.current || !npcId || !PRINCESSES[npcId]) {
             setInteractPrompt(null);
             return;
@@ -551,9 +561,7 @@ export const App: React.FC = () => {
               : `💬 Click ${name} (or press E) ✨`);
         },
         onInteractRequest(npcId: string) {
-          if (phaseRef.current !== 'roam' || pausedRef.current) return;
-          if (!npcId || !QUESTS[npcId]) return;
-          startQuest(npcId as PrincessId);
+          requestInteract(npcId);
         },
         onPauseRequest() {
           handleTogglePause();
@@ -672,9 +680,7 @@ export const App: React.FC = () => {
             muted={muted}
             onToggleMute={handleToggleMute}
             onPause={handleTogglePause}
-            onInteract={() => {
-              if (interactPrompt && activeNPC) startQuest(activeNPC);
-            }}
+            onInteract={() => requestInteract(nearNPCRef.current)}
             todayStarNPC={todayStar}
           />
           {gameState === 'roam' && <VirtualJoystick />}
