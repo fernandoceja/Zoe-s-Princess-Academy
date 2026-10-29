@@ -47,7 +47,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
   };
 
   return (
-    <div className="zsq-modal-wrap fixed inset-0 z-40 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in pointer-events-auto">
+    <div className="zsq-sheet fixed inset-0 z-40 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in pointer-events-auto">
       <div className="w-full max-w-xl bg-gradient-to-b from-white via-[#fdfcf7] to-[#f7f4e9] rounded-3xl border-4 border-[#ebd373] p-5 sm:p-7 shadow-2xl relative">
         {/* Princess Info Header */}
         <div className="flex items-center gap-4 mb-4">

@@ -1,15 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createWorld } from './engine-dom.js';
+import {
+  createWorld,
+  SoundFX,
+  Narrator,
+  setLang,
+  Input,
+  installAudioCare,
+  isIOS,
+  canBypassSilentSwitch,
+  startPadNav,
+} from './engine-dom.js';
 import {
   PRINCESSES,
   NPC_ORDER,
   QUESTS,
-  buildRounds,
+  WEEK,
+  revealLines,
+  BELLE_CLIP_DIR,
   setSchoolWords,
   setWeek,
+  Save,
 } from './engine-core.js';
-import { SoundFX, Narrator, setLang } from './engine-dom.js';
-import { Save, checkMilestones } from './engine-core.js';
 import {
   todayKey,
   collectTreasure,
@@ -35,51 +46,93 @@ import {
   plantLine,
   spellLine,
 } from './engine-core.js';
-import { Input } from './engine-dom.js';
-import { builtSlotIds, shouldRunFinale, openLandIds } from './engine-core.js';
-import { landState, recordQuest, today, pickTodayStar } from './engine-core.js';
+import { builtSlotIds, openLandIds, today, shouldRunFinale } from './engine-core.js';
+import {
+  createQuestbook,
+  roundView,
+  pick,
+  nextRound,
+  praiseLine,
+  sortFirstLine,
+} from './flow/questbook.js';
+import { voiceText } from './flow/voice.js';
+import { visualHtml } from './flow/visuals.js';
+import {
+  NPC_TO_LAND,
+  questStart,
+  roundsFor,
+  restCard,
+  questComplete,
+  todayStarTarget,
+  afterQuestCard,
+  nextAfterQuest,
+  kingdomsToAnnounce,
+  markKingdomsSeen,
+  kingdomCard,
+} from './flow/outcomes.js';
 
 import { HUD } from './components/HUD';
 import { TitleModal } from './components/TitleModal';
 import { TutorialModal } from './components/TutorialModal';
 import { DialogueModal } from './components/DialogueModal';
-import { ChallengeModal } from './components/ChallengeModal';
+import { ChallengeModal, Feedback } from './components/ChallengeModal';
 import { CelebrationModal } from './components/CelebrationModal';
 import { PauseMenu } from './components/PauseMenu';
 import { WardrobeModal } from './components/WardrobeModal';
 import { TreasureBookModal } from './components/TreasureBookModal';
 import { ParentCorner } from './components/ParentCorner';
 import { VirtualJoystick } from './components/VirtualJoystick';
-import { PrincessId, Round } from './types';
+import { PrincessId } from './types';
 
 const NPC_IDS = NPC_ORDER as PrincessId[];
-const NPC_TO_LAND: Record<string, string> = {
-  belle: 'library',
-  elsa: 'frostfall',
-  rapunzel: 'meadow',
-  cinderella: 'village',
-  ariel: 'cove',
-  moana: 'isle',
-  jasmine: 'garden',
-  anna: 'harbor',
-  tiana: 'bayou',
-  aurora: 'glen',
-};
+
+// Let the star burst and happy hop play out before a full-screen card covers the world (main.js CELEBRATE_VIEW_MS).
+const CELEBRATE_VIEW_MS = 1800;
+
+type Phase = 'title' | 'tutorial' | 'roam' | 'dialogue' | 'challenge' | 'celebrate' | 'finale';
+
+interface Dialogue {
+  id: number;
+  npcId: PrincessId;
+  kind: 'greeting' | 'praise';
+  lines: string[];
+  actionLabel?: string;
+  onDone: () => void;
+}
+
+interface Card {
+  kind: 'celebrate' | 'finale' | 'milestone' | 'rest';
+  title: string;
+  sub: string;
+  emoji?: string;
+  say?: string;
+  voice?: string;
+  actionLabel?: string;
+  onContinue: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+}
 
 export const App: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<any>(null);
 
+  // The quest state lives in one plain object (src/flow/questbook.js). React state only re-renders.
+  const qb = useRef<any>(null);
+  const serialRef = useRef(0);
+  const dialogueSerial = useRef(0);
+  // Refs for the world hooks, which are created once at boot and must see the current phase.
+  const phaseRef = useRef<Phase>('title');
+  const pausedRef = useRef(false);
+  // The princess Zoe is near, as the world reports it (the HUD talk button uses it, as E and tapping do).
+  const nearNPCRef = useRef<PrincessId | null>(null);
+
   // Core Game State
-  const [gameState, setGameState] = useState<
-    | 'title'
-    | 'tutorial'
-    | 'roam'
-    | 'dialogue'
-    | 'challenge'
-    | 'celebrate'
-    | 'finale'
-  >('title');
+  const [gameState, setGameStateRaw] = useState<Phase>('title');
+  const setPhase = (p: Phase) => {
+    phaseRef.current = p;
+    setGameStateRaw(p);
+  };
 
   const [paused, setPaused] = useState(false);
   const [pauseTab, setPauseTab] = useState<
@@ -91,17 +144,12 @@ export const App: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [todayStar, setTodayStar] = useState<PrincessId | undefined>(undefined);
 
-  // Quest State
-  const [rounds, setRounds] = useState<Round[]>([]);
-  const [roundIdx, setRoundIdx] = useState(0);
-  const [results, setResults] = useState<any[]>([]);
-  const [requeued, setRequeued] = useState(0);
-  const [celebrationData, setCelebrationData] = useState<{
-    title: string;
-    sub: string;
-    isFinale?: boolean;
-    afterAction: () => void;
-  } | null>(null);
+  // Quest view state (the flow decides; these only draw it)
+  const [view, setView] = useState<any>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [questStep, setQuestStep] = useState<{ current: number; total: number } | undefined>(undefined);
+  const [dialogue, setDialogue] = useState<Dialogue | null>(null);
+  const [card, setCard] = useState<Card | null>(null);
 
   // Progress State
   const [stars, setStars] = useState(0);
@@ -125,112 +173,7 @@ export const App: React.FC = () => {
     }, duration);
   };
 
-  // 1. Initialize Game & 3D World
-  useEffect(() => {
-    Save.load();
-    const day = todayKey();
-    rolloverTreasures(Save.data, day);
-    setSchoolWords(Save.data.schoolWords);
-    setWeek(Save.data.week);
-    setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
-    Narrator.setMuted(!!Save.data.muted);
-
-    // Sync state from Save
-    setStars(Save.data.stars || 0);
-    setDoneLands(Save.data.done || []);
-    setUnlockedMilestones(Save.data.milestones || []);
-    setCurrentOutfit(Save.data.outfit || {});
-    setFoundSecrets(Save.data.secrets || []);
-    setMuted(!!Save.data.muted);
-    setLadderState(Save.data.ladder || {});
-    setSchoolWordsState(Save.data.schoolWords || []);
-
-    const openLands = openLandIds();
-    setTreasuresToday(findsToday(Save.data, day, openLands));
-    setTreasuresTotal(findsTotal(openLands));
-
-    try {
-      const star = pickTodayStar(Save.data, today());
-      setTodayStar(star as PrincessId);
-    } catch (e) {}
-
-    // Init Input and 3D Canvas
-    Input.init();
-
-    if (containerRef.current) {
-      const world = createWorld(containerRef.current, {
-        onNearNPC(npcId: string) {
-          if (npcId && PRINCESSES[npcId]) {
-            setInteractPrompt(`💬 Tap ${PRINCESSES[npcId].name} to talk ✨`);
-          } else {
-            setInteractPrompt(null);
-          }
-        },
-        onInteractRequest(npcId: string) {
-          if (!npcId || !QUESTS[npcId]) return;
-          handleStartQuest(npcId as PrincessId);
-        },
-        onPauseRequest() {
-          handleTogglePause();
-        },
-        onWorldTap() {
-          SoundFX.chime();
-        },
-        onGateTap() {
-          SoundFX.chime();
-          showToast('A new kingdom will open here soon! ✨');
-        },
-        onSecretTap(part: string) {
-          const id = secretTrackerRef.current.tap(part, Date.now());
-          if (id) revealSecret(id);
-        },
-        treasuresGot() {
-          return treasuresGotToday(Save.data, todayKey());
-        },
-        onTreasure(kind: string, landId: string, id: string) {
-          const dayKey = todayKey();
-          if (!collectTreasure(Save.data, id, kind, dayKey)) return;
-          Save.save();
-          SoundFX.chime();
-          showToast(
-            `You found a ${kind}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} in this land today ✨`
-          );
-
-          if (awardRowStar(Save.data, landId, dayKey)) {
-            Save.data.stars += 1;
-            Save.save();
-            setStars(Save.data.stars);
-            showToast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`);
-          }
-
-          const openL = openLandIds();
-          setTreasuresToday(findsToday(Save.data, dayKey, openL));
-        },
-      });
-
-      worldRef.current = world;
-      world.setInputEnabled(false);
-
-      // Restore world saved state
-      for (const id of Save.data.done || []) {
-        if (NPC_IDS.includes(id as PrincessId)) {
-          world.setNPCState(id, 'done');
-        }
-      }
-      world.setCastleCrown(
-        shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)
-      );
-      world.setOutfit(Save.data.outfit);
-    }
-
-    return () => {
-      if (worldRef.current) {
-        worldRef.current.dispose();
-      }
-    };
-  }, []);
-
-  // Reveal secrets & sticker rewards
+  // Reveal secrets & sticker rewards (main.js revealSecret)
   const revealSecret = (id: string) => {
     const def = ALL_SECRETS.find((x: any) => x.id === id);
     if (!def) return;
@@ -247,13 +190,14 @@ export const App: React.FC = () => {
     else if (id === 'tallymarks') line = tallyLine().say;
     else if (id === 'wordgarden') line = wordLine().say;
     else if (id === 'bookstack') {
-      const sp = spellLine(Save.data.week?.spelling);
+      const sp = spellLine(WEEK.spelling);
       line = sp.say;
+      showToast(`📚 ${sp.show}`);
     } else line = plantLine().say;
 
     SoundFX.chime();
     Narrator.speakExact(def.npc, line);
-    showToast(`${def.emoji} ${line}`);
+    if (id !== 'bookstack') showToast(`${def.emoji} ${line}`);
 
     if (foundSecret(Save.data, id)) {
       Save.save();
@@ -276,18 +220,269 @@ export const App: React.FC = () => {
 
   // Toggle Pause
   const handleTogglePause = () => {
-    if (gameState !== 'roam') return;
-    const nextPaused = !paused;
+    if (phaseRef.current !== 'roam') return;
+    const nextPaused = !pausedRef.current;
+    pausedRef.current = nextPaused;
     setPaused(nextPaused);
     setPauseTab('menu');
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(!nextPaused);
-      if (nextPaused) worldRef.current.pause();
-      else worldRef.current.resume();
-    }
+    // The world keeps running under the pause menu (it delivers the gamepad resume key); see the cover rule at boot.
+    if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused);
     if (nextPaused) {
       Narrator.stop();
     }
+  };
+
+  // ---------- quest flow ----------
+
+  // Show the flow's next round (main.js startRound): the view carries the choices, narrowing and voice.
+  const showRound = (npcId: PrincessId) => {
+    const q = qb.current;
+    if (!q) return;
+    const v = roundView(q);
+    const voice = voiceText(npcId, v.round, v.choices) + (v.round.sort ? ' ' + sortFirstLine(v.round.sort) : '');
+    serialRef.current += 1;
+    setView({ ...v, voiceText: voice, visualHtml: visualHtml(npcId, v.round), serial: serialRef.current });
+    setFeedback(null);
+    setQuestStep({ current: Math.min(q.roundIdx + 1, q.rounds.length), total: q.rounds.length });
+    setPhase('challenge');
+  };
+
+  const openDialogue = (d: Omit<Dialogue, 'id'>) => {
+    dialogueSerial.current += 1;
+    const id = dialogueSerial.current;
+    const done = d.onDone;
+    setDialogue({ ...d, id, onDone: () => { setDialogue(null); done(); } });
+  };
+
+  // Soft stop after one quest: rest, or one more right away (main.js showRest).
+  const showRest = (npcId: PrincessId) => {
+    const r = restCard(npcId);
+    setPhase('dialogue');
+    setInteractPrompt(null);
+    setCard({
+      kind: 'rest',
+      title: r.title,
+      sub: r.sub,
+      say: r.speak,
+      voice: npcId,
+      actionLabel: 'Rest 💤',
+      onContinue: () => { setCard(null); endToRoam(); },
+      secondaryLabel: 'One more? ✨',
+      onSecondary: () => { setCard(null); startQuest(npcId, { again: true }); },
+    });
+  };
+
+  // Talk to a princess: the same guard as js/main.js onInteractRequest. Used by E, tapping her and the HUD button.
+  const requestInteract = (npcId: string | null) => {
+    if (phaseRef.current !== 'roam' || pausedRef.current) return;
+    if (!npcId || !QUESTS[npcId]) return;
+    startQuest(npcId as PrincessId);
+  };
+
+  // Start Quest with NPC (main.js startQuest)
+  const startQuest = (npcId: PrincessId, opts: { again?: boolean } = {}) => {
+    const d = questStart(Save.data, npcId, opts, today());
+    setActiveNPC(npcId);
+    setPhase('dialogue');
+    if (worldRef.current) {
+      worldRef.current.setInputEnabled(false);
+      worldRef.current.focus(npcId);
+    }
+    setInteractPrompt(null);
+    if (d.kind === 'rest') {
+      showRest(npcId);
+      return;
+    }
+    qb.current = createQuestbook(npcId, roundsFor(Save.data, npcId));
+    openDialogue({
+      npcId,
+      kind: d.dialogue.kind,
+      lines: d.dialogue.lines,
+      actionLabel: d.practice ? undefined : 'Start Quest! ⭐',
+      onDone: () => showRound(npcId),
+    });
+  };
+
+  // A pick from the challenge view goes to the flow, which decides what the view shows next.
+  const handlePick = (pickedId: string, info?: any) => {
+    const q = qb.current;
+    if (!q || !view) return;
+    const npcId = q.npcId as PrincessId;
+    const round = view.round;
+    const kind = pick(q, pickedId, view.correctId, Save.data);
+
+    if (kind === 'correct') {
+      Save.save();
+      setStars(Save.data.stars);
+      SoundFX.chime();
+      const praise = praiseLine();
+      Narrator.speakExact(npcId, praise);
+      setFeedback({ kind, pickedId, correctId: view.correctId, message: `⭐ +1 star! ${praise}` });
+    } else if (kind === 'reveal') {
+      // Third miss: show the answer gently and count it as done (no star).
+      SoundFX.pop();
+      const { shown, say } = revealLines(round);
+      Narrator.speakExact(npcId, say);
+      setFeedback({ kind, pickedId, correctId: view.correctId, message: shown });
+    } else if (kind === 'retry') {
+      // Gentle retry: never reveal the answer, never penalize.
+      SoundFX.pop();
+      Narrator.speakExact(
+        npcId,
+        round.hintSay || round.hint,
+        round.sound ? () => Narrator.playClip(BELLE_CLIP_DIR + round.sound) : undefined
+      );
+      setFeedback({ kind, pickedId, correctId: null, message: round.hint });
+    } else if (kind === 'spellwrong') {
+      SoundFX.pop();
+      const say = (info && info.say) || round.hintSay || round.hint;
+      Narrator.speakExact(npcId, say);
+      setFeedback({ kind, pickedId, correctId: null, message: (info && info.say) || round.hint });
+    } else if (kind === 'sortwrong') {
+      const say = info || round.hint;
+      Narrator.speakExact(npcId, say);
+      setFeedback({ kind, pickedId, correctId: null, message: say });
+    }
+  };
+
+  // Next after a locked round (main.js: revealAnswer's onNext = startRound or nextRound).
+  const handleAdvance = () => {
+    const q = qb.current;
+    if (!q || !feedback) return;
+    const f = feedback;
+    setFeedback(null);
+    SoundFX.pop();
+    Narrator.stop();
+    if (f.kind === 'retry') {
+      showRound(q.npcId);
+      return;
+    }
+    if (nextRound(q)) completeQuest();
+    else showRound(q.npcId);
+  };
+
+  // The quest is over (main.js completeQuest). Saves here, as main.js does on each path.
+  const completeQuest = () => {
+    const q = qb.current;
+    if (!q) return;
+    const npcId = q.npcId as PrincessId;
+    const out = questComplete(Save.data, npcId, q.results, today());
+    Save.save();
+    setStars(Save.data.stars);
+    setDoneLands([...Save.data.done]);
+    setLadderState({ ...Save.data.ladder });
+    if (out.todayStar !== undefined) {
+      try { worldRef.current?.setTodayStar(out.todayStar); } catch (e) { /* decoration only */ }
+    }
+
+    if (out.kind === 'practice') {
+      // Practice replay: no new shard, straight to the soft stop.
+      SoundFX.chime();
+      afterQuest(npcId, () => afterQuestNext(npcId, true));
+      return;
+    }
+
+    setPhase('celebrate');
+    worldRef.current?.setNPCState(npcId, 'done');
+    worldRef.current?.celebrate(NPC_TO_LAND[npcId]);
+    const P = PRINCESSES[npcId];
+    setTimeout(() => setCard({
+      kind: 'celebrate',
+      title: `${P.name}'s land is glowing!`,
+      sub: `You earned the ${P.landName} star shard! ⭐ +3 stars`,
+      onContinue: () => {
+        setCard(null);
+        openDialogue({
+          npcId,
+          kind: 'praise',
+          lines: QUESTS[npcId].complete,
+          onDone: () => afterQuest(npcId, () => afterQuestNext(npcId, false)),
+        });
+      },
+    }), CELEBRATE_VIEW_MS);
+  };
+
+  // Milestone card after a quest, saved before it shows (main.js afterQuest).
+  const afterQuest = (npcId: PrincessId, next: () => void) => {
+    const m = afterQuestCard(Save.data, npcId);
+    if (!m) { next(); return; }
+    Save.save();
+    setUnlockedMilestones([...Save.data.milestones]);
+    setPhase('dialogue');
+    setCard({
+      kind: 'milestone',
+      title: m.title,
+      sub: m.sub,
+      emoji: m.emoji,
+      say: m.say,
+      voice: npcId,
+      onContinue: () => { setCard(null); next(); },
+    });
+  };
+
+  // After the quest's own end: the finale when every kingdom is restored, else the rest card.
+  const afterQuestNext = (npcId: PrincessId, practice: boolean) => {
+    const nx = nextAfterQuest(Save.data, npcId, { practice, npcIds: NPC_IDS, builtCount: builtSlotIds().length });
+    if (nx.kind === 'finale') runFinale();
+    else showRest(npcId);
+  };
+
+  // Grand finale (main.js runFinale).
+  const runFinale = () => {
+    setPhase('finale');
+    worldRef.current?.setCastleCrown(true);
+    NPC_IDS.forEach((id, i) => setTimeout(() => worldRef.current?.celebrate(NPC_TO_LAND[id]), i * 120));
+    setTimeout(() => setCard({
+      kind: 'finale',
+      title: 'The Starlight Crown is Restored! 👑',
+      sub: 'All ten lands are glowing together across the kingdom! You did it, Princess Zoe!',
+      onContinue: () => { setCard(null); endToRoam(); },
+    }), CELEBRATE_VIEW_MS);
+  };
+
+  const endToRoam = () => {
+    qb.current = null;
+    setActiveNPC(null);
+    setView(null);
+    setFeedback(null);
+    setDialogue(null);
+    setPhase('roam');
+    if (worldRef.current) {
+      worldRef.current.setInputEnabled(true);
+      worldRef.current.unfocus();
+    }
+  };
+
+  // Title -> world (main.js enterWorld).
+  const enterWorld = () => {
+    setPhase('roam');
+    if (worldRef.current) worldRef.current.setInputEnabled(true);
+    showToast('Walk to a princess and say hello! 👑');
+    // New kingdoms: the big card the first time, a short card when a kingdom opens later.
+    const k = kingdomsToAnnounce(Save.data);
+    if (k) {
+      const c = kingdomCard(k.first, k.names);
+      setCard({
+        kind: 'milestone',
+        title: c.title,
+        sub: c.sub,
+        emoji: c.emoji,
+        onContinue: () => {
+          markKingdomsSeen(Save.data);
+          Save.save();
+          setCard(null);
+        },
+      });
+    }
+    if (isIOS() && !canBypassSilentSwitch()) {
+      setTimeout(() => showToast('🔔 No sound? Flip the silent switch off and turn the volume up.'), 2500);
+    }
+    const c = Input.describeControls();
+    const how = c.gamepad ? 'press ✕' : c.touch ? 'tap her' : 'click her or press E';
+    Narrator.speakText(
+      `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
+      { pitch: 1.15, rate: 0.95 }
+    );
   };
 
   // Start Adventure from Title
@@ -305,161 +500,151 @@ export const App: React.FC = () => {
     if (seen) {
       enterWorld();
     } else {
-      setGameState('tutorial');
+      setPhase('tutorial');
     }
   };
 
-  const enterWorld = () => {
-    setGameState('roam');
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(true);
-      worldRef.current.resume();
-    }
-    showToast('Walk to a princess and say hello! 👑');
-    Narrator.speakText(
-      'Welcome to Starlight Quest! Walk to a princess and tap her or press E to say hello.',
-      { pitch: 1.15, rate: 0.95 }
-    );
-  };
+  // 1. Initialize Game & 3D World (boot once; no StrictMode in main.tsx)
+  useEffect(() => {
+    Save.load();
+    const day = todayKey();
+    let coverObserver: MutationObserver | null = null;
+    rolloverTreasures(Save.data, day);
+    setSchoolWords(Save.data.schoolWords);
+    setWeek(Save.data.week);
+    setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
+    Narrator.setMuted(!!Save.data.muted);
 
-  // Start Quest with NPC
-  const handleStartQuest = (npcId: PrincessId) => {
-    setActiveNPC(npcId);
-    setRoundIdx(0);
-    setResults([]);
-    setRequeued(0);
+    // Sync state from Save
+    setStars(Save.data.stars || 0);
+    setDoneLands(Save.data.done || []);
+    setUnlockedMilestones(Save.data.milestones || []);
+    setCurrentOutfit(Save.data.outfit || {});
+    setFoundSecrets(Save.data.secrets || []);
+    setMuted(!!Save.data.muted);
+    setLadderState(Save.data.ladder || {});
+    setSchoolWordsState(Save.data.schoolWords || []);
 
-    const built = buildRounds(npcId, Math.random, landState(Save.data.ladder[npcId]));
-    setRounds(built);
+    const openLands = openLandIds();
+    setTreasuresToday(findsToday(Save.data, day, openLands));
+    setTreasuresTotal(findsTotal(openLands));
 
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(false);
-      worldRef.current.focus(npcId);
-    }
-    setGameState('dialogue');
-  };
+    try {
+      const t = todayStarTarget(Save.data, today());
+      if (t !== undefined) setTodayStar(t as PrincessId | undefined);
+    } catch (e) {}
 
-  // Progress from Dialogue to Challenge rounds
-  const handleDialogueDone = () => {
-    setGameState('challenge');
-  };
+    // Init Input, audio care and the 3D Canvas
+    Input.init();
+    startPadNav();
+    installAudioCare();
+    Input.onGamepadChange = (connected: boolean) => {
+      showToast(connected
+        ? '🎮 Controller connected! Left stick walks, ✕ talks.'
+        : '🎮 Controller disconnected.');
+    };
 
-  // Correct Answer in Challenge
-    // R4-FIX F1: correct-round path (fixed in P3)
-  const handleRoundCorrect = () => {
-    // Add star
-    Save.data.stars += 1;
-    if (activeNPC && !Save.data.done.includes(activeNPC)) {
-      Save.data.shards[activeNPC] = (Save.data.shards[activeNPC] || 0) + 1;
-    }
-    Save.save();
-    setStars(Save.data.stars);
+    if (containerRef.current) {
+      const world = createWorld(containerRef.current, {
+        onNearNPC(npcId: string) {
+          nearNPCRef.current = npcId && PRINCESSES[npcId] ? (npcId as PrincessId) : null;
+          if (phaseRef.current !== 'roam' || pausedRef.current || !npcId || !PRINCESSES[npcId]) {
+            setInteractPrompt(null);
+            return;
+          }
+          const c = Input.describeControls();
+          const name = PRINCESSES[npcId].name;
+          setInteractPrompt(c.gamepad
+            ? `💬 Press ✕ to talk to ${name} ✨`
+            : c.touch
+              ? `💬 Tap ${name} to talk ✨`
+              : `💬 Click ${name} (or press E) ✨`);
+        },
+        onInteractRequest(npcId: string) {
+          requestInteract(npcId);
+        },
+        onPauseRequest() {
+          handleTogglePause();
+        },
+        onWorldTap() {
+          if (phaseRef.current !== 'roam' || pausedRef.current) return;
+          SoundFX.chime();
+        },
+        onGateTap() {
+          if (phaseRef.current !== 'roam' || pausedRef.current) return;
+          SoundFX.chime();
+          showToast('A new kingdom will open here soon! ✨');
+        },
+        onSecretTap(part: string) {
+          if (phaseRef.current !== 'roam' || pausedRef.current) return;
+          const id = secretTrackerRef.current.tap(part, Date.now());
+          if (id) revealSecret(id);
+        },
+        treasuresGot() {
+          return treasuresGotToday(Save.data, todayKey());
+        },
+        onTreasure(kind: string, landId: string, id: string) {
+          const dayKey = todayKey();
+          if (!collectTreasure(Save.data, id, kind, dayKey)) return;
+          Save.save();
+          SoundFX.chime();
+          showToast(`You found ${kind === 'seaglass' ? 'a piece of sea glass' : kind === 'anchor' ? 'an anchor' : `a ${kind}`}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} here today ✨`);
+          if (awardRowStar(Save.data, landId, dayKey)) {
+            // Same award path as a won round: +1 star, save, counter.
+            Save.data.stars += 1;
+            Save.save();
+            setStars(Save.data.stars);
+            setTimeout(() => showToast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`), 1600);
+          }
+          setTreasuresToday(findsToday(Save.data, dayKey, openLandIds()));
+        },
+      });
 
-    // Bookkeeping
-    const nextRoundIdx = roundIdx + 1;
-    if (nextRoundIdx >= rounds.length) {
-      // Completed all 5 rounds!
-      completeQuest();
-    } else {
-      setRoundIdx(nextRoundIdx);
-    }
-  };
+      worldRef.current = world;
+      world.setInputEnabled(false);
 
-  // Missed round handling
-    // R4-FIX F1: miss-round path (fixed in P3)
-  const handleRoundMiss = (missCount: number) => {
-    const curRound = rounds[roundIdx];
-    if (curRound && !curRound.requeued && results.length < 5) {
-      setResults((prev) => [...prev, { round: curRound, firstTry: false, hinted: true }]);
-      if (missCount === 1 && requeued < 2) {
-        setRequeued((r) => r + 1);
-        const copy = [...rounds];
-        copy.splice(Math.min(copy.length, roundIdx + 3), 0, { ...curRound, requeued: true });
-        setRounds(copy);
-      }
-    }
-  };
-
-  // Complete Quest for active NPC
-    // R4-FIX F1: quest completion (fixed in P3)
-  const completeQuest = () => {
-    if (!activeNPC) return;
-    const npcId = activeNPC;
-    const P = PRINCESSES[npcId];
-    const quest = QUESTS[npcId];
-
-    // Ladder bookkeeping
-    Save.data.ladder[npcId] = recordQuest(landState(Save.data.ladder[npcId]), results);
-    Save.data.lastPlay[npcId] = today();
-    setLadderState({ ...Save.data.ladder });
-
-    const isFirstTime = !Save.data.done.includes(npcId);
-    if (isFirstTime) {
-      Save.data.done.push(npcId);
-      Save.data.stars += 3; // +3 bonus stars for land shard
-      setDoneLands([...Save.data.done]);
-    }
-    Save.save();
-    setStars(Save.data.stars);
-
-    if (worldRef.current) {
-      worldRef.current.setNPCState(npcId, 'done');
-      worldRef.current.celebrate(NPC_TO_LAND[npcId]);
-    }
-
-    // Check star milestones
-    const freshMilestones = checkMilestones(Save.data);
-    if (freshMilestones.length > 0) {
-      Save.save();
-      setUnlockedMilestones([...Save.data.milestones]);
-    }
-
-    // Trigger Land Celebration
-    setCelebrationData({
-      title: `${P.name}'s land is glowing!`,
-      sub: `You earned the ${P.landName} star shard! ⭐ +3 stars`,
-      afterAction: () => {
-        // Check if all 10 lands complete -> Starlight Crown Finale
-        const allDone = shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length);
-        if (allDone) {
-          triggerFinale();
-        } else {
-          returnToRoam();
+      // Restore world saved state
+      for (const id of Save.data.done || []) {
+        if (NPC_IDS.includes(id as PrincessId)) {
+          world.setNPCState(id, 'done');
         }
-      },
-    });
-    setGameState('celebrate');
-  };
-
-  // Trigger Grand Finale
-  const triggerFinale = () => {
-    if (worldRef.current) {
-      worldRef.current.setCastleCrown(true);
-      NPC_IDS.forEach((id, i) =>
-        setTimeout(() => worldRef.current?.celebrate(NPC_TO_LAND[id]), i * 150)
+      }
+      world.setCastleCrown(
+        shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)
       );
+      world.setOutfit(Save.data.outfit);
+
+      // Stop drawing the 3D world while a full-screen card covers it (saves battery, keeps the phone cool).
+      // The pause menu is left out on purpose: it is translucent and the world loop delivers its resume key.
+      // Same selector and rule as js/main.js (155-168).
+      const COVER_SELECTOR = '.zsq-title, .zsq-tutorial, .zsq-modal-wrap, .zsq-celebrate, .zsq-finale, .zsq-parent-wrap';
+      const syncWorldCover = () => {
+        if (!worldRef.current) return;
+        const covered = Array.from(document.querySelectorAll(COVER_SELECTOR))
+          .some((n) => !n.classList.contains('zsq-hidden') && !n.classList.contains('zsq-leaving'));
+        if (covered) worldRef.current.pause(); else worldRef.current.resume();
+      };
+      coverObserver = new MutationObserver(syncWorldCover);
+      coverObserver.observe(document.getElementById('root') || document.body, {
+        subtree: true, childList: true, attributes: true, attributeFilter: ['class'],
+      });
+      syncWorldCover();
     }
 
-    setCelebrationData({
-      title: 'The Starlight Crown is Restored! 👑',
-      sub: 'All ten lands are glowing together across the kingdom! You did it, Princess Zoe!',
-      isFinale: true,
-      afterAction: () => {
-        returnToRoam();
-      },
-    });
-    setGameState('finale');
-  };
+    return () => {
+      if (coverObserver) coverObserver.disconnect();
+      if (worldRef.current) {
+        worldRef.current.dispose();
+      }
+    };
+  }, []);
 
-  const returnToRoam = () => {
-    setActiveNPC(null);
-    setGameState('roam');
-    setCelebrationData(null);
-    if (worldRef.current) {
-      worldRef.current.setInputEnabled(true);
-      worldRef.current.unfocus();
-      worldRef.current.resume();
-    }
+  // Save Custom Words (Parent Corner)
+  const handleSaveCustomWords = (words: string[]) => {
+    Save.data.schoolWords = words;
+    Save.save();
+    setSchoolWords(words);
+    setSchoolWordsState(words);
   };
 
   // Wardrobe Outfit Changed
@@ -472,23 +657,16 @@ export const App: React.FC = () => {
     }
   };
 
-  // Save Custom Words (Parent Corner)
-  const handleSaveCustomWords = (words: string[]) => {
-    Save.data.schoolWords = words;
-    Save.save();
-    setSchoolWords(words);
-    setSchoolWordsState(words);
-  };
-
-  const currentRound = rounds[roundIdx];
+  // Challenge dots: 5 per quest (a missed round may come back), as main.js startRound.
+  const progress = { current: Math.min((qb.current ? qb.current.roundIdx : 0) + 1, 5), total: 5 };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden select-none bg-[#1a1033] font-['Nunito',sans-serif]">
       {/* 3D Three.js Canvas Container */}
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Floating HUD */}
-      {gameState === 'roam' && !paused && (
+      {/* Floating HUD: the top bar stays up through dialogue and challenges (main.js keeps it; only the joystick is roam-only) */}
+      {gameState !== 'title' && gameState !== 'tutorial' && !paused && (
         <>
           <HUD
             stars={stars}
@@ -497,19 +675,15 @@ export const App: React.FC = () => {
             treasuresToday={treasuresToday}
             treasuresTotal={treasuresTotal}
             activeNPC={activeNPC}
-            questStep={
-              activeNPC ? { current: roundIdx + 1, total: rounds.length } : undefined
-            }
+            questStep={activeNPC ? questStep : undefined}
             interactPrompt={interactPrompt}
             muted={muted}
             onToggleMute={handleToggleMute}
             onPause={handleTogglePause}
-            onInteract={() => {
-              if (interactPrompt && activeNPC) handleStartQuest(activeNPC);
-            }}
+            onInteract={() => requestInteract(nearNPCRef.current)}
             todayStarNPC={todayStar}
           />
-          <VirtualJoystick />
+          {gameState === 'roam' && <VirtualJoystick />}
         </>
       )}
 
@@ -527,7 +701,7 @@ export const App: React.FC = () => {
         <TitleModal
           onStart={handleStartTitle}
           hasSeenTutorial={true}
-          onOpenTutorial={() => setGameState('tutorial')}
+          onOpenTutorial={() => setPhase('tutorial')}
         />
       )}
 
@@ -544,40 +718,43 @@ export const App: React.FC = () => {
       )}
 
       {/* Dialogue Modal */}
-      {gameState === 'dialogue' && activeNPC && (
+      {dialogue && (
         <DialogueModal
-          npcId={activeNPC}
-          lines={
-            doneLands.includes(activeNPC)
-              ? [
-                  `Welcome back, Princess Zoe! My land is glowing because of you! 💖 Let's play another round of fun questions!`,
-                ]
-              : QUESTS[activeNPC]?.intro || ['Hello Princess Zoe! Will you help me?']
-          }
-          onDone={handleDialogueDone}
-          actionLabel="Start Quest! ⭐"
+          key={dialogue.id}
+          npcId={dialogue.npcId}
+          lines={dialogue.lines}
+          kind={dialogue.kind}
+          onDone={dialogue.onDone}
+          actionLabel={dialogue.actionLabel}
         />
       )}
 
       {/* Challenge Modal */}
-      {gameState === 'challenge' && activeNPC && currentRound && (
+      {gameState === 'challenge' && activeNPC && view && (
         <ChallengeModal
+          key={view.serial}
           npcId={activeNPC}
-          round={currentRound}
-          roundIdx={roundIdx}
-          totalRounds={rounds.length}
-          onCorrect={handleRoundCorrect}
-          onMiss={handleRoundMiss}
+          view={view}
+          progress={progress}
+          feedback={feedback}
+          onPick={handlePick}
+          onAdvance={handleAdvance}
         />
       )}
 
-      {/* Celebration & Finale Modal */}
-      {(gameState === 'celebrate' || gameState === 'finale') && celebrationData && (
+      {/* Cards: land glowing, milestone, new kingdom, rest, finale */}
+      {card && (
         <CelebrationModal
-          title={celebrationData.title}
-          sub={celebrationData.sub}
-          isFinale={celebrationData.isFinale}
-          onContinue={celebrationData.afterAction}
+          kind={card.kind}
+          title={card.title}
+          sub={card.sub}
+          emoji={card.emoji}
+          say={card.say}
+          voice={card.voice}
+          actionLabel={card.actionLabel}
+          onContinue={card.onContinue}
+          secondaryLabel={card.secondaryLabel}
+          onSecondary={card.onSecondary}
         />
       )}
 
