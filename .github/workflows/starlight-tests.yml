@@ -103,6 +103,10 @@ jobs:
       - name: Build shell (R4)
         working-directory: starlight-quest
         run: npm run build
+      - name: Assemble site (R4 T8)
+        run: node starlight-quest/tools/assemble-site.mjs
+      - name: Built precache check (R4 T8)
+        run: node starlight-quest/tests/buildprecache_check.mjs
       - name: Bundle check (R4 T7)
         run: node starlight-quest/tests/bundle_check.mjs
       - name: Ladder wiring check (R4 T1)
