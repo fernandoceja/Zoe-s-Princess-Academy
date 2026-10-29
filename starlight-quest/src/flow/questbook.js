@@ -91,3 +91,50 @@ export function pick(qb, pickedId, correctId, saveData) {
   qb.misses++;
   return 'retry';
 }
+
+/* ---- Helpers the views need (ported from js/main.js and js/ui.js) ---- */
+
+// Praise after a right answer (main.js PRAISES, 25-30).
+export const PRAISES = [
+  'Wonderful! You did it!',
+  'Amazing work, superstar!',
+  'Yes! You are so smart!',
+  'Beautiful! Keep shining!',
+];
+
+/** A random praise line (main.js startRound correct branch). rng injectable. */
+export function praiseLine(rng = Math.random) {
+  return PRAISES[Math.floor(rng() * PRAISES.length)];
+}
+
+const _an = (n) => (/^[aeiou]/.test(n) ? 'an' : 'a');
+const _itemLine = (i) => `${_an(i.name) === 'an' ? 'An' : 'A'} ${i.name}.`;
+
+/** Sort round: the first picture's line, read after the question (ui.js _sortBins, firstItemLine). */
+export function sortFirstLine(sort) {
+  const items = sort.items || [];
+  if (!items.length) return '';
+  return sort.kind === 'words' ? items[0].name : _itemLine(items[0]);
+}
+
+/**
+ * Is this bin right for this item? ui.js _sortBins: the first bin is "yes" (living, or naming for the
+ * word sort); a word sort item is right when it is naming. yesBin is true for the first bin.
+ */
+export function sortBinRight(item, wordSort, yesBin) {
+  return yesBin === !!(wordSort ? item.naming : item.living);
+}
+
+/** Hint for a wrong bin (ui.js _sortBins, the hint text shown and spoken). */
+export function sortWrongHint(item, wordSort) {
+  if (wordSort) return 'Good try! A naming word names a thing. An action word tells what it does.';
+  return item.living
+    ? `Good try! ${_an(item.name) === 'an' ? 'An' : 'A'} ${item.name} needs water to grow. Is it living?`
+    : `Good try! Does ${_an(item.name)} ${item.name} need water to grow?`;
+}
+
+/** Hint for a wrong dictation tile by its slot (ui.js showChallenge build.onWrong, 1301-1303). */
+export function dictationHint(build, index) {
+  const last = index === build.target.length - 1;
+  return (build.hints && (index === 0 ? build.hints.first : last ? build.hints.last : null)) || build.hint || '';
+}

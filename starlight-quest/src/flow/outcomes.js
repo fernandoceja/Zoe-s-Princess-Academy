@@ -134,3 +134,19 @@ export function markKingdomsSeen(saveData, builtIds = builtSlotIds()) {
   saveData.seenNewKingdoms = true;
   saveData.seenKingdoms = [...new Set([...(saveData.seenKingdoms || []), ...builtIds])];
 }
+
+/**
+ * Text for the new-kingdom card (ui.js showNewKingdoms, 1672-1679). names null = the first big
+ * announcement; otherwise the short card naming the new land(s).
+ */
+export function kingdomCard(first, names) {
+  if (!first && Array.isArray(names) && names.length) {
+    const one = names.length === 1 ? names[0] : '';
+    return {
+      title: names.length > 1 ? 'New kingdoms opened!' : 'A new kingdom opened!',
+      sub: `${names.join(' and ')} ${names.length > 1 ? 'are' : 'is'} waiting. Follow the sparkly path!`,
+      emoji: /Garden/.test(one) ? '🌟🌙🌟' : /Harbor/.test(one) ? '🌟⚓🌟' : /Bayou/.test(one) ? '🌟🌸🌟' : '🌟🏝️🌟',
+    };
+  }
+  return { title: 'New kingdoms appeared beyond the Starlight Hub!', sub: 'Follow the sparkly paths to find them.', emoji: '🌟🏰🌟' };
+}
