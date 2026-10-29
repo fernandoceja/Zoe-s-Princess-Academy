@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Save } from './engine-core.js';
 import { Input, createWorld } from './engine-dom.js';
+import { VirtualJoystick } from './components/VirtualJoystick';
 
 // P1 stub: boots the engine world once. Replaced by the real shell in P2/P3.
 export default function App() {
@@ -17,5 +18,10 @@ export default function App() {
     return () => world.dispose();
   }, []);
 
-  return <div ref={ref} style={{ position: 'fixed', inset: 0 }} />;
+  return (
+    <>
+      <div ref={ref} style={{ position: 'fixed', inset: 0 }} />
+      <VirtualJoystick />
+    </>
+  );
 }
