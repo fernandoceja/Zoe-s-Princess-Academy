@@ -97,3 +97,11 @@ jobs:
         run: node starlight-quest/tests/engine_untouched_check.mjs
       - name: Save continuity check (R4)
         run: node starlight-quest/tests/savecontinuity_check.mjs
+      - name: Install shell dependencies (R4)
+        working-directory: starlight-quest
+        run: npm ci
+      - name: Build shell (R4)
+        working-directory: starlight-quest
+        run: npm run build
+      - name: Bundle check (R4 T7)
+        run: node starlight-quest/tests/bundle_check.mjs

@@ -1,7 +1,9 @@
 // Assemble the GitHub Pages site into <repo>/_site.
-// Copy-only mode: copies every repo file byte-for-byte, preserving paths.
-// Build mode (starlight-quest/package.json present) is not implemented until P1.6.
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+// Copy-only mode (no starlight-quest/package.json): copies every repo file byte-for-byte, preserving paths.
+// Build mode (starlight-quest/package.json present): also builds the React shell with Vite and copies
+// dist/next.html and dist/app/ into _site/starlight-quest/. The vanilla game is always copied unchanged.
+import { execSync } from 'node:child_process';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,9 +12,12 @@ const repo = resolve(here, '..', '..');                         // repo root
 const out = join(repo, '_site');
 const dist = join(repo, 'starlight-quest', 'dist');
 
-if (existsSync(join(repo, 'starlight-quest', 'package.json'))) {
-  console.log('assemble: build mode not implemented yet (P1.6)');
-  process.exit(1);
+const shell = join(repo, 'starlight-quest');
+const buildMode = existsSync(join(shell, 'package.json'));
+
+if (buildMode) {
+  execSync('npm ci', { cwd: shell, stdio: 'inherit' });
+  execSync('npm run build', { cwd: shell, stdio: 'inherit' });
 }
 
 rmSync(out, { recursive: true, force: true });
@@ -42,3 +47,10 @@ function walk(dir) {
 
 walk(repo);
 console.log(`assemble: copied ${copied} files to _site`);
+
+if (buildMode) {
+  const target = join(out, 'starlight-quest');
+  copyFileSync(join(dist, 'next.html'), join(target, 'next.html'));
+  cpSync(join(dist, 'app'), join(target, 'app'), { recursive: true });
+  console.log('assemble: copied built shell (next.html, app/) into _site/starlight-quest');
+}
