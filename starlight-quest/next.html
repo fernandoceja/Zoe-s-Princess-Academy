@@ -20,7 +20,8 @@
 <script>
   // Offline play: cache the game after the first visit, and ask the browser
   // to keep saved progress (localStorage) from being cleared under storage pressure.
-  if ('serviceWorker' in navigator) {
+  // Production build only (Vite fills %PROD%): the dev server must not install the worker.
+  if ('%PROD%' === 'true' && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
         // Check for a newer game version on open and whenever she comes back to it.
