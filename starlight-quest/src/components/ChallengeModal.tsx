@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PRINCESSES, QUESTS, tileSound } from '../engine-core.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
-import { dictationHint } from '../flow/questbook.js';
+import { dictationHint, sortBinRight, sortWrongHint } from '../flow/questbook.js';
 import { PrincessId, Round } from '../types';
 
 // What the flow hands the view for one round (roundView + voice text + visual HTML, see App.tsx).
@@ -228,29 +228,23 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
     );
   };
 
-  // Word Sort (Aurora / Rapunzel)
+  // Sorting bins (Rapunzel living / not living, Aurora naming / action). The rule is the engine's
+  // (ui.js _sortBins via sortBinRight): the first bin is "yes". Wrong bin -> '__sortwrong' with the
+  // engine's hint; the last item in a right bin -> '__sortdone'.
   const renderWordSort = () => {
     if (!round.sort) return null;
-    const bins = round.choices || ['Naming', 'Action'];
-    // R4-FIX F6: bin check uses the wrong field, and '__sortdone' is scored as a miss (fixed in P3)
-    const handleSortItem = (itemIdx: number, bin: string) => {
+    const wordSort = round.sort.kind === 'words';
+    const bins: string[] = round.choices || (wordSort ? ['Naming', 'Action'] : ['🌱 Living', '🪨 Not living']);
+    const handleSortItem = (itemIdx: number, binIdx: number) => {
       if (locked) return;
       const item = sortedItems[itemIdx];
-      const isCorrectBin =
-        (bin.toLowerCase().includes('name') && item.naming) ||
-        (bin.toLowerCase().includes('action') && !item.naming);
-      if (isCorrectBin) {
-        SoundFX.pop();
-        const updated = [...sortedItems];
-        updated[itemIdx].bin = bin;
+      SoundFX.pop();
+      if (sortBinRight(item, wordSort, binIdx === 0)) {
+        const updated = sortedItems.map((it, i) => (i === itemIdx ? { ...it, bin: bins[binIdx] } : it));
         setSortedItems(updated);
-        // Check if all sorted
-        if (updated.every((it) => it.bin != null)) {
-          onPick('__sortdone');
-        }
+        if (updated.every((it) => it.bin != null)) onPick('__sortdone');
       } else {
-        SoundFX.pop();
-        onPick('__sortwrong', round.hint || 'Good try! Think about what the word does.');
+        onPick('__sortwrong', sortWrongHint(item, wordSort));
       }
     };
     return (
@@ -268,10 +262,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
               <span>{item.name}</span>
               {!item.bin && (
                 <div className="flex gap-1">
-                  {bins.map((b) => (
+                  {bins.map((b, bi) => (
                     <button
                       key={b}
-                      onClick={() => handleSortItem(i, b)}
+                      onClick={() => handleSortItem(i, bi)}
                       className="px-2 py-0.5 rounded-md bg-purple-100 hover:bg-purple-200 text-xs font-bold text-purple-900 active:scale-95"
                     >
                       {b}
