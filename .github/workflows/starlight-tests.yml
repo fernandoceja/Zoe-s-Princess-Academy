@@ -86,3 +86,14 @@ jobs:
         run: node starlight-quest/tests/aurora_check.mjs
       - name: Ten-land finale check
         run: node starlight-quest/tests/finale_check.mjs
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Engine untouched check (R4)
+        run: node starlight-quest/tests/engine_untouched_check.mjs
+      - name: Save continuity check (R4)
+        run: node starlight-quest/tests/savecontinuity_check.mjs

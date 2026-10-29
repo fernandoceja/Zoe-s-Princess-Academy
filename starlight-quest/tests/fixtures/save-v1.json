@@ -1,0 +1,72 @@
+{
+  "stars": 137,
+  "shards": {
+    "belle": 12,
+    "elsa": 9,
+    "rapunzel": 7,
+    "cinderella": 11,
+    "ariel": 4,
+    "moana": 3,
+    "jasmine": 2,
+    "anna": 1,
+    "tiana": 5,
+    "aurora": 0
+  },
+  "done": ["belle", "elsa", "rapunzel", "cinderella", "ariel", "moana", "jasmine"],
+  "milestones": ["trail-10", "tiara-25", "skirt-50", "butterfly-100"],
+  "outfit": {
+    "trail": "icy",
+    "gem": "blue",
+    "skirt": "mint",
+    "buddy": true
+  },
+  "treasures": {
+    "day": "2026-10-27",
+    "got": ["library-0", "library-1", "meadow-3", "village-0"],
+    "total": {
+      "shell": 3,
+      "gem": 2,
+      "feather": 1,
+      "star": 1,
+      "ribbon": 2
+    },
+    "stars": []
+  },
+  "secrets": ["clock", "bookstack", "shellrhyme"],
+  "seenNewKingdoms": true,
+  "seenKingdoms": ["sse", "ssw", "ese", "wsw", "ene"],
+  "lang": "EN",
+  "muted": false,
+  "started": true,
+  "ladder": {
+    "belle": { "tier": 2, "review": [] },
+    "elsa": {
+      "tier": 3,
+      "review": [
+        {
+          "round": {
+            "prompt": "Which word says 'again'?",
+            "answer": "again",
+            "choices": ["again", "some", "every"]
+          },
+          "wins": 1
+        }
+      ]
+    },
+    "rapunzel": { "tier": 1, "review": [] },
+    "cinderella": { "tier": 2, "review": [] }
+  },
+  "lastPlay": {
+    "belle": "2026-10-26",
+    "elsa": "2026-10-27",
+    "rapunzel": "2026-10-25",
+    "cinderella": "2026-10-27"
+  },
+  "week": {
+    "spelling": ["ship", "chat", "fish"],
+    "sight": ["said", "what"],
+    "vowels": ["bee", "moon"],
+    "dictation": "The cat sat on the mat."
+  },
+  "schoolWords": ["said", "what", "because"]
+}
