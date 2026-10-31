@@ -9,6 +9,9 @@ export const VirtualJoystick: React.FC = () => {
 
   const radius = 48; // Max radius in px
 
+  // If the stick unmounts mid-touch (pause, a dialogue), stop Zoe instead of leaving her walking.
+  useEffect(() => () => Input.setJoystick(0, 0), []);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     if (touchIdRef.current !== null) return;
     const touch = e.changedTouches[0];
