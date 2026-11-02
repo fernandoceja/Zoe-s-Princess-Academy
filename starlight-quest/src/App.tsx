@@ -618,6 +618,8 @@ export const App: React.FC = () => {
         shouldRunFinale(Save.data.done, NPC_IDS, builtSlotIds().length)
       );
       world.setOutfit(Save.data.outfit);
+      // The guiding star over today's land, as main.js boot does (refreshTodayStar, main.js:180).
+      try { world.setTodayStar(todayStarTarget(Save.data, today())); } catch (e) { /* decoration only */ }
 
       // Stop drawing the 3D world while a full-screen card covers it (saves battery, keeps the phone cool).
       // The pause menu is left out on purpose: it is translucent and the world loop delivers its resume key.
