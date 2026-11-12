@@ -1,6 +1,6 @@
 // Elsa count-on (1.OA.5/6) and doubles (1.OA.6) rounds: rules, one right answer, ~half of Elsa's rounds.
 import { buildRounds, roundKey } from '../js/quests.js';
-const bad = []; let n = 0, co = 0, db = 0, bigDb = 0;
+const bad = []; let n = 0, co = 0, db = 0, nd = 0, bigDb = 0;
 const isCO = (r) => (r.visual && r.visual.kind === 'counton') || /Start at \d+ and count on|Which number do you start with|^What is \d+ \+ \d+\?$/.test(r.prompt) && /Start with the bigger number/.test(r.hint);
 for (let tier = 1; tier <= 3; tier++) {
   for (let seed = 1; seed <= 3000; seed++) {
@@ -10,7 +10,10 @@ for (let tier = 1; tier <= 3; tier++) {
       n++;
       const ok = new Set(r.choices).size === 3 && r.choices.length === 3 && r.choices.includes(r.answer) && !r.choices.includes('0');
       let m;
-      if (/Start with the bigger number/.test(r.hint)) {
+      if (/Start with the double:/.test(r.hint)) {
+        nd++;   // doubles plus one: checked in detail by nearDoubles_check.mjs; here only that it is not mistaken for count-on or a double
+        if (!ok) bad.push(['near choices', r.prompt, r.choices]);
+      } else if (/Start with the bigger number/.test(r.hint)) {
         co++;
         if (!ok) bad.push(['choices', r.prompt, r.choices]);
         const nums = r.prompt.match(/\d+/g).map(Number);
@@ -42,9 +45,9 @@ for (let tier = 1; tier <= 3; tier++) {
 // Same fact, different picture must not share a review-queue id.
 const a = { prompt: 'What is 3 + 3?', answer: '6', visual: { kind: 'doubles', n: 3, style: 'flakes' } };
 if (roundKey(a) === roundKey({ ...a, visual: { kind: 'doubles', n: 3, style: 'frames' } })) bad.push(['key', 'pictures share a roundKey']);
-const pct = (100 * (co + db)) / n;
+const pct = (100 * (co + db + nd)) / n;
 if (bigDb === 0) bad.push(['no big doubles', bigDb]);
-console.log(`checked ${n} elsa rounds, ${co} count-on, ${db} doubles (${pct.toFixed(1)}% new, ${bigDb} above 5+5), violations ${bad.length}`);
+console.log(`checked ${n} elsa rounds, ${co} count-on, ${db} doubles, ${nd} doubles-plus-one (${pct.toFixed(1)}% new, ${bigDb} above 5+5), violations ${bad.length}`);
 if (pct < 40 || pct > 60) bad.push(['share', pct]);
-if (co === 0 || db === 0) bad.push(['missing kind', co, db]);
+if (co === 0 || db === 0 || nd === 0) bad.push(['missing kind', co, db, nd]);
 if (bad.length) { console.log(bad.slice(0, 10)); process.exit(1); }

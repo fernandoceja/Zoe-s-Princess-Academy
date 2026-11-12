@@ -1290,8 +1290,31 @@ function _doublesRound(tier, rng) {
   if (tier <= 2) r.visual = { kind: 'doubles', n, style: tier === 1 ? 'flakes' : 'frames' };
   return r;
 }
+// Doubles plus one (1.OA.6): "6 + 6 is 12, so 6 + 7 is one more." Easy: the double's answer is given, picture shows both frames plus the extra dot.
+// Core: ten-frames only. Stretch: no picture, and the pair can come in either order (7 + 6).
+function _nearDoublesRound(tier, rng) {
+  const n = tier === 1 ? 1 + Math.floor(rng() * 5) : 2 + Math.floor(rng() * 8);   // Easy 1-5, Core/Stretch 2-9 (sum stays under 20)
+  const dbl = 2 * n, sum = dbl + 1;
+  const flip = tier === 3 && rng() < 0.5;
+  const [x, y] = flip ? [n + 1, n] : [n, n + 1];
+  const r = {
+    choices: _nz(_numChoices(sum, rng, 20, [dbl, dbl + 2]), sum), answer: String(sum),
+    hint: `Good try! Start with the double: ${n} + ${n} is ${dbl}. Then count one more.`,
+  };
+  if (tier === 1) {
+    r.prompt = `${n} + ${n} is ${dbl}. What is ${n} + ${n + 1}?`;
+    r.say = `${n} plus ${n} is ${dbl}. What is ${n} plus ${n + 1}?`;
+    r.visual = { kind: 'neardoubles', n, style: 'bridge' };
+  } else {
+    r.prompt = `What is ${x} + ${y}?`;
+    r.say = `What is ${x} plus ${y}?`;
+    if (tier === 2) r.visual = { kind: 'neardoubles', n, style: 'frames' };
+  }
+  return r;
+}
 function _elsaNew(tier, rng) {
-  return rng() < 0.5 ? _countOnRound(tier, rng) : _doublesRound(tier, rng);
+  if (rng() < 0.5) return _countOnRound(tier, rng);
+  return rng() < 0.5 ? _doublesRound(tier, rng) : _nearDoublesRound(tier, rng);
 }
 const MISSING = [[8, '+', 10], [6, '+', 9], [3, '+', 7, true], [10, '-', 6], [7, '+', 12], [9, '+', 15]];
 function _missingRound([a, op, total, first], rng) {
