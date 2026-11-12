@@ -35,8 +35,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="zsq-tutorial fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#fdfcfe] via-[#fbf7eb] to-[#eef6ff] rounded-[32px] border-4 border-[#ebd373] p-6 sm:p-8 text-center shadow-2xl">
+    <div className="zsq-tutorial fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-lg my-auto bg-gradient-to-b from-[#fdfcfe] via-[#fbf7eb] to-[#eef6ff] rounded-[32px] border-4 border-[#ebd373] p-6 sm:p-8 text-center shadow-2xl">
         {/* Step dots */}
         <div className="flex justify-center gap-2 mb-4">
           {STEPS.map((_, i) => (

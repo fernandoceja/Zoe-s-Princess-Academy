@@ -52,7 +52,7 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
 
         {/* Center: Quest Pill & Daily Treasures */}
-        <div className="flex items-center justify-center gap-2 pointer-events-auto order-3 w-full sm:order-none sm:w-auto">
+        <div className="flex items-center justify-center gap-2 pointer-events-none order-3 w-full sm:order-none sm:w-auto">   {/* no taps stolen from the world */}
           {/* Quest Progress Pill */}
           <div className="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border-2 border-[#ebd373] shadow-md flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-purple-900">
             {activeNPC && questStep ? (

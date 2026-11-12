@@ -21,8 +21,8 @@ export const TitleModal: React.FC<TitleModalProps> = ({
   }, []);
 
   return (
-    <div className="zsq-title fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-gradient-to-b from-[#fdfcfe] via-[#fdf8e6] to-[#eef6ff] rounded-[32px] border-4 border-[#ebd373] p-6 sm:p-8 text-center shadow-2xl overflow-hidden">
+    <div className="zsq-title fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-md my-auto bg-gradient-to-b from-[#fdfcfe] via-[#fdf8e6] to-[#eef6ff] rounded-[32px] border-4 border-[#ebd373] p-6 sm:p-8 text-center shadow-2xl overflow-hidden">
         {/* Soft magical sparkle corners */}
         <div className="absolute -top-10 -right-10 w-28 h-28 bg-yellow-200/40 rounded-full blur-xl pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-purple-200/40 rounded-full blur-xl pointer-events-none" />

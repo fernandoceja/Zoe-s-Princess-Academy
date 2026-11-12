@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 const read = (p) => readFileSync(new URL('../src/' + p, import.meta.url), 'utf8');
 const problems = [];
 const KID = ['HUD', 'ChallengeModal', 'DialogueModal', 'TutorialModal', 'CelebrationModal', 'TitleModal', 'PauseMenu', 'WardrobeModal', 'TreasureBookModal'];
-const OK_H = /(?:^|[\s`"])(?:min-h-\[(\d+)px\]|h-\[(\d+)px\])/;
 let buttons = 0;
 for (const name of KID) {
   const src = read(`components/${name}.tsx`);
@@ -31,6 +30,11 @@ if (!/max-width:639px\)\{\.zsq-toast\{top:7\.5rem/.test(css)) problems.push('toa
 if (!/orientation:landscape\) and \(max-height:\d+px\)\{\.zsq-toast\{top:auto;bottom:\d/.test(css)) problems.push('toast: landscape rule that moves it off the HUD is missing');
 if (!/className="zsq-toast fixed/.test(app) || /className="fixed top-16/.test(app)) problems.push('toast: App must use the zsq-toast class');
 if (!/pointer-events-none/.test(app.slice(app.indexOf('zsq-toast') - 40, app.indexOf('zsq-toast') + 200))) problems.push('toast: must not block taps');
+if (!/pointer-events-none order-3 w-full/.test(hud)) problems.push('HUD: the second-row pill must not steal taps from the world');
+for (const f of ['PauseMenu', 'TitleModal', 'TutorialModal']) {
+  const src = read(`components/${f}.tsx`);
+  if (!/overflow-y-auto/.test(src) || !/\bmy-auto\b/.test(src)) problems.push(`${f}: must scroll when taller than a short landscape screen`);
+}
 if (!/flex-wrap/.test(hud) || !/order-3 w-full sm:order-none/.test(hud)) problems.push('HUD: the quest pill must wrap under the buttons on narrow screens');
 console.log(`tapsize: ${buttons} kid buttons scanned, problems ${problems.length}`);
 if (problems.length) { for (const p of problems.slice(0, 15)) console.log(p); process.exit(1); }

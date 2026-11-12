@@ -35,8 +35,8 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   const ring = (id: string) => (armed === id ? ' ring-4 ring-amber-400' : '');
 
   return (
-    <div className="zsq-pause-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto">
-      <div className="w-full max-w-sm bg-gradient-to-b from-[#fefbf5] to-[#f4f7fd] rounded-[32px] border-4 border-[#ebd373] p-6 text-center shadow-2xl">
+    <div className="zsq-pause-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto">
+      <div className="w-full max-w-sm my-auto bg-gradient-to-b from-[#fefbf5] to-[#f4f7fd] rounded-[32px] border-4 border-[#ebd373] p-6 text-center shadow-2xl">
         {/* Title */}
         <div className="text-4xl mb-2">⏸️</div>
         <h2 className="text-2xl font-black text-amber-950 mb-1">{PAUSE.heading}</h2>
