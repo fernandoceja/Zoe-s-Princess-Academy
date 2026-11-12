@@ -118,8 +118,8 @@ export function finaleLines() {
  * Kingdoms to announce when the title is left (main.js enterWorld, 191-204).
  * Returns null when there is nothing new, otherwise { first, names }: first = the big announcement
  * (names null), else the names of the new lands.
- * Q6: nothing is announced until she has finished her first quest (saveData.done non-empty), so a brand-new player is not told about
- * kingdoms that are still locked; the card then shows after that first quest (App.tsx afterQuestNext) or the next time she leaves the title.
+ * Q6: nothing is announced until she has finished her first quest (saveData.done non-empty), so a brand-new player starts playing before a card
+ * about the wider kingdom appears; the card then shows after that first quest (App.tsx afterQuestNext) or the next time she leaves the title.
  */
 export function kingdomsToAnnounce(saveData, builtIds = builtSlotIds()) {
   if (!Array.isArray(saveData.done) || saveData.done.length === 0) return null;
