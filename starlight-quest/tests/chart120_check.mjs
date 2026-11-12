@@ -14,7 +14,7 @@ for (let n = 1; n <= 120; n++) {
   ok(stepFrom(n, 'left') === (n % 10 !== 1 ? n - 1 : null), `left ${n} must not wrap`);
 }
 
-const RE = { find: /^Which animal is on \d+\?$/, clue: /^Start at \d+\. Go (down|up|right|left) [\w-]+\d*(, then (down|up|right|left) [\w-]+\d*)?\. What number are you on\?$/ };
+const RE = { find: /^Which picture is on \d+\?$/, clue: /^Start at \d+\. Go (down|up|right|left) [\w-]+\d*(, then (down|up|right|left) [\w-]+\d*)?\. What number are you on\?$/ };
 const kinds = {};
 for (let tier = 1; tier <= 3; tier++) {
   for (let seed = 1; seed <= 2000; seed++) {

@@ -57,7 +57,7 @@ function _wrongTwo(answer, mistakes, rng, lo, hi) {
 }
 const _numChoices = (answer, wrong, rng) => _shuffle([answer, ...wrong], rng).map(String);
 
-// ---- Find an animal on a number ("Which animal is on 27?") ----
+// ---- Find an animal on a number ("Which picture is on 27?") ----
 export function chartFind(tier, rng) {
   const easy = tier === 1;
   const n = easy ? _int(3, 38, rng) : _int(12, 110, rng);
@@ -70,7 +70,7 @@ export function chartFind(tier, rng) {
   const marks = cells.map((c, i) => ({ n: c, e: animals[i].e }));
   const rowLo = easy ? 1 : _window(cells, 6, rng);
   return {
-    kind: 'chartfind', prompt: `Which animal is on ${n}?`,
+    kind: 'chartfind', prompt: `Which picture is on ${n}?`,
     visual: { kind: 'chart', rowLo, rows: easy ? 4 : 6, ...(easy ? { hlRow: cellRow(n) } : {}), marks },
     choices: _shuffle(animals.map((a) => a.name), rng), answer: animals[0].name,
     hint: easy ? 'Good try! Find the bright row. Then count across, one number at a time.'
