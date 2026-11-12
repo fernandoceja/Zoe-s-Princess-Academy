@@ -8,7 +8,7 @@ export const GLEN_R = 9.6;
 export const GLEN_SPOTS = {
   rose: [0, -5.8], berries: [5.4, -4.6], bird: [-3.0, -5.4],
   rabbit: [4.6, 2.4], squirrel: [-0.8, 5.6], chime: [-4.1, 4.0],
-  'word-bird': [-1.8, -1.5], 'word-run': [1.0, -1.5], 'word-rose': [3.8, -1.5],
+  'word-bird': [-1.8, -1.5], 'word-sing': [1.0, -1.5], 'word-rose': [3.8, -1.5],
 };
 export const GLEN_TREES = [[-6.5, -5.3], [5.4, -7.2], [8, 0.2], [5.6, 6.4], [-4.4, 7.2]];
 // Small lowercase block alphabet, drawn in the shared unlit mesh; no font/assets.
@@ -17,7 +17,7 @@ const GLYPHS = {
   r: ['000','000','110','100','100'], d: ['001','001','011','101','011'],
   u: ['000','000','101','101','111'], n: ['000','000','110','101','101'],
   o: ['000','000','111','101','111'], s: ['000','000','011','010','110'],
-  e: ['000','000','111','110','111'],
+  e: ['000','000','111','110','111'], g: ['011','101','011','001','110'],
 };
 
 /** env follows buildBayou; returns update and a bounded dry treasure settler. */

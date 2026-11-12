@@ -91,7 +91,7 @@
 
 - **Standard:** ELA Language — CA CCSS **L.1.1** (grammar and usage).
 - **What the child practices:** Naming words and action words: identify each kind and sort four short words into the two groups.
-- **Example round:** *"Which word is an action?"* — choices: `bird`, `run`, `rose`.
+- **Example round:** *"Which word is an action?"* — choices: `bird`, `sing`, `rose`.
 
 ## 👑 Starlight Finale
 

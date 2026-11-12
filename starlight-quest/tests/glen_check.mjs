@@ -47,22 +47,22 @@ assert.equal(kept.kinds.at(-1).count, 5); assert.equal(kept.stickers.at(-1).foun
 const allIds = all.lands.flatMap((l) => Array.from({ length: 5 }, (_, i) => l.id + '-' + i));
 assert.equal(sanitizeTreasures({ day, got: allIds }).got.length, 50);
 assert.deepEqual(sanitizeTreasures(null).got, []);
-assert.deepEqual(WORD_SIGNS, ['bird', 'run', 'rose']);
-assert.deepEqual(WORD_NAMES, ['bird', 'rose']); assert.equal(WORD_ACTION, 'run');
-assert.equal(wordKind('bird'), 'naming'); assert.equal(wordKind('rose'), 'naming'); assert.equal(wordKind('run'), 'action'); assert.equal(wordKind('unknown'), null);
-assert.match(wordLine().say, /Bird and rose are naming words. Run is an action word!/);
+assert.deepEqual(WORD_SIGNS, ['bird', 'sing', 'rose']);
+assert.deepEqual(WORD_NAMES, ['bird', 'rose']); assert.equal(WORD_ACTION, 'sing');
+assert.equal(wordKind('bird'), 'naming'); assert.equal(wordKind('rose'), 'naming'); assert.equal(wordKind('sing'), 'action'); assert.equal(wordKind('unknown'), null);
+assert.match(wordLine().say, /Bird and rose are naming words. Sing is an action word!/);
 for (const names of [['bird', 'rose'], ['rose', 'bird']]) {
   const t = createSecretTracker();
   assert.equal(t.tap('word-' + names[0], 1000), null);
   assert.equal(t.tap('word-' + names[1], 2000), null);
-  assert.equal(t.tap('word-run', 3000), 'wordgarden');
-  assert.equal(t.tap('word-run', 3100), null, 'no repeated speech');
+  assert.equal(t.tap('word-sing', 3000), 'wordgarden');
+  assert.equal(t.tap('word-sing', 3100), null, 'no repeated speech');
 }
 for (const sequence of [
-  [['word-run', 1000]], [['word-bird', 1000], ['word-run', 2000]],
-  [['word-bird', 1000], ['word-bird', 2000], ['word-run', 3000]],
-  [['word-bird', 1000], ['word-rose', 2000], ['word-run', 16001]],
-  [['word-bird', 1000], ['word-run', 2000], ['word-rose', 3000], ['word-run', 4000]],
+  [['word-sing', 1000]], [['word-bird', 1000], ['word-sing', 2000]],
+  [['word-bird', 1000], ['word-bird', 2000], ['word-sing', 3000]],
+  [['word-bird', 1000], ['word-rose', 2000], ['word-sing', 16001]],
+  [['word-bird', 1000], ['word-sing', 2000], ['word-rose', 3000], ['word-sing', 4000]],
 ]) { const t = createSecretTracker(); for (const [part, ms] of sequence) assert.equal(t.tap(part, ms), null, 'wrong/late sequences do not award a sticker'); }
 
 const { center, pad } = glenGeometry();
