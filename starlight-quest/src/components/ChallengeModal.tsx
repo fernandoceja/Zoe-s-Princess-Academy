@@ -121,7 +121,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             <button
               key={i}
               onClick={() => playSound(l, i)}
-              className={`w-14 h-16 sm:w-16 sm:h-20 rounded-2xl border-4 font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md active:scale-95 transition-all ${
+              className={`w-[60px] min-h-[64px] h-16 sm:w-16 sm:h-20 rounded-2xl border-4 font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md active:scale-95 transition-all ${
                 activeBlendLetter === i
                   ? 'bg-amber-400 text-amber-950 border-white scale-110 shadow-lg'
                   : 'bg-white text-purple-950 border-purple-200 hover:border-purple-300'
@@ -133,7 +133,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         </div>
         <button
           onClick={blendAll}
-          className="mt-1 px-4 py-2 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-extrabold text-sm shadow-md active:scale-95 flex items-center gap-1.5"
+          className="mt-1 min-h-[60px] px-5 py-2 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white font-extrabold text-base shadow-md active:scale-95 flex items-center gap-1.5"
         >
           <span>🔊</span>
           <span>Blend it!</span>
@@ -222,7 +222,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 key={i}
                 disabled={isUsed || locked}
                 onClick={() => handleTileTap(t)}
-                className={`px-4 py-2.5 rounded-xl border-2 font-black text-base sm:text-lg shadow-sm transition-all active:scale-95 ${
+                className={`min-h-[60px] min-w-[60px] px-4 py-2.5 rounded-xl border-2 font-black text-xl sm:text-2xl shadow-sm transition-all active:scale-95 ${
                   isUsed
                     ? 'opacity-30 bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
                     : isGlow
@@ -240,14 +240,14 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           <button
             onClick={handleUndo}
             disabled={placedTiles.length === 0 || locked}
-            className="px-3.5 py-1.5 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-40 text-xs font-black text-slate-700 active:scale-95"
+            className="min-h-[60px] px-5 py-1.5 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-40 text-sm font-black text-slate-700 active:scale-95"
           >
             ↶ Undo
           </button>
           <button
             onClick={handleClear}
             disabled={placedTiles.length === 0 || locked}
-            className="px-3.5 py-1.5 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-40 text-xs font-black text-slate-700 active:scale-95"
+            className="min-h-[60px] px-5 py-1.5 rounded-full bg-slate-200 hover:bg-slate-300 disabled:opacity-40 text-sm font-black text-slate-700 active:scale-95"
           >
             ✖ Clear
           </button>
@@ -294,7 +294,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                     <button
                       key={b}
                       onClick={() => handleSortItem(i, bi)}
-                      className="px-2 py-0.5 rounded-md bg-purple-100 hover:bg-purple-200 text-xs font-bold text-purple-900 active:scale-95"
+                      className="min-h-[60px] min-w-[60px] px-3 py-1 rounded-xl bg-purple-100 hover:bg-purple-200 text-sm font-bold text-purple-900 active:scale-95"
                     >
                       {b}
                     </button>
@@ -357,7 +357,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           </p>
           <button
             onClick={replay}
-            className="w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 border border-amber-300 flex items-center justify-center text-base shrink-0 active:scale-95 shadow-xs"
+            className="w-[60px] h-[60px] rounded-full bg-amber-100 hover:bg-amber-200 border border-amber-300 flex items-center justify-center text-2xl shrink-0 active:scale-95 shadow-xs"
             aria-label="Hear that again"
             title="Listen again"
           >
@@ -421,7 +421,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         {locked && (
           <button
             onClick={onAdvance}
-            className="mt-4 w-full px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg shadow-lg border-2 border-white active:scale-95"
+            className="mt-4 w-full min-h-[60px] px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg shadow-lg border-2 border-white active:scale-95"
           >
             {feedback?.kind === 'retry' ? 'Try again 💗' : 'Next ➜'}
           </button>

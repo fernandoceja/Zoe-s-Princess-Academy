@@ -62,6 +62,7 @@
     "tests/sound_check.mjs": "b187642ffcd67a0b69964131ed606ee860a6a267b93011059f5ff08d56d3c9cb",
     "tests/spell_check.mjs": "31bcf61b35335eb63bd4da9aa0d3c2496a1613555a98336985b26e30e6cef2b3",
     "tests/tap_check.mjs": "cbaea3f36526b86061f57267fdc352a8eb5db83620f04ac91cc570b2f11144e3",
+    "tests/tapsize_check.mjs": "2d55f9c3579c6b0d426fd253976fe042602fe8db1943ae6a2bacccea85d994ae",
     "tests/tiana_check.mjs": "e5979de90a3c8a092dd84b02148c68636e1fe347c692d457128bb0457cc9a950",
     "tests/todaystar_check.mjs": "1820074c69989574d09e49dd05752e230028c9206e4685aeb31229bcb919eeeb",
     "tests/treasure_check.mjs": "d4178c4c9f39fca87d1590d1bc43664729a07b5a5640cc566a907948c398de5d",

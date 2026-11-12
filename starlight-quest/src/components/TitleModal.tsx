@@ -53,7 +53,7 @@ export const TitleModal: React.FC<TitleModalProps> = ({
         <div className="flex flex-col gap-3">
           <button
             onClick={onStart}
-            className="w-full py-4 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-xl shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
+            className="w-full min-h-[60px] py-4 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-xl shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
             {TITLE.start}
           </button>
@@ -61,14 +61,14 @@ export const TitleModal: React.FC<TitleModalProps> = ({
           {hasSeenTutorial && (
             <button
               onClick={onOpenTutorial}
-              className="w-full py-2.5 px-4 rounded-full bg-white/80 text-purple-900 font-bold text-sm border border-purple-200 hover:bg-white active:scale-95 transition-all"
+              className="w-full min-h-[60px] py-2.5 px-4 rounded-full bg-white/80 text-purple-900 font-bold text-base border border-purple-200 hover:bg-white active:scale-95 transition-all"
             >
               {TITLE.howTo}
             </button>
           )}
           <button
             onClick={() => Narrator.speakText(titleSay(), { pitch: 1.15, rate: 0.95 })}
-            className="w-full py-2.5 px-4 rounded-full bg-white/80 text-amber-900 font-bold text-sm border border-amber-200 hover:bg-white active:scale-95 transition-all"
+            className="w-full min-h-[60px] py-2.5 px-4 rounded-full bg-white/80 text-amber-900 font-bold text-base border border-amber-200 hover:bg-white active:scale-95 transition-all"
             aria-label="Read this aloud"
           >
             {TITLE.listen}

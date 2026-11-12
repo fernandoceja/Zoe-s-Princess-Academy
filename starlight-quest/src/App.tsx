@@ -709,7 +709,7 @@ export const App: React.FC = () => {
 
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none animate-bounce">
+        <div className="zsq-toast fixed left-1/2 transform -translate-x-1/2 z-50 pointer-events-none animate-bounce">
           <div className="bg-amber-400 text-amber-950 font-black text-sm sm:text-base px-5 py-2.5 rounded-full border-2 border-white shadow-lg">
             {toastMsg}
           </div>

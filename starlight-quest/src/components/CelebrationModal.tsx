@@ -103,7 +103,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
         {/* Continue Button */}
         <button
           onClick={onContinue}
-          className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg sm:text-xl shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
+          className="min-h-[60px] px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg sm:text-xl shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
         >
           {primary}
         </button>
@@ -111,7 +111,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
         {secondaryLabel && onSecondary && (
           <button
             onClick={onSecondary}
-            className="mt-3 px-8 py-3 rounded-full bg-white text-amber-900 font-black text-base sm:text-lg shadow-md border-2 border-amber-300 hover:brightness-105 active:scale-95 transition-all"
+            className="mt-3 min-h-[60px] px-8 py-3 rounded-full bg-white text-amber-900 font-black text-base sm:text-lg shadow-md border-2 border-amber-300 hover:brightness-105 active:scale-95 transition-all"
           >
             {secondaryLabel}
           </button>

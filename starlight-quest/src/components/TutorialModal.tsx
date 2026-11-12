@@ -69,7 +69,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
         {/* Audio Replay Button */}
         <button
           onClick={() => Narrator.speakText(tutorialSay(step), { pitch: 1.15, rate: 0.95 })}
-          className="mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/90 border border-amber-300 text-xs font-bold text-amber-800 shadow-sm active:scale-95"
+          className="mb-6 inline-flex items-center justify-center gap-1.5 min-h-[60px] px-6 py-1.5 rounded-full bg-white/90 border border-amber-300 text-sm font-bold text-amber-800 shadow-sm active:scale-95"
           aria-label="Read again"
         >
           <span>{TUTORIAL_BUTTONS.listen}</span>
@@ -79,14 +79,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={handleSkip}
-            className="px-5 py-3 rounded-full text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+            className="min-h-[60px] px-6 py-3 rounded-full text-base font-bold text-slate-500 hover:text-slate-800 transition-colors"
           >
             {TUTORIAL_BUTTONS.skip}
           </button>
 
           <button
             onClick={handleNext}
-            className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
+            className="min-h-[60px] px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-lg shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
             {stepIdx === STEPS.length - 1 ? TUTORIAL_BUTTONS.last : TUTORIAL_BUTTONS.next}
           </button>

@@ -60,7 +60,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
           </div>
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 font-black text-slate-700 flex items-center justify-center text-lg active:scale-95"
+            className="w-[60px] h-[60px] shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 font-black text-slate-700 flex items-center justify-center text-2xl active:scale-95"
             aria-label="Back"
           >
             ✕
@@ -71,7 +71,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
         <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
           {/* Sparkle Trail (10 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('trail'), has('trail-10')))}>
+            <button type="button" className="w-full min-h-[60px] flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('trail'), has('trail-10')))}>
               <span className="font-black text-sm text-purple-900">{cat('trail').emoji} {cat('trail').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('trail'), has('trail-10'))}
@@ -83,7 +83,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                   <button
                     key={c.id}
                     onClick={() => handleChoose('trail', c.id)}
-                    className={`p-2 rounded-xl border-2 text-xs font-bold transition-all ${
+                    className={`min-h-[60px] p-2 rounded-xl border-2 text-sm font-bold transition-all ${
                       (currentOutfit.trail || 'pinkgold') === c.id
                         ? 'border-purple-600 bg-purple-50 font-black text-purple-900 shadow-sm'
                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
@@ -100,7 +100,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Tiara Gem Color (25 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('gem'), has('tiara-25')))}>
+            <button type="button" className="w-full min-h-[60px] flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('gem'), has('tiara-25')))}>
               <span className="font-black text-sm text-purple-900">{cat('gem').emoji} {cat('gem').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('gem'), has('tiara-25'))}
@@ -112,7 +112,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                   <button
                     key={c.id}
                     onClick={() => handleChoose('gem', c.id)}
-                    className={`p-2 rounded-xl border-2 text-xs font-bold transition-all ${
+                    className={`min-h-[60px] p-2 rounded-xl border-2 text-sm font-bold transition-all ${
                       (currentOutfit.gem || 'pink') === c.id
                         ? 'border-purple-600 bg-purple-50 font-black text-purple-900 shadow-sm'
                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
@@ -129,7 +129,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Skirt Color (50 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('skirt'), has('skirt-50')))}>
+            <button type="button" className="w-full min-h-[60px] flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('skirt'), has('skirt-50')))}>
               <span className="font-black text-sm text-purple-900">{cat('skirt').emoji} {cat('skirt').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('skirt'), has('skirt-50'))}
@@ -141,7 +141,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                   <button
                     key={c.id}
                     onClick={() => handleChoose('skirt', c.id)}
-                    className={`p-2 rounded-xl border-2 text-xs font-bold transition-all ${
+                    className={`min-h-[60px] p-2 rounded-xl border-2 text-sm font-bold transition-all ${
                       (currentOutfit.skirt || 'rose') === c.id
                         ? 'border-purple-600 bg-purple-50 font-black text-purple-900 shadow-sm'
                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
@@ -158,7 +158,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Butterfly Companion (100 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('buddy'), has('butterfly-100')))}>
+            <button type="button" className="w-full min-h-[60px] flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('buddy'), has('butterfly-100')))}>
               <span className="font-black text-sm text-purple-900">{cat('buddy').emoji} {cat('buddy').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('buddy'), has('butterfly-100'))}
@@ -167,7 +167,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
             {has('butterfly-100') ? (
               <button
                 onClick={() => handleChoose('buddy', !currentOutfit.buddy)}
-                className={`w-full py-2.5 rounded-xl border-2 text-xs font-black transition-all ${
+                className={`w-full min-h-[60px] py-2.5 rounded-xl border-2 text-sm font-black transition-all ${
                   currentOutfit.buddy
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm'
                     : 'border-slate-200 bg-slate-50 text-slate-700'
@@ -184,7 +184,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="mt-5 w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
+          className="mt-5 w-full min-h-[60px] py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
         >
           {WARDROBE.done}
         </button>

@@ -127,3 +127,5 @@ jobs:
         run: node starlight-quest/tests/retry_check.mjs
       - name: Read-aloud screens check (Q2)
         run: node starlight-quest/tests/screens_check.mjs
+      - name: Tap size check (Q4)
+        run: node starlight-quest/tests/tapsize_check.mjs

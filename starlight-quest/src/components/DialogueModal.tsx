@@ -74,7 +74,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
           </div>
           <button
             onClick={handleReplay}
-            className="w-10 h-10 rounded-full bg-amber-100 hover:bg-amber-200 border border-amber-300 flex items-center justify-center text-lg shadow-sm active:scale-95"
+            className="w-[60px] h-[60px] rounded-full bg-amber-100 hover:bg-amber-200 border border-amber-300 flex items-center justify-center text-2xl shadow-sm active:scale-95 shrink-0"
             aria-label="Repeat speech"
             title="Read again"
           >
@@ -96,7 +96,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
           </div>
           <button
             onClick={handleNext}
-            className="px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base sm:text-lg shadow-md border-2 border-white hover:brightness-105 active:scale-95 transition-all"
+            className="min-h-[60px] px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base sm:text-lg shadow-md border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
             {lineIdx < lines.length - 1 ? 'Next ➡️' : actionLabel}
           </button>
