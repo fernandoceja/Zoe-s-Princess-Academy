@@ -432,7 +432,7 @@ export const App: React.FC = () => {
   const afterQuestNext = (npcId: PrincessId, practice: boolean) => {
     const nx = nextAfterQuest(Save.data, npcId, { practice, npcIds: NPC_IDS, builtCount: builtSlotIds().length });
     if (nx.kind === 'finale') runFinale();
-    else showRest(npcId);
+    else if (!showKingdomCard(() => showRest(npcId))) showRest(npcId);
   };
 
   // Grand finale (main.js runFinale).
@@ -461,27 +461,33 @@ export const App: React.FC = () => {
     }
   };
 
+  // The New kingdoms card (Q6). Returns true when a card was shown; `then` runs when it is dismissed.
+  const showKingdomCard = (then: (() => void) | null): boolean => {
+    const k = kingdomsToAnnounce(Save.data);
+    if (!k) return false;
+    const c = kingdomCard(k.first, k.names);
+    setCard({
+      kind: 'milestone',
+      title: c.title,
+      sub: c.sub,
+      emoji: c.emoji,
+      onContinue: () => {
+        markKingdomsSeen(Save.data);
+        Save.save();
+        setCard(null);
+        if (then) then();
+      },
+    });
+    return true;
+  };
+
   // Title -> world (main.js enterWorld).
   const enterWorld = () => {
     setPhase('roam');
     if (worldRef.current) worldRef.current.setInputEnabled(true);
     showToast('Walk to a princess and say hello! 👑', 3000, false);   // the welcome line below says it
-    // New kingdoms: the big card the first time, a short card when a kingdom opens later.
-    const k = kingdomsToAnnounce(Save.data);
-    if (k) {
-      const c = kingdomCard(k.first, k.names);
-      setCard({
-        kind: 'milestone',
-        title: c.title,
-        sub: c.sub,
-        emoji: c.emoji,
-        onContinue: () => {
-          markKingdomsSeen(Save.data);
-          Save.save();
-          setCard(null);
-        },
-      });
-    }
+    // New kingdoms: the big card the first time (only once she has finished a quest, Q6), a short card when a kingdom opens later.
+    const k = showKingdomCard(null);
     if (isIOS() && !canBypassSilentSwitch()) {
       setTimeout(() => showToast('🔔 No sound? Flip the silent switch off and turn the volume up.', 3000, false), 2500);
     }
