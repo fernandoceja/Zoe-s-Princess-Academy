@@ -50,6 +50,14 @@ export function visualHtml(npcId, round) {
     }
     return svg + '</svg>';
   }
+  if (npcId === 'elsa' && round.visual && round.visual.kind === 'neardoubles') {
+    const { n, style } = round.visual;
+    // Core: the double's frame next to the frame with one more. Easy: the double on a snowy bridge (two frames), then one more flake lands.
+    if (style === 'frames') return `<div style="text-align:center;line-height:1.6">${frames(n, 0, 26)}<div style="font-size:30px">➕</div>${frames(n + 1, 0, 26)}</div>`;
+    return `<div role="img" aria-label="${n} and ${n} on a snowy bridge, then one more snowflake lands" style="text-align:center;line-height:1.6">` +
+      `<div style="display:inline-block;padding:6px 10px;border-bottom:8px solid #bae6fd;border-radius:12px">${frames(n, 0, 22)}<span style="font-size:26px;margin:0 4px">➕</span>${frames(n, 0, 22)}</div>` +
+      `<div style="font-size:30px">➕ ❄️ <span style="font-size:18px;font-weight:700;color:#0c4a6e">one more</span></div></div>`;
+  }
   if (npcId === 'elsa' && round.visual && round.visual.kind === 'doubles') {
     const { n, style } = round.visual;
     if (style === 'frames') return `<div style="text-align:center;line-height:1.6">${frames(n, 0, 26)}<div style="font-size:30px">➕</div>${frames(n, 0, 26)}</div>`;
