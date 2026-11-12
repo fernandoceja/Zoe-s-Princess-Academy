@@ -41,7 +41,7 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
           </div>
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-full bg-slate-200 hover:bg-slate-300 font-black text-slate-700 flex items-center justify-center text-lg active:scale-95"
+            className="w-[60px] h-[60px] shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 font-black text-slate-700 flex items-center justify-center text-2xl active:scale-95"
             aria-label="Back"
           >
             ✕
@@ -86,7 +86,7 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="mt-5 w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
+          className="mt-5 w-full min-h-[60px] py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
         >
           {TREASURE.back}
         </button>

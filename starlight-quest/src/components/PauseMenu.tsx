@@ -35,8 +35,8 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   const ring = (id: string) => (armed === id ? ' ring-4 ring-amber-400' : '');
 
   return (
-    <div className="zsq-pause-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto">
-      <div className="w-full max-w-sm bg-gradient-to-b from-[#fefbf5] to-[#f4f7fd] rounded-[32px] border-4 border-[#ebd373] p-6 text-center shadow-2xl">
+    <div className="zsq-pause-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto">
+      <div className="w-full max-w-sm my-auto bg-gradient-to-b from-[#fefbf5] to-[#f4f7fd] rounded-[32px] border-4 border-[#ebd373] p-6 text-center shadow-2xl">
         {/* Title */}
         <div className="text-4xl mb-2">⏸️</div>
         <h2 className="text-2xl font-black text-amber-950 mb-1">{PAUSE.heading}</h2>
@@ -47,7 +47,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           {/* Resume */}
           <button
             onClick={() => tap('resume', PAUSE.resume, onResume)}
-            className={`w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-lg shadow-md border border-white active:scale-95 transition-all flex items-center justify-center gap-2${ring('resume')}`}
+            className={`w-full min-h-[60px] py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-lg shadow-md border border-white active:scale-95 transition-all flex items-center justify-center gap-2${ring('resume')}`}
           >
             <span>▶️</span>
             <span>{PAUSE.resume}</span>
@@ -56,7 +56,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           {/* Wardrobe */}
           <button
             onClick={() => tap('wardrobe', PAUSE.wardrobe, onOpenWardrobe)}
-            className={`w-full py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-purple-900 font-extrabold text-base shadow-xs border-2 border-purple-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('wardrobe')}`}
+            className={`w-full min-h-[60px] py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-purple-900 font-extrabold text-base shadow-xs border-2 border-purple-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('wardrobe')}`}
           >
             <span>👗</span>
             <span>{PAUSE.wardrobe}</span>
@@ -65,7 +65,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           {/* Treasure Book */}
           <button
             onClick={() => tap('treasure', PAUSE.treasure, onOpenTreasureBook)}
-            className={`w-full py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-teal-900 font-extrabold text-base shadow-xs border-2 border-teal-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('treasure')}`}
+            className={`w-full min-h-[60px] py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-teal-900 font-extrabold text-base shadow-xs border-2 border-teal-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('treasure')}`}
           >
             <span>📖</span>
             <span>{PAUSE.treasure}</span>
@@ -74,7 +74,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
           {/* Replay Tutorial */}
           <button
             onClick={() => tap('howTo', PAUSE.howTo, onOpenTutorial)}
-            className={`w-full py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-indigo-900 font-extrabold text-base shadow-xs border-2 border-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('howTo')}`}
+            className={`w-full min-h-[60px] py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-indigo-900 font-extrabold text-base shadow-xs border-2 border-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-2${ring('howTo')}`}
           >
             <span>❓</span>
             <span>{PAUSE.howTo}</span>

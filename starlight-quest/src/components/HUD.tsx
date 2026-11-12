@@ -37,7 +37,7 @@ export const HUD: React.FC<HUDProps> = ({
   return (
     <>
       {/* Top Bar HUD */}
-      <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between p-2 sm:p-3 pointer-events-none">
+      <header className="fixed top-0 left-0 right-0 z-20 flex flex-wrap items-center justify-between gap-y-1 p-2 sm:p-3 pointer-events-none">
         {/* Left: Princess Zoe avatar & Stars */}
         <div className="flex items-center gap-2 pointer-events-auto bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border-2 border-[#ebd373] shadow-md">
           <img
@@ -52,7 +52,7 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
 
         {/* Center: Quest Pill & Daily Treasures */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center justify-center gap-2 pointer-events-none order-3 w-full sm:order-none sm:w-auto">   {/* no taps stolen from the world */}
           {/* Quest Progress Pill */}
           <div className="bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border-2 border-[#ebd373] shadow-md flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-purple-900">
             {activeNPC && questStep ? (
@@ -104,14 +104,14 @@ export const HUD: React.FC<HUDProps> = ({
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
             onClick={onToggleMute}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-lg sm:text-xl hover:scale-105 active:scale-95 transition-transform"
+            className="w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform"
             aria-label={muted ? 'Unmute Sound' : 'Mute Sound'}
           >
             {muted ? '🔇' : '🔊'}
           </button>
           <button
             onClick={onPause}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-lg sm:text-xl hover:scale-105 active:scale-95 transition-transform font-black text-purple-900"
+            className="w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform font-black text-purple-900"
             aria-label="Pause Menu"
           >
             ⏸️
@@ -124,7 +124,7 @@ export const HUD: React.FC<HUDProps> = ({
         <div className="fixed bottom-20 sm:bottom-12 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto animate-bounce">
           <button
             onClick={onInteract}
-            className="bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950 font-black px-5 py-3 rounded-full border-4 border-white shadow-xl text-base sm:text-lg flex items-center gap-2 active:scale-95 transition-transform"
+            className="min-h-[60px] bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950 font-black px-6 py-3 rounded-full border-4 border-white shadow-xl text-base sm:text-lg flex items-center gap-2 active:scale-95 transition-transform"
           >
             <span>{interactPrompt}</span>
           </button>
