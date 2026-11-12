@@ -1,6 +1,6 @@
 // Elsa count-on (1.OA.5/6) and doubles (1.OA.6) rounds: rules, one right answer, ~half of Elsa's rounds.
 import { buildRounds, roundKey } from '../js/quests.js';
-const bad = []; let n = 0, co = 0, db = 0;
+const bad = []; let n = 0, co = 0, db = 0, bigDb = 0;
 const isCO = (r) => (r.visual && r.visual.kind === 'counton') || /Start at \d+ and count on|Which number do you start with|^What is \d+ \+ \d+\?$/.test(r.prompt) && /Start with the bigger number/.test(r.hint);
 for (let tier = 1; tier <= 3; tier++) {
   for (let seed = 1; seed <= 3000; seed++) {
@@ -27,12 +27,14 @@ for (let tier = 1; tier <= 3; tier++) {
       } else if ((m = r.prompt.match(/^What is (\d+) \+ (\d+)\?$/)) && r.hint.includes('double')) {
         db++;
         if (!ok) bad.push(['choices', r.prompt, r.choices]);
-        if (m[1] !== m[2] || +m[1] < 1 || +m[1] > 5 || r.answer !== String(2 * m[1])) bad.push(['double', r.prompt, r.answer]);
+        if (+m[1] >= 6) bigDb++;
+        if (m[1] !== m[2] || +m[1] < 1 || +m[1] > (r.tier === 1 ? 5 : 10) || r.answer !== String(2 * m[1])) bad.push(['double', r.prompt, r.answer]);
         if (r.tier === 3 && r.visual) bad.push(['t3 double visual', r.prompt]);
       } else if ((m = r.prompt.match(/^Which double makes (\d+)\?$/))) {
         db++;
         const k = +m[1] / 2;
-        if (!ok || r.tier !== 3 || r.answer !== `${k} + ${k}` || r.choices.some((c) => !/^([1-5]) \+ \1$/.test(c))) bad.push(['which double', r.prompt, r.choices]);
+        if (k >= 6) bigDb++;
+        if (!ok || r.tier !== 3 || r.answer !== `${k} + ${k}` || r.choices.some((c) => !/^([1-9]|10) \+ \1$/.test(c))) bad.push(['which double', r.prompt, r.choices]);
       } else if (r.visual && r.visual.kind) bad.push(['unknown visual', r.prompt]);
     }
   }
@@ -41,7 +43,8 @@ for (let tier = 1; tier <= 3; tier++) {
 const a = { prompt: 'What is 3 + 3?', answer: '6', visual: { kind: 'doubles', n: 3, style: 'flakes' } };
 if (roundKey(a) === roundKey({ ...a, visual: { kind: 'doubles', n: 3, style: 'frames' } })) bad.push(['key', 'pictures share a roundKey']);
 const pct = (100 * (co + db)) / n;
-console.log(`checked ${n} elsa rounds, ${co} count-on, ${db} doubles (${pct.toFixed(1)}% new), violations ${bad.length}`);
+if (bigDb === 0) bad.push(['no big doubles', bigDb]);
+console.log(`checked ${n} elsa rounds, ${co} count-on, ${db} doubles (${pct.toFixed(1)}% new, ${bigDb} above 5+5), violations ${bad.length}`);
 if (pct < 40 || pct > 60) bad.push(['share', pct]);
 if (co === 0 || db === 0) bad.push(['missing kind', co, db]);
 if (bad.length) { console.log(bad.slice(0, 10)); process.exit(1); }
