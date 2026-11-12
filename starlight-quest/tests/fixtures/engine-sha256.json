@@ -56,6 +56,7 @@
     "tests/reveal_check.mjs": "4f0d3afe6f599794a67ad6446156fe8421402bb1858ed9afb4e1522e5a7b3a83",
     "tests/reviewqueue_check.mjs": "b43a1fc872b248175b92904fe4567dedd5915108feec4afd00b9c0c992ff544b",
     "tests/roster_check.mjs": "840a480ae396475b3978ac580dd80078126f9af1b56c242c2e099dbd7c62fae8",
+    "tests/screens_check.mjs": "b0863e062efd160cfeb674ded3b6218bd055f3a3ddfccd1084e5219bf44c9766",
     "tests/secret_check.mjs": "900da79607a9e4a438985a4aef5c49e1101086ce19477426dae0f29bc43fe48e",
     "tests/sort_check.mjs": "17e2bc97550427ecad9b5009d2c9448fe478c67afce4418ffc7a53052ba10421",
     "tests/sound_check.mjs": "b187642ffcd67a0b69964131ed606ee860a6a267b93011059f5ff08d56d3c9cb",

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Narrator } from '../engine-dom.js';
+import { TREASURE, treasureSay, stickerSay } from '../flow/screens.js';
 import { ALL_SECRETS } from '../engine-core.js';
 import { PRINCESSES } from '../engine-core.js';
 
@@ -15,6 +17,12 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
   treasuresTotal,
   onBack,
 }) => {
+  const say = (text: string) => Narrator.speakText(text, { pitch: 1.15, rate: 0.95 });
+  useEffect(() => {
+    say(treasureSay(treasuresToday, treasuresTotal));
+    return () => { Narrator.stop(); };
+  }, []);
+
   return (
     <div className="zsq-sheet fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto">
       <div className="w-full max-w-lg bg-gradient-to-b from-[#fefbf6] to-[#f4f7fd] rounded-[32px] border-4 border-[#ebd373] p-5 sm:p-7 shadow-2xl my-auto">
@@ -24,10 +32,10 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
             <span className="text-3xl">📖</span>
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-amber-950">
-                Treasure Book
+                {TREASURE.heading}
               </h2>
               <p className="text-xs font-bold text-slate-500">
-                Find hidden sparkles & secret scenery across the lands!
+                {TREASURE.sub}
               </p>
             </div>
           </div>
@@ -42,7 +50,7 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
 
         {/* Daily Finds Counter */}
         <div className="mb-4 p-3 bg-teal-50 border-2 border-teal-200 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-bold text-teal-900">
-          <span>✨ Daily sparkling treasures found today:</span>
+          <span>{TREASURE.daily}</span>
           <span className="font-black text-base text-teal-700">
             {treasuresToday} / {treasuresTotal}
           </span>
@@ -54,8 +62,9 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
             const isFound = foundSecrets.includes(sec.id);
             const p = PRINCESSES[sec.npc];
             return (
-              <div
+              <button
                 key={sec.id}
+                onClick={() => say(isFound ? stickerSay(sec.label, p?.name) : TREASURE.secretSay)}
                 className={`p-3 rounded-2xl border-2 flex flex-col items-center text-center shadow-xs transition-all ${
                   isFound
                     ? 'bg-white border-amber-300'
@@ -64,12 +73,12 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
               >
                 <div className="text-4xl mb-1">{isFound ? sec.emoji : '❓'}</div>
                 <div className="font-black text-xs text-slate-800 line-clamp-1">
-                  {isFound ? sec.label : 'Secret Sticker'}
+                  {isFound ? sec.label : TREASURE.secret}
                 </div>
                 <div className="text-[10px] font-bold text-slate-400 mt-0.5">
                   {p?.name || 'Kingdom'}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -79,7 +88,7 @@ export const TreasureBookModal: React.FC<TreasureBookModalProps> = ({
           onClick={onBack}
           className="mt-5 w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
         >
-          Back to Quest 🌟
+          {TREASURE.back}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { OUTFIT, MILESTONES } from '../engine-core.js';
-import { SoundFX } from '../engine-dom.js';
+import { SoundFX, Narrator } from '../engine-dom.js';
+import { WARDROBE, WARDROBE_CATS, wardrobeStatus, wardrobeSay, wardrobeCatSay, spoken } from '../flow/screens.js';
 
 interface WardrobeModalProps {
   stars: number;
@@ -23,9 +24,20 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
   onBack,
 }) => {
   const has = (id: string) => unlockedMilestones.includes(id);
+  const cat = (id: string) => WARDROBE_CATS.find((c: any) => c.id === id)!;
+  const say = (text: string) => Narrator.speakText(text, { pitch: 1.15, rate: 0.95 });
+
+  useEffect(() => {
+    say(wardrobeSay(stars));
+    return () => { Narrator.stop(); };
+  }, []);
 
   const handleChoose = (category: string, value: any) => {
     SoundFX.pop();
+    const picked = typeof value === 'string'
+      ? (OUTFIT as any)[category]?.choices?.find((c: any) => c.id === value)?.label
+      : value ? 'Fluttering with Zoe' : 'Butterfly Friend resting';
+    if (picked) say(spoken(picked));
     const updated = { ...currentOutfit, [category]: value };
     onSelectOutfit(updated);
   };
@@ -39,10 +51,10 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
             <span className="text-3xl">👗</span>
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-amber-950">
-                Zoe's Wardrobe
+                {WARDROBE.heading}
               </h2>
               <p className="text-xs font-bold text-slate-500">
-                Earn stars in quests to unlock royal outfits! (⭐ {stars} stars)
+                {WARDROBE.sub} (⭐ {stars} stars)
               </p>
             </div>
           </div>
@@ -59,12 +71,12 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
         <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
           {/* Sparkle Trail (10 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-black text-sm text-purple-900">✨ Sparkle Trail</span>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('trail'), has('trail-10')))}>
+              <span className="font-black text-sm text-purple-900">{cat('trail').emoji} {cat('trail').title}</span>
               <span className="text-xs font-bold text-amber-700">
-                {has('trail-10') ? 'Unlocked 🔓' : 'Needs 10 ⭐'}
+                {wardrobeStatus(cat('trail'), has('trail-10'))}
               </span>
-            </div>
+            </button>
             {has('trail-10') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.trail.choices.map((c: any) => (
@@ -82,18 +94,18 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic">Earn 10 stars to unlock sparkle trail colors!</p>
+              <p className="text-xs text-slate-400 italic">{cat('trail').locked}</p>
             )}
           </div>
 
           {/* Tiara Gem Color (25 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-black text-sm text-purple-900">💎 Tiara Gem</span>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('gem'), has('tiara-25')))}>
+              <span className="font-black text-sm text-purple-900">{cat('gem').emoji} {cat('gem').title}</span>
               <span className="text-xs font-bold text-amber-700">
-                {has('tiara-25') ? 'Unlocked 🔓' : 'Needs 25 ⭐'}
+                {wardrobeStatus(cat('gem'), has('tiara-25'))}
               </span>
-            </div>
+            </button>
             {has('tiara-25') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.gem.choices.map((c: any) => (
@@ -111,18 +123,18 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic">Earn 25 stars to unlock gem colors for Zoe's tiara!</p>
+              <p className="text-xs text-slate-400 italic">{cat('gem').locked}</p>
             )}
           </div>
 
           {/* Skirt Color (50 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-black text-sm text-purple-900">👗 Skirt Color</span>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('skirt'), has('skirt-50')))}>
+              <span className="font-black text-sm text-purple-900">{cat('skirt').emoji} {cat('skirt').title}</span>
               <span className="text-xs font-bold text-amber-700">
-                {has('skirt-50') ? 'Unlocked 🔓' : 'Needs 50 ⭐'}
+                {wardrobeStatus(cat('skirt'), has('skirt-50'))}
               </span>
-            </div>
+            </button>
             {has('skirt-50') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.skirt.choices.map((c: any) => (
@@ -140,18 +152,18 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic">Earn 50 stars to unlock beautiful new royal skirt colors!</p>
+              <p className="text-xs text-slate-400 italic">{cat('skirt').locked}</p>
             )}
           </div>
 
           {/* Butterfly Companion (100 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-black text-sm text-purple-900">🦋 Butterfly Friend</span>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('buddy'), has('butterfly-100')))}>
+              <span className="font-black text-sm text-purple-900">{cat('buddy').emoji} {cat('buddy').title}</span>
               <span className="text-xs font-bold text-amber-700">
-                {has('butterfly-100') ? 'Unlocked 🔓' : 'Needs 100 ⭐'}
+                {wardrobeStatus(cat('buddy'), has('butterfly-100'))}
               </span>
-            </div>
+            </button>
             {has('butterfly-100') ? (
               <button
                 onClick={() => handleChoose('buddy', !currentOutfit.buddy)}
@@ -164,7 +176,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
                 {currentOutfit.buddy ? '✨ Fluttering with Zoe (Active)' : 'Fly with Butterfly Friend'}
               </button>
             ) : (
-              <p className="text-xs text-slate-400 italic">Reach 100 stars to make a magical butterfly companion!</p>
+              <p className="text-xs text-slate-400 italic">{cat('buddy').locked}</p>
             )}
           </div>
         </div>
@@ -174,7 +186,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
           onClick={onBack}
           className="mt-5 w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-md active:scale-95"
         >
-          Done ✨
+          {WARDROBE.done}
         </button>
       </div>
     </div>

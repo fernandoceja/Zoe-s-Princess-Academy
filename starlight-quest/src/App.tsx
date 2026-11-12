@@ -73,6 +73,7 @@ import {
 
 import { HUD } from './components/HUD';
 import { TitleModal } from './components/TitleModal';
+import { spoken } from './flow/screens.js';
 import { TutorialModal } from './components/TutorialModal';
 import { DialogueModal } from './components/DialogueModal';
 import { ChallengeModal, Feedback } from './components/ChallengeModal';
@@ -167,7 +168,9 @@ export const App: React.FC = () => {
   // Secret tracker ref
   const secretTrackerRef = useRef(createSecretTracker());
 
-  const showToast = (msg: string, duration = 3000) => {
+  // A pop-up message is read aloud too (Q2). `say`: custom spoken words, or false when something else is already speaking.
+  const showToast = (msg: string, duration = 3000, say?: string | false) => {
+    if (say !== false) Narrator.speakText(say || spoken(msg), { pitch: 1.15, rate: 0.95 });
     setToastMsg(msg);
     setTimeout(() => {
       setToastMsg((prev) => (prev === msg ? null : prev));
@@ -193,19 +196,19 @@ export const App: React.FC = () => {
     else if (id === 'bookstack') {
       const sp = spellLine(WEEK.spelling);
       line = sp.say;
-      showToast(`📚 ${sp.show}`);
+      showToast(`📚 ${sp.show}`, 3000, false);
     } else line = plantLine().say;
 
     SoundFX.chime();
     Narrator.speakExact(def.npc, line);
-    if (id !== 'bookstack') showToast(`${def.emoji} ${line}`);
+    if (id !== 'bookstack') showToast(`${def.emoji} ${line}`, 3000, false);
 
     if (foundSecret(Save.data, id)) {
       Save.save();
       setFoundSecrets([...Save.data.secrets]);
       setTimeout(() => {
         showToast(`New sticker: ${def.label}! ${def.emoji}`);
-      }, 1400);
+      }, 2600);
     }
   };
 
@@ -223,7 +226,7 @@ export const App: React.FC = () => {
   const handleTogglePause = () => {
     if (phaseRef.current !== 'roam') {
       // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
-      showToast('Finish talking first, then you can pause! ⏸️', 2200);
+      showToast('Finish talking first, then you can pause! ⏸️', 2200, false);   // she is mid-sentence: do not cut her off
       return;
     }
     const nextPaused = !pausedRef.current;
@@ -462,7 +465,7 @@ export const App: React.FC = () => {
   const enterWorld = () => {
     setPhase('roam');
     if (worldRef.current) worldRef.current.setInputEnabled(true);
-    showToast('Walk to a princess and say hello! 👑');
+    showToast('Walk to a princess and say hello! 👑', 3000, false);   // the welcome line below says it
     // New kingdoms: the big card the first time, a short card when a kingdom opens later.
     const k = kingdomsToAnnounce(Save.data);
     if (k) {
@@ -480,14 +483,19 @@ export const App: React.FC = () => {
       });
     }
     if (isIOS() && !canBypassSilentSwitch()) {
-      setTimeout(() => showToast('🔔 No sound? Flip the silent switch off and turn the volume up.'), 2500);
+      setTimeout(() => showToast('🔔 No sound? Flip the silent switch off and turn the volume up.', 3000, false), 2500);
     }
     const c = Input.describeControls();
     const how = c.gamepad ? 'press ✕' : c.touch ? 'tap her' : 'click her or press E';
-    Narrator.speakText(
-      `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
-      { pitch: 1.15, rate: 0.95 }
-    );
+    // After this tap's screen change, so the Title / How to Play cleanup cannot cut it off. A New kingdoms card speaks instead.
+    if (!k) {
+      setTimeout(() => {
+        Narrator.speakText(
+          `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
+          { pitch: 1.15, rate: 0.95 }
+        );
+      }, 0);
+    }
   };
 
   // Start Adventure from Title
@@ -546,7 +554,7 @@ export const App: React.FC = () => {
     Input.onGamepadChange = (connected: boolean) => {
       showToast(connected
         ? '🎮 Controller connected! Left stick walks, ✕ talks.'
-        : '🎮 Controller disconnected.');
+        : '🎮 Controller disconnected.', 3000, false);
     };
 
     if (containerRef.current) {
@@ -593,13 +601,17 @@ export const App: React.FC = () => {
           if (!collectTreasure(Save.data, id, kind, dayKey)) return;
           Save.save();
           SoundFX.chime();
-          showToast(`You found ${kind === 'seaglass' ? 'a piece of sea glass' : kind === 'anchor' ? 'an anchor' : `a ${kind}`}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} here today ✨`);
-          if (awardRowStar(Save.data, landId, dayKey)) {
+          const found = `You found ${kind === 'seaglass' ? 'a piece of sea glass' : kind === 'anchor' ? 'an anchor' : `a ${kind}`}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} here today ✨`;
+          const rowDone = awardRowStar(Save.data, landId, dayKey);
+          const rowMsg = `All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`;
+          // One voice line for both messages, so the second does not cut the first.
+          showToast(found, 3000, rowDone ? spoken(found, `All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! Plus one star.`) : undefined);
+          if (rowDone) {
             // Same award path as a won round: +1 star, save, counter.
             Save.data.stars += 1;
             Save.save();
             setStars(Save.data.stars);
-            setTimeout(() => showToast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`), 1600);
+            setTimeout(() => showToast(rowMsg, 3000, false), 1600);
           }
           setTreasuresToday(findsToday(Save.data, dayKey, openLandIds()));
         },

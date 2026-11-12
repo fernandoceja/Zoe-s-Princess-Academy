@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { FINALE_LINES } from '../engine-core.js';
+import { spoken } from '../flow/screens.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
 
 // One card, four kinds (main.js: showCelebration, showFinale, showMilestone, showRest).
@@ -61,8 +62,9 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
       Narrator.speakExact(voice || 'zoe', say);
     } else if (isFinale) {
       Narrator.speakExact('belle', FINALE_LINES.join(' '));
-    } else if (kind === 'celebrate') {
-      Narrator.speakExact('zoe', `${title}! ${sub}`);
+    } else if (kind === 'celebrate' || kind === 'milestone') {
+      // Milestones (stars, the New kingdoms card) are read aloud too, so she never has to read alone.
+      Narrator.speakExact('zoe', spoken(`${title}!`, sub));
     }
 
     return () => {
