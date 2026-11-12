@@ -1,57 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Narrator } from '../engine-dom.js';
+import { Narrator, Input } from '../engine-dom.js';
+import { tutorialSteps, tutorialSay, TUTORIAL_BUTTONS } from '../flow/screens.js';
 
 interface TutorialModalProps {
   onComplete: () => void;
 }
 
-interface Step {
-  title: string;
-  emoji: string;
-  text: string;
-  speech: string;
-}
-
-const STEPS: Step[] = [
-  {
-    title: 'How to Move',
-    emoji: '🧭',
-    text: 'Use WASD, arrow keys, or drag with your finger on the screen to walk Princess Zoe around the kingdom.',
-    speech: 'Welcome to Starlight Quest! Walk Princess Zoe around the kingdom using arrow keys, WASD, or drag the circle on your screen.',
-  },
-  {
-    title: 'Talk to Friends',
-    emoji: '👑',
-    text: 'Walk up to any princess and press E, Space, or tap her to say hello and start her quest!',
-    speech: 'Walk up to any princess and tap her or press E to say hello and start her quest!',
-  },
-  {
-    title: 'Answer Questions',
-    emoji: '⭐',
-    text: 'Pick an answer from the big cards. Wrong answers get gentle hints and second chances—no losing ever!',
-    speech: 'Answer five fun questions. Tap the cards to answer! If you miss, a gentle hint helps you try again.',
-  },
-  {
-    title: 'Collect Stars',
-    emoji: '✨',
-    text: 'Earn stars with every quest! Completing all ten lands brings the golden Starlight Crown back to the castle.',
-    speech: 'Earn stars and star shards! Restoring all ten lands brings the magical Starlight Crown back to the castle.',
-  },
-  {
-    title: 'Pause & Dress Up',
-    emoji: '👗',
-    text: 'Tap the pause button anytime to change your dress, check your stickers, or visit the Parent Corner.',
-    speech: 'Tap the pause button anytime to dress up Zoe with unlocked rewards, or view the Parent Corner.',
-  },
-];
-
 export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
   const [stepIdx, setStepIdx] = useState(0);
-
+  // Touch screens get touch words (no keys); the voice reads exactly what is shown.
+  const touch = !!Input.describeControls().touch;
+  const STEPS = tutorialSteps(touch);
   const step = STEPS[stepIdx];
 
   useEffect(() => {
-    Narrator.speakText(step.speech, { pitch: 1.15, rate: 0.95 });
+    Narrator.speakText(tutorialSay(step), { pitch: 1.15, rate: 0.95 });
     return () => {
       Narrator.stop();
     };
@@ -105,12 +68,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
 
         {/* Audio Replay Button */}
         <button
-          onClick={() => Narrator.speakText(step.speech, { pitch: 1.15, rate: 0.95 })}
+          onClick={() => Narrator.speakText(tutorialSay(step), { pitch: 1.15, rate: 0.95 })}
           className="mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/90 border border-amber-300 text-xs font-bold text-amber-800 shadow-sm active:scale-95"
           aria-label="Read again"
         >
-          <span>🔊</span>
-          <span>Listen again</span>
+          <span>{TUTORIAL_BUTTONS.listen}</span>
         </button>
 
         {/* Navigation Buttons */}
@@ -119,14 +81,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
             onClick={handleSkip}
             className="px-5 py-3 rounded-full text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
           >
-            Skip
+            {TUTORIAL_BUTTONS.skip}
           </button>
 
           <button
             onClick={handleNext}
             className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
-            {stepIdx === STEPS.length - 1 ? "Let's Play! 👑" : 'Next ➡️'}
+            {stepIdx === STEPS.length - 1 ? TUTORIAL_BUTTONS.last : TUTORIAL_BUTTONS.next}
           </button>
         </div>
       </div>

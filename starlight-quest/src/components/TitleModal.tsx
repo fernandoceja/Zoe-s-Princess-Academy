@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PORTRAIT_ZOE } from '../engine-core.js';
+import { Narrator } from '../engine-dom.js';
+import { TITLE, titleSay } from '../flow/screens.js';
 
 interface TitleModalProps {
   onStart: () => void;
@@ -12,6 +14,12 @@ export const TitleModal: React.FC<TitleModalProps> = ({
   hasSeenTutorial,
   onOpenTutorial,
 }) => {
+  // She reads the card aloud (iOS may hold the first speech until a tap, so the Listen button is always there).
+  useEffect(() => {
+    Narrator.speakText(titleSay(), { pitch: 1.15, rate: 0.95 });
+    return () => { Narrator.stop(); };
+  }, []);
+
   return (
     <div className="zsq-title fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#fdfcfe] via-[#fdf8e6] to-[#eef6ff] rounded-[32px] border-4 border-[#ebd373] p-6 sm:p-8 text-center shadow-2xl overflow-hidden">
@@ -35,10 +43,10 @@ export const TitleModal: React.FC<TitleModalProps> = ({
 
         {/* Title */}
         <h1 className="text-2xl sm:text-3xl font-black text-amber-900 mb-1 tracking-tight">
-          Zoe's Starlight Quest
+          {TITLE.heading}
         </h1>
         <p className="text-sm sm:text-base font-semibold text-purple-900/80 mb-6">
-          A gentle 3D learning adventure for Princess Zoe ✨
+          {TITLE.sub}
         </p>
 
         {/* Start Button */}
@@ -47,7 +55,7 @@ export const TitleModal: React.FC<TitleModalProps> = ({
             onClick={onStart}
             className="w-full py-4 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-xl shadow-lg border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
-            Start Adventure 🌟
+            {TITLE.start}
           </button>
 
           {hasSeenTutorial && (
@@ -55,14 +63,21 @@ export const TitleModal: React.FC<TitleModalProps> = ({
               onClick={onOpenTutorial}
               className="w-full py-2.5 px-4 rounded-full bg-white/80 text-purple-900 font-bold text-sm border border-purple-200 hover:bg-white active:scale-95 transition-all"
             >
-              📖 How to Play
+              {TITLE.howTo}
             </button>
           )}
+          <button
+            onClick={() => Narrator.speakText(titleSay(), { pitch: 1.15, rate: 0.95 })}
+            className="w-full py-2.5 px-4 rounded-full bg-white/80 text-amber-900 font-bold text-sm border border-amber-200 hover:bg-white active:scale-95 transition-all"
+            aria-label="Read this aloud"
+          >
+            {TITLE.listen}
+          </button>
         </div>
 
         {/* Reassuring footer for kids */}
         <p className="mt-5 text-xs font-semibold text-slate-500">
-          No timers, no penalties, and always gentle hints. Have fun! 💖
+          {TITLE.footer}
         </p>
       </div>
     </div>

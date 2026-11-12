@@ -125,3 +125,5 @@ jobs:
         run: node starlight-quest/tests/nearDoubles_check.mjs
       - name: Kind retries check (Q1)
         run: node starlight-quest/tests/retry_check.mjs
+      - name: Read-aloud screens check (Q2)
+        run: node starlight-quest/tests/screens_check.mjs
