@@ -116,7 +116,10 @@ function playQuest(npc, ladderRaw, rng, saveData, wrongsFor) {
   check(finaleLines().length > 0 && finaleLines()[0].princessId === 'belle', 'finale: lines missing');
 
   // New kingdoms: announced once, then not again until another opens.
-  const kingSave = { seenKingdoms: [], seenNewKingdoms: false };
+  const kingSave = { seenKingdoms: [], seenNewKingdoms: false, done: [] };
+  check(kingdomsToAnnounce(kingSave, ['sse']) === null, 'kingdom (Q6): nothing is announced before her first finished quest');
+  check(kingSave.seenNewKingdoms === false && kingSave.seenKingdoms.length === 0, 'kingdom (Q6): not announcing must not mark anything seen');
+  kingSave.done = ['belle'];
   const k1 = kingdomsToAnnounce(kingSave, ['sse']);
   check(k1 && k1.first === true && k1.names === null, 'kingdom: the first built kingdom is the big announcement');
   markKingdomsSeen(kingSave, ['sse']);

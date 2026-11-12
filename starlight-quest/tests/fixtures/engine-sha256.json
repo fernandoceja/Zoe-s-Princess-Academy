@@ -44,7 +44,7 @@
     "tests/harbor_check.mjs": "2007cea8698ea570d5cc0d4995ef2509529736fa959c841769d392feec2d6bfb",
     "tests/isle_check.mjs": "d0755b7a6f828b736f9bec133170b86c646cde619b264a8640b078e74215db52",
     "tests/jasmine_check.mjs": "abb7d9cd800502aa55783ac026828e7c729cc638d685ed2b851d279270bd2cac",
-    "tests/ladderwiring_check.mjs": "0e0d6f1c5a7d79211e4668e17b2fef396ff85cca0238f50020c3cf450b54971b",
+    "tests/ladderwiring_check.mjs": "af13d25f6bf54f62bb6bf2a80741f6ae1324c569f946a74af8013036b5156a8e",
     "tests/lands_check.mjs": "082e6bc44406dba431e1243e47cdeccd99e707831b81a5b2bf9a219698f401f9",
     "tests/measure_check.mjs": "779ab57df36ddc001c119cb90fb20b74a82e2e714ec149a9aa6c8f58596718a9",
     "tests/milestone_check.mjs": "d621d722058ad8a4b6aa9d7f83725d5af75c5a2f4351bf3dbe056790b93b3bc4",

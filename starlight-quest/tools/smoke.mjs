@@ -170,8 +170,8 @@ async function offline(browser, base) {
   await page.getByRole('button', { name: /Let's Play/ }).click();
   const hud = page.locator('[title$="lands glowing"]');
   await hud.waitFor({ timeout: 30000 });
-  // A fresh save shows the "New kingdoms appeared" card once; dismiss it.
-  await page.getByRole('button', { name: /Yay/ }).click();
+  // Q6: a fresh save no longer shows the "New kingdoms appeared" card (it waits for the first finished quest); if one is up, dismiss it.
+  { const yay = page.getByRole('button', { name: /Yay/ }); if (await yay.isVisible({ timeout: 1500 }).catch(() => false)) await yay.click(); }
 
   // Walk north to Belle (Zoe starts at the hub; Belle's land is north). The interact prompt names her when close.
   const belle = page.locator('button', { hasText: 'Belle' });
