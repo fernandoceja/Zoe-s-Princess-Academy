@@ -123,3 +123,5 @@ jobs:
         run: node starlight-quest/tests/weekpack_check.mjs
       - name: Elsa doubles-plus-one check (M1)
         run: node starlight-quest/tests/nearDoubles_check.mjs
+      - name: Kind retries check (Q1)
+        run: node starlight-quest/tests/retry_check.mjs

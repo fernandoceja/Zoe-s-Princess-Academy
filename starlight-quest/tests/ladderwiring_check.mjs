@@ -71,8 +71,8 @@ function playQuest(npc, ladderRaw, rng, saveData, wrongsFor) {
   check(qb.results.every((r) => !r.round.requeued), 'hinted: a re-asked round was recorded as a result');
   const next = recordQuest(landState({ tier: 2, review: [] }), qb.results);
   check(next.tier === 1, `hinted: tier ${next.tier}, expected 1`);
-  check(save.stars === qb.rounds.length, `hinted: stars ${save.stars}, expected ${qb.rounds.length} (one star per correct pick, re-asks included)`);
-  check(qb.rounds.length > 5, `hinted: expected re-asked rounds in the queue, got ${qb.rounds.length}`);
+  check(save.stars === 5, `hinted: stars ${save.stars}, expected 5 (one star per correct pick)`);
+  check(qb.rounds.length === 5, `hinted: a missed round must not be re-asked in the same quest (Q1), got ${qb.rounds.length} rounds`);
 }
 
 // 3. Outcomes (P3.3): the once-a-day check, questComplete (ladder, lastPlay, done, +3 stars only the first time),
