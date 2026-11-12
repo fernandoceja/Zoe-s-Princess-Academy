@@ -17,7 +17,7 @@ export const TitleModal: React.FC<TitleModalProps> = ({
   // She reads the card aloud (iOS may hold the first speech until a tap, so the Listen button is always there).
   useEffect(() => {
     Narrator.speakText(titleSay(), { pitch: 1.15, rate: 0.95 });
-    return () => { Narrator.stop(); };
+    // No stop on unmount: Start speaks the welcome line in the same tap, and a stop here would cut it.
   }, []);
 
   return (

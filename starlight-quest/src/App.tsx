@@ -226,7 +226,7 @@ export const App: React.FC = () => {
   const handleTogglePause = () => {
     if (phaseRef.current !== 'roam') {
       // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
-      showToast('Finish talking first, then you can pause! ⏸️', 2200);
+      showToast('Finish talking first, then you can pause! ⏸️', 2200, false);   // she is mid-sentence: do not cut her off
       return;
     }
     const nextPaused = !pausedRef.current;
@@ -487,10 +487,15 @@ export const App: React.FC = () => {
     }
     const c = Input.describeControls();
     const how = c.gamepad ? 'press ✕' : c.touch ? 'tap her' : 'click her or press E';
-    Narrator.speakText(
-      `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
-      { pitch: 1.15, rate: 0.95 }
-    );
+    // After this tap's screen change, so the Title / How to Play cleanup cannot cut it off. A New kingdoms card speaks instead.
+    if (!k) {
+      setTimeout(() => {
+        Narrator.speakText(
+          `Welcome to Starlight Quest! Walk to a princess and ${how} to say hello.`,
+          { pitch: 1.15, rate: 0.95 }
+        );
+      }, 0);
+    }
   };
 
   // Start Adventure from Title
@@ -596,13 +601,17 @@ export const App: React.FC = () => {
           if (!collectTreasure(Save.data, id, kind, dayKey)) return;
           Save.save();
           SoundFX.chime();
-          showToast(`You found ${kind === 'seaglass' ? 'a piece of sea glass' : kind === 'anchor' ? 'an anchor' : `a ${kind}`}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} here today ✨`);
-          if (awardRowStar(Save.data, landId, dayKey)) {
+          const found = `You found ${kind === 'seaglass' ? 'a piece of sea glass' : kind === 'anchor' ? 'an anchor' : `a ${kind}`}! ${landTreasureCount(Save.data, landId, dayKey)} of ${TREASURES_PER_LAND} here today ✨`;
+          const rowDone = awardRowStar(Save.data, landId, dayKey);
+          const rowMsg = `All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`;
+          // One voice line for both messages, so the second does not cut the first.
+          showToast(found, 3000, rowDone ? spoken(found, `All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! Plus one star.`) : undefined);
+          if (rowDone) {
             // Same award path as a won round: +1 star, save, counter.
             Save.data.stars += 1;
             Save.save();
             setStars(Save.data.stars);
-            setTimeout(() => showToast(`All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! +1 ⭐`, 3000, `All ${TREASURES_PER_LAND} treasures in ${TREASURE_LAND_NAMES[landId]}! Plus one star.`), 1600);
+            setTimeout(() => showToast(rowMsg, 3000, false), 1600);
           }
           setTreasuresToday(findsToday(Save.data, dayKey, openLandIds()));
         },

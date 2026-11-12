@@ -71,12 +71,12 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
         <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
           {/* Sparkle Trail (10 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2 cursor-pointer" role="button" onClick={() => say(wardrobeCatSay(cat('trail'), has('trail-10')))}>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('trail'), has('trail-10')))}>
               <span className="font-black text-sm text-purple-900">{cat('trail').emoji} {cat('trail').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('trail'), has('trail-10'))}
               </span>
-            </div>
+            </button>
             {has('trail-10') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.trail.choices.map((c: any) => (
@@ -100,12 +100,12 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Tiara Gem Color (25 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2 cursor-pointer" role="button" onClick={() => say(wardrobeCatSay(cat('gem'), has('tiara-25')))}>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('gem'), has('tiara-25')))}>
               <span className="font-black text-sm text-purple-900">{cat('gem').emoji} {cat('gem').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('gem'), has('tiara-25'))}
               </span>
-            </div>
+            </button>
             {has('tiara-25') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.gem.choices.map((c: any) => (
@@ -129,12 +129,12 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Skirt Color (50 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2 cursor-pointer" role="button" onClick={() => say(wardrobeCatSay(cat('skirt'), has('skirt-50')))}>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('skirt'), has('skirt-50')))}>
               <span className="font-black text-sm text-purple-900">{cat('skirt').emoji} {cat('skirt').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('skirt'), has('skirt-50'))}
               </span>
-            </div>
+            </button>
             {has('skirt-50') ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {OUTFIT.skirt.choices.map((c: any) => (
@@ -158,12 +158,12 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
 
           {/* Butterfly Companion (100 Stars) */}
           <div className="p-3.5 bg-white rounded-2xl border-2 border-amber-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2 cursor-pointer" role="button" onClick={() => say(wardrobeCatSay(cat('buddy'), has('butterfly-100')))}>
+            <button type="button" className="w-full flex items-center justify-between mb-2 text-left" onClick={() => say(wardrobeCatSay(cat('buddy'), has('butterfly-100')))}>
               <span className="font-black text-sm text-purple-900">{cat('buddy').emoji} {cat('buddy').title}</span>
               <span className="text-xs font-bold text-amber-700">
                 {wardrobeStatus(cat('buddy'), has('butterfly-100'))}
               </span>
-            </div>
+            </button>
             {has('butterfly-100') ? (
               <button
                 onClick={() => handleChoose('buddy', !currentOutfit.buddy)}

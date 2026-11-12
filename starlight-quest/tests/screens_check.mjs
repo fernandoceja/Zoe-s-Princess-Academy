@@ -68,6 +68,11 @@ const cel = read('components/CelebrationModal.tsx');
 has(cel, /kind === 'celebrate' \|\| kind === 'milestone'\) \{[\s\S]*?speakExact\('zoe', spoken\(/, 'the milestone / New kingdoms card is read aloud');
 const app = read('App.tsx');
 has(app, /Narrator\.speakText\(say \|\| spoken\(msg\)/, 'every pop-up message is read aloud');
+// Speech conflicts found in review: the welcome line must not be cut by a screen's cleanup; a mid-sentence pause toast stays quiet.
+has(title, /^(?![\s\S]*Narrator\.stop\(\))/, 'TitleModal must not stop speech on unmount (it would cut the welcome line)');
+has(app, /setTimeout\(\(\) => \{\s*Narrator\.speakText\(\s*`Welcome to Starlight Quest!/, 'the welcome line is spoken after the screen change');
+has(app, /Finish talking first[^\n]*2200, false\)/, 'the pause toast must not cut a princess off');
+has(read('components/WardrobeModal.tsx'), /^(?![\s\S]*role="button")/, 'Wardrobe rows are real buttons (gamepad and keyboard reach them)');
 // Grown-ups and mute: nothing speaks in Parent Corner; nothing bypasses Narrator.
 for (const f of ['components/ParentCorner.tsx']) check(!/Narrator|speechSynthesis/.test(read(f)), `${f} must stay silent`);
 for (const f of ['TitleModal', 'PauseMenu', 'WardrobeModal', 'TreasureBookModal', 'TutorialModal', 'CelebrationModal']) check(!/speechSynthesis/.test(read(`components/${f}.tsx`)), `${f} must speak through Narrator (so Mute works)`);
