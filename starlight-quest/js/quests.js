@@ -14,6 +14,7 @@
 // portrait paths are relative to the game root. voice holds speechSynthesis
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
+import { chartT1, chartT2, chartT3 } from './chart120.js?v=20261028r3';
 import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261028r3';
 import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261028r3';
 import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261028r3';
@@ -1752,8 +1753,9 @@ function _moanaRoll(rng) {
     hint: 'Good try! Picture pushing each one across the floor. Which one would keep going?',
   };
 }
-function _moanaT1(rng) { return _moanaName(rng, rng() < 0.65 ? _FLAT_T1 : _SOLIDS); }
+function _moanaT1(rng) { if (rng() < 0.5) return chartT1(rng); return _moanaName(rng, rng() < 0.65 ? _FLAT_T1 : _SOLIDS); }
 function _moanaT2(rng) {
+  if (rng() < 0.5) return chartT2(rng);
   const x = rng();
   if (x < 0.35) return _moanaCount(rng);
   if (x < 0.5) return _moanaNoCorners(rng);
@@ -1761,6 +1763,7 @@ function _moanaT2(rng) {
   return _moanaName(rng, rng() < 0.5 ? _FLAT_ALL : _SOLIDS);
 }
 function _moanaT3(rng) {
+  if (rng() < 0.5) return chartT3(rng);
   const x = rng();
   if (x < 0.3) return _moanaObject(rng);
   if (x < 0.55) return _moanaFaces(rng);

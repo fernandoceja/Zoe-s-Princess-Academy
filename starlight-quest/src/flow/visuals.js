@@ -4,6 +4,7 @@
  * The shell puts these strings in the page with dangerouslySetInnerHTML, as main.js does with innerHTML.
  */
 import { shapeSVG, tallyCardHtml } from '../engine-core.js';
+import { chartHtml } from '../../js/chart120.js?v=20261028r3';
 
 export function visualHtml(npcId, round) {
   // Ten-frames: 5x2 grid of cells, dots fill left-to-right, top row first; n (0-20) uses ceil(n/10) frames.
@@ -86,6 +87,7 @@ export function visualHtml(npcId, round) {
   if (npcId === 'cinderella' && round.clock) {
     return clockSVG(round.clock.hour, round.clock.minute);
   }
+  if (npcId === 'moana' && round.visual && round.visual.kind === 'chart') return chartHtml(round.visual);
   if (npcId === 'moana' && round.visual && round.visual.kind === 'shape') return shapeSVG(round.visual);
   if (npcId === 'jasmine' && round.visual && round.visual.kind === 'story') return storyCardsHtml(round.visual);
   if (npcId === 'anna' && round.visual && round.visual.kind === 'sentence') return sentenceCardHtml(round.visual);

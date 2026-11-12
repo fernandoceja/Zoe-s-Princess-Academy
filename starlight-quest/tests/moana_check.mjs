@@ -65,6 +65,7 @@ for (let tier = 1; tier <= 3; tier++) {
       ok(!sq, 'square and rectangle offered together (a square is also a rectangle)', r);
 
       // The picture matches the question
+      if (r.visual && r.visual.kind === 'chart') continue; // 120-chart rounds are checked in chart120_check.mjs
       if (r.visual) {
         ok(r.visual.kind === 'shape' && TRUTH[r.visual.shape], 'visual names a known shape', r);
         const svg = shapeSVG(r.visual);
