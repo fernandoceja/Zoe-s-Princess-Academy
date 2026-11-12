@@ -187,7 +187,7 @@ export const HARBOR_SECRETS = [
 export const BAYOU_SECRETS = [
   { id: 'tallymarks', land: 'bayou', npc: 'tiana', label: 'Tally marks', emoji: '🥕' },
 ];
-// Rosewood Glen's secret (K14): the word garden has three little signs: bird, run, rose. Bird and rose are naming words (nouns), run is an
+// Rosewood Glen's secret (K14): the word garden has three little signs: bird, sing, rose. Bird and rose are naming words (nouns), sing is an
 // action word (a verb). Tap the two naming words (either order), then the action word. Aurora says her naming-and-action-words line.
 // Shown only while the glen is open.
 export const GLEN_SECRETS = [
@@ -288,7 +288,7 @@ export function createSecretTracker() {
         return seen && n === TALLY_TARGET ? fire('tallymarks', now) : null;
       }
       if (part === 'word-' + WORD_ACTION || WORD_NAMES.some((w) => part === 'word-' + w)) {
-        // The word garden: tap bird and rose (any order), then run. Tapping run too early (or after a long wait) starts over.
+        // The word garden: tap bird and rose (any order), then sing. Tapping sing too early (or after a long wait) starts over.
         const fresh = (w) => now - (nameAt[w] ?? -Infinity) <= WORD_WINDOW_MS;
         if (part === 'word-' + WORD_ACTION) {
           const ready = WORD_NAMES.every(fresh);
@@ -415,9 +415,9 @@ export function tallyLine() {
 }
 
 // Aurora's word garden (naming words and action words). The three signs, left to right; the first two names are nouns, the middle one a verb.
-export const WORD_SIGNS = ['bird', 'run', 'rose'];
+export const WORD_SIGNS = ['bird', 'sing', 'rose'];
 export const WORD_NAMES = ['bird', 'rose'];
-export const WORD_ACTION = 'run';
+export const WORD_ACTION = 'sing';
 /** What kind of word a sign shows: 'naming' (a noun: a person, animal, place or thing), 'action' (a verb) or null. */
 export function wordKind(w) { return WORD_NAMES.includes(w) ? 'naming' : w === WORD_ACTION ? 'action' : null; }
 /** The line Aurora says for the word-garden secret. */
