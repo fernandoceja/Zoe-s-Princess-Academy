@@ -7,7 +7,7 @@
 
 /** Build the questbook for one quest. `rounds` is this play's round list (buildRounds output). */
 export function createQuestbook(npcId, rounds) {
-  return { npcId, rounds, roundIdx: 0, misses: 0, results: [], requeued: 0 };
+  return { npcId, rounds, roundIdx: 0, misses: 0, results: [] };
 }
 
 /** Shuffle the choices into { id: 'c0'.., label } order (main.js shuffledChoices, rng injectable). */
@@ -42,15 +42,14 @@ export function roundView(qb, rng = Math.random) {
   return { round, choices: arr, correctId, tileRound, bigWord: round.show || null, replayText: round.replay || null };
 }
 
-/** Ladder bookkeeping for a finished round (main.js noteResult). Re-asks don't count twice. */
+/**
+ * Ladder bookkeeping for a finished round (main.js noteResult).
+ * A quest is always 5 questions (Q1). A missed round is NOT asked again inside the same quest: its result is
+ * recorded as hinted, and the ladder (recordQuest) puts it in the review queue, which brings it back on a later play.
+ */
 export function noteResult(qb, round) {
   if (round.requeued || qb.results.length >= 5) return;
   qb.results.push({ round, firstTry: qb.misses === 0, hinted: qb.misses > 0 });
-  // Missed it? Ask it again 2 rounds later in this quest (at most twice).
-  if (qb.misses > 0 && qb.requeued < 2) {
-    qb.requeued++;
-    qb.rounds.splice(Math.min(qb.rounds.length, qb.roundIdx + 3), 0, { ...round, requeued: true });
-  }
 }
 
 /** Move to the next round (main.js nextRound). Returns true when the quest is over. */

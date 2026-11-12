@@ -423,7 +423,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             onClick={onAdvance}
             className="mt-4 w-full px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg shadow-lg border-2 border-white active:scale-95"
           >
-            Next ➜
+            {feedback?.kind === 'retry' ? 'Try again 💗' : 'Next ➜'}
           </button>
         )}
       </div>
