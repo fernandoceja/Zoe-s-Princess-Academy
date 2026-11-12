@@ -1273,18 +1273,18 @@ function _countOnRound(tier, rng) {
   return r;
 }
 function _doublesRound(tier, rng) {
-  const n = 1 + Math.floor(rng() * 5), sum = 2 * n;
+  const n = tier >= 2 ? (rng() < 0.6 ? 6 + Math.floor(rng() * 5) : 1 + Math.floor(rng() * 5)) : 1 + Math.floor(rng() * 5), sum = 2 * n;
   if (tier === 3 && rng() < 0.5) {
-    const others = _shuffle([1, 2, 3, 4, 5].filter((k) => k !== n), rng).slice(0, 2);
+    const others = _shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter((k) => k !== n), rng).slice(0, 2);
     return {
-      prompt: `Which double makes ${sum}?`,
+      prompt: `Which double makes ${sum}?`, say: `Which double makes ${sum}?`,
       choices: _shuffle([n, ...others].map((k) => `${k} + ${k}`), rng), answer: `${n} + ${n}`,
       hint: `Good try! A double is the same number twice. Which number, added to itself, makes ${sum}?`,
     };
   }
   const r = {
     prompt: `What is ${n} + ${n}?`, say: `What is ${n} plus ${n}?`,
-    choices: _nz(_numChoices(sum, rng, 10, [sum + 1, sum - 1, n]), sum), answer: String(sum),
+    choices: _nz(_numChoices(sum, rng, 20, [sum + 1, sum - 1, n]), sum), answer: String(sum),
     hint: `Good try! A double is the same number twice. Count ${n} and ${n} more.`,
   };
   if (tier <= 2) r.visual = { kind: 'doubles', n, style: tier === 1 ? 'flakes' : 'frames' };
