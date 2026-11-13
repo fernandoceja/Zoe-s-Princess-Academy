@@ -21,20 +21,23 @@ export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, play
   // Like the pause menu: a tap says the name; a second tap goes at once, or it goes by itself after a moment. With sound off it just goes.
   const [armed, setArmed] = useState<string | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const pickedRef = useRef(false);   // after a pick the next line ("Follow the fireflies") is already speaking: do not cut it off
+  const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    Narrator.speakText(mapSay(todayStar ? name(todayStar) : ''), { pitch: 1.15, rate: 0.95 });
+    Narrator.speakText(mapSay(todayStar && kingdomLands().some((l: Land) => l.npc === todayStar) ? name(todayStar) : ''), { pitch: 1.15, rate: 0.95 });
+    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
-    return () => { window.clearTimeout(timer.current); window.removeEventListener('keydown', onKey); Narrator.stop(); };
+    return () => { window.clearTimeout(timer.current); window.removeEventListener('keydown', onKey); if (!pickedRef.current) Narrator.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const pick = (l: Land) => {
     window.clearTimeout(timer.current);
     if (!l.open) { Narrator.speakText(landSay(name(l.npc), false) + ' ' + KINGDOM_MAP.closed + '.', { pitch: 1.15, rate: 0.95 }); return; }
-    if (armed === l.npc || Narrator.muted) { setArmed(null); onPick(l.npc); return; }
+    if (armed === l.npc || Narrator.muted) { setArmed(null); pickedRef.current = true; onPick(l.npc); return; }
     setArmed(l.npc);
     Narrator.speakText(landSay(name(l.npc), doneIds.includes(l.npc)), { pitch: 1.15, rate: 0.95 });
-    timer.current = window.setTimeout(() => { setArmed(null); onPick(l.npc); }, SPEAK_TAP_MS);
+    timer.current = window.setTimeout(() => { setArmed(null); pickedRef.current = true; onPick(l.npc); }, SPEAK_TAP_MS);
   };
   const todayLand = lands.find((l) => l.npc === todayStar);
   const zoe = mapPercent(player.x, player.z);
@@ -42,11 +45,11 @@ export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, play
 
   return (
     <div className="zsq-modal-wrap fixed inset-0 z-40 flex items-center justify-center p-3 bg-night/80 backdrop-blur-xs animate-fade-in pointer-events-auto overflow-y-auto"
-      role="dialog" aria-label={KINGDOM_MAP.heading}>
+      role="dialog" aria-modal="true" aria-label={KINGDOM_MAP.heading}>
       <div className="zsq-map-card w-full max-w-xl my-auto bg-cream rounded-[28px] border-4 border-gold p-3 sm:p-4 shadow-2xl relative">
         <h2 className="text-center font-title font-extrabold text-xl text-night mb-2">{KINGDOM_MAP.heading}</h2>
         <div className="zsq-map-body flex flex-col items-center gap-3">
-          <div className="relative" style={{ width: 'min(92vw, 62vh, 520px)', aspectRatio: '1 / 1' }}>
+          <div className="relative" style={{ width: 'var(--zsq-map-size)', aspectRatio: '1 / 1' }}>
             <svg viewBox={`${-MAP_HALF} ${-MAP_HALF} ${MAP_HALF * 2} ${MAP_HALF * 2}`} className="absolute inset-0 w-full h-full" aria-hidden="true">
               <circle cx="0" cy="0" r={WORLD_RADIUS} fill="#C9B3F2" fillOpacity="0.55" stroke="#2B1E5C" strokeOpacity="0.35" strokeWidth="0.8" />
               {innerCenters.map((c, i) => <line key={'i' + i} x1="0" y1="0" x2={c.x} y2={c.z} stroke="#FFF8EC" strokeWidth="3.2" strokeLinecap="round" />)}
@@ -85,7 +88,7 @@ export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, play
                 ⭐ {KINGDOM_MAP.today}
               </button>
             )}
-            <button onClick={onClose} className="min-h-[60px] min-w-[60px] px-5 rounded-full bg-night text-cream font-read font-bold text-xl border-2 border-white shadow-md active:scale-95" aria-label={KINGDOM_MAP.close}>
+            <button ref={closeRef} onClick={onClose} className="min-h-[60px] min-w-[60px] px-5 rounded-full bg-night text-cream font-read font-bold text-xl border-2 border-white shadow-md active:scale-95" aria-label={KINGDOM_MAP.close}>
               ✖ {KINGDOM_MAP.close}
             </button>
           </div>

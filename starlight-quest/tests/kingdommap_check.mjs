@@ -41,14 +41,15 @@ ok(landLabel('Meadow', 'glow') === 'Meadow. Glowing.' && landLabel('Meadow', 'ne
 ok(/Not open yet/.test(landLabel('Meadow', 'closed')), 'closed label');
 
 // No two tap targets overlap, on a small map (240px is the least the layout is allowed to use) and a big one.
-for (const size of [240, 300, 360, 520]) {
+for (const size of [290, 300, 360, 520]) {
   const pts = mapLayout(lands, size);
   for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
     const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
-    if (size >= 300) ok(d >= MIN_TARGET_PX, `${pts[i].npc}/${pts[j].npc} ${Math.round(d)}px apart at ${size}px`);
+    ok(d >= MIN_TARGET_PX, `${pts[i].npc}/${pts[j].npc} ${Math.round(d)}px apart at ${size}px`);
   }
 }
 const src = readFileSync(new URL('../src/components/KingdomMap.tsx', import.meta.url), 'utf8');
+ok(/aria-modal="true"/.test(src), 'dialog is modal');
 ok(/zsq-modal-wrap/.test(src), 'map pauses the world through the modal wrapper');
 
 if (bad.length) { for (const x of [...new Set(bad)].slice(0, 20)) console.log('  ' + x); console.log(`kingdommap_check: ${new Set(bad).size} problem(s)`); process.exit(1); }

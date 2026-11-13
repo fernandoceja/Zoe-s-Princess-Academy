@@ -302,9 +302,11 @@ export const App: React.FC = () => {
   const pickKingdom = (npcId: string) => {
     closeMap();
     if (!PRINCESSES[npcId]) return;
-    try { worldRef.current?.showTrail(npcId); } catch (e) { /* decoration only */ }
+    let lit = false;
+    try { lit = !!worldRef.current?.showTrail(npcId); } catch (e) { /* decoration only */ }
     const name = PRINCESSES[npcId].landName;
-    showToast(followLine(name), 3500, followSay(name));
+    if (lit) showToast(followLine(name), 3500, followSay(name));
+    else showToast(`${name} is right here!`, 3000, spoken(`${name} is right here!`));
   };
 
   // Talk to a princess: the same guard as js/main.js onInteractRequest. Used by E, tapping her and the HUD button.
