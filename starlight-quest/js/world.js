@@ -20,7 +20,7 @@ import { buildBayou } from './bayou.js?v=20261028r3';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
   closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU, isGlenOpen, glenGeometry, GLEN,
-  INNER_PAD_DIST, CASTLE_POS, CASTLE_R, trailRoute, sampleTrail, progressAlong, trailArrived,
+  INNER_PAD_DIST, CASTLE_POS, CASTLE_R, trailRoute, avoidColliders, sampleTrail, progressAlong, trailArrived,
 } from './worldmap.js?v=20261028r3';
 
 // ---------------------------------------------------------------------------
@@ -1932,27 +1932,35 @@ export function createWorld(container, hooks) {
   flyPoints.frustumCulled = false; flyPoints.visible = false; flyPoints.raycast = () => {};
   scene.add(flyPoints);
   const flyGold = new THREE.Color(0xffd95a), flyMint = new THREE.Color(0x8fd6c4);
-  let flyTo = null, flyRoute = [], flyDots = [], flyFade = 0, flyEnding = -1, flyCheck = 0;   // flyFade: 0..1 fade-in; flyEnding: fade-out progress, -1 = not ending
+  let flyPoint = null, flyTo = null, flyRoute = [], flyDots = [], flyFade = 0, flyEnding = -1, flyCheck = 0;   // flyFade: 0..1 fade-in; flyEnding: fade-out progress, -1 = not ending
   function flyBuild() {
-    flyRoute = trailRoute({ x: playerPos.x, z: playerPos.z }, flyTo, colliders);
+    flyRoute = flyPoint ? avoidColliders([{ x: playerPos.x, z: playerPos.z }, flyPoint], colliders) : trailRoute({ x: playerPos.x, z: playerPos.z }, flyTo, colliders);
     flyDots = sampleTrail(flyRoute, FLY_SPACING, 400);
   }
   function showTrail(npcId) {
     if (!npcs[npcId]) return false;
-    flyTo = npcId; flyFade = calmMotion ? 1 : 0; flyEnding = -1; flyCheck = 0;
+    flyPoint = null; flyTo = npcId; flyFade = calmMotion ? 1 : 0; flyEnding = -1; flyCheck = 0;
+    flyBuild();
+    flyPoints.visible = flyDots.length > 0;
+    return flyDots.length > 0;
+  }
+  // B4 lantern scoot: the same fireflies, leading to a spot in the garden instead of a princess. onTrailArrived(id) gets this id, e.g. 'lantern-3'.
+  function showTrailTo(id, pt) {
+    if (!id || !pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.z)) return false;
+    flyPoint = { x: pt.x, z: pt.z }; flyTo = String(id); flyFade = calmMotion ? 1 : 0; flyEnding = -1; flyCheck = 0;
     flyBuild();
     flyPoints.visible = flyDots.length > 0;
     return flyDots.length > 0;
   }
   function clearTrail() {
-    flyTo = null; flyRoute = []; flyDots = []; flyEnding = -1; flyPoints.visible = false;
+    flyPoint = null; flyTo = null; flyRoute = []; flyDots = []; flyEnding = -1; flyPoints.visible = false;
   }
   function getPlayerXZ() { return { x: playerPos.x, z: playerPos.z }; }
   function updateTrail(dt, t) {
     if (!flyTo) return;
-    const land = npcs[flyTo];
-    const pad = land && land.group ? land.group.position : null;   // {x, y, z}: read in place, nothing allocated per frame
-    if (flyEnding < 0 && pad && trailArrived(playerPos.x, playerPos.z, pad)) {
+    const land = flyPoint ? null : npcs[flyTo];
+    const pad = flyPoint || (land && land.group ? land.group.position : null);   // {x, y, z}: read in place, nothing allocated per frame
+    if (flyEnding < 0 && pad && trailArrived(playerPos.x, playerPos.z, pad, flyPoint ? 1.8 : undefined)) {
       const id = flyTo;
       if (calmMotion) { clearTrail(); } else { flyEnding = 0; }
       onTrailArrived(id);
@@ -2457,6 +2465,9 @@ export function createWorld(container, hooks) {
     setOutfit,
     setTodayStar,
     showTrail,
+    showTrailTo,
+    gardenLantern(i, mode) { if (garden) garden.setQuestLantern(i, mode); },
+    gardenLanternXZ(i) { return garden ? garden.questLanternXZ(i) : null; },
     clearTrail,
     getPlayerXZ,
     setClockTime,

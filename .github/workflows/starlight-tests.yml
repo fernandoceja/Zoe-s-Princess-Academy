@@ -149,3 +149,5 @@ jobs:
         run: node starlight-quest/tests/paint_check.mjs
       - name: Kingdom map check (B2)
         run: node starlight-quest/tests/kingdommap_check.mjs
+      - name: Lantern scoot check (B4)
+        run: node starlight-quest/tests/lanterns_check.mjs

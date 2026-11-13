@@ -51,6 +51,9 @@ export const LANTERN_POSTS = [
   { x: 3.5, z: 1.9, h: 1.4 }, { x: 3.5, z: -2.3, h: 1.4 }, { x: -2.0, z: -7.4, h: 1.4 }, { x: 2.0, z: -7.4, h: 1.4 },
 ];
 
+// B4 lantern scoot: the eight lanterns she walks to, in garden-local metres: the seven posts, then the lantern in the vine arch (HALOS 0-7).
+export const QUEST_LANTERNS = [...LANTERN_POSTS.map((l) => ({ x: l.x, z: l.z })), { x: 0.8, z: 9.3 }];
+
 /** True when a garden-local spot is in the reflecting pool or the fountain basin: treasures stay on dry ground. */
 export function gardenWet(lx, lz) {
   if (((lx - POOL.x) / (POOL.rx + 0.4)) ** 2 + ((lz - POOL.z) / (POOL.rz + 0.4)) ** 2 < 1) return true;
@@ -106,6 +109,8 @@ export function buildGarden(env) {
   const STORY_AT = HALOS.length;
   STORY_LANTERNS.forEach((s) => HALOS.push({ x: wx(s.key), y: 1.45, z: wz(s.key), base: 0.5, tint: [1, 0.85, 0.5] }));
   const N_H = HALOS.length;
+  // B4: -1 = every lantern as usual; during a lantern scoot each of the eight is 0 dim, 1 the next one (pulses) or 2 lit (bright).
+  const questState = new Int8Array(QUEST_LANTERNS.length).fill(-1);
   const FLY_AT = N_H, N_FLY = 8, BUB_AT = FLY_AT + N_FLY, N_BUB = 8, SPK_AT = BUB_AT + N_BUB, N_SPK = 6;
   const RIP_AT = SPK_AT + N_SPK, N_RIP = 16, NOTE_AT = RIP_AT + N_RIP, N_NOTE = 4, FX_N = NOTE_AT + N_NOTE;
   const fxPos = new Float32Array(FX_N * 3).fill(-50);
@@ -241,6 +246,18 @@ export function buildGarden(env) {
   const waveOrder = HALOS.map((h, i) => i).sort((a, b) => HALOS[b].z - HALOS[a].z);   // gate first, far end last
   const waveRank = []; waveOrder.forEach((hi, r) => { waveRank[hi] = r; });
 
+  // The glow a scoot lantern shows: dim (0), the next one pulsing (1), lit (2).
+  const questK = (i, t, k) => (questState[i] === 2 ? 1.5 : questState[i] === 1 ? 0.55 + (calmMotion ? 0.3 : 0.3 + 0.3 * Math.sin(t * 4)) : 0.12);
+  function setQuestLantern(i, mode) {
+    if (!(i >= 0 && i < questState.length)) return;
+    questState[i] = mode === 'lit' ? 2 : mode === 'next' ? 1 : mode === 'off' ? 0 : -1;
+    if (calmMotion) { // update() does nothing under calm motion, so paint the halo here
+      const h = HALOS[i], on = questState[i] >= 0;
+      put(i, h.x, h.y, h.z, on ? questK(i, 0, h.base) : h.base, h.tint[0], h.tint[1], h.tint[2]);
+      fxGeo.attributes.position.needsUpdate = true; fxGeo.attributes.color.needsUpdate = true;
+    }
+  }
+
   function update(t, dt) {
     if (calmMotion) return; // calm motion: taps glow only; nothing here moves
     // Halos: a very slow, gentle flicker; the lantern wave and the story-lantern lights ride on top.
@@ -251,6 +268,7 @@ export function buildGarden(env) {
       let k = h.base * (1 + 0.1 * Math.sin(t * 1.3 + i * 1.7));
       if (wave >= 0) { const w = bump((wave - waveRank[i] * 0.1) / 0.7); k += 0.75 * w; pulse = Math.max(pulse, w); }
       if (i >= STORY_AT) { const s = storyGlow[i - STORY_AT]; if (s > 0) k += 0.8 * Math.min(1, s); }
+      if (i < questState.length && questState[i] >= 0) k = questK(i, t, k);
       put(i, h.x, h.y, h.z, k, h.tint[0], h.tint[1], h.tint[2]);
     }
     for (let s = 0; s < 3; s++) if (storyGlow[s] > 0) storyGlow[s] = Math.max(0, storyGlow[s] - dt);
@@ -516,6 +534,8 @@ export function buildGarden(env) {
 
   return {
     update,
+    setQuestLantern,
+    questLanternXZ: (i) => (i >= 0 && i < QUEST_LANTERNS.length ? { x: cx + QUEST_LANTERNS[i].x, z: cz + QUEST_LANTERNS[i].z } : null),
     wet: (x, z) => gardenWet(x - cx, z - cz),
     dry: (x, z) => !gardenWet(x - cx, z - cz) && Math.hypot(x - cx, z - cz) < GARDEN_R - 0.6,
   };
