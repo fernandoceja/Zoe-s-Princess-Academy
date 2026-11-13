@@ -49,3 +49,27 @@ export function tallyCardHtml(v) {
     `<div style="flex:1;min-width:0">${tallySVG(r.n, { scale: 1.2, left: true, label: 'tally marks for ' + esc(r.name) })}</div></div>`).join('');
   return `<div role="group" aria-label="Tally chart" style="${box}"><div style="text-align:center;font-family:Nunito,system-ui,sans-serif;font-weight:800;font-size:15px;color:#6d28d9;padding-bottom:4px">${esc((v && v.title) || 'Tally chart')}</div>${rows}</div>`;
 }
+
+/** Firefly jar (M2, make 8, 9 and 10): { kind: 'jar', total, lit, hideEmpty }. `total` slots in two rows (5 + the rest); the first `lit` glow,
+ * the others are dim empty spots. With hideEmpty the empty spots are not drawn, so she has to work out the missing number from the jar's number.
+ * One <circle data-fly="lit"|"empty"> per slot (the tests count them). Plain data in, one inline <svg> string out, no images. */
+export const JAR_TOTALS = [8, 9, 10];
+export function jarHtml(v) {
+  const total = Math.max(1, Math.min(10, Math.floor(Number(v && v.total) || 10)));
+  const lit = Math.max(0, Math.min(total, Math.floor(Number(v && v.lit) || 0)));
+  const hide = !!(v && v.hideEmpty);
+  const top = Math.min(5, total), bottom = total - top, SP = 38, X0 = 30;
+  let flies = '';
+  for (let i = 0; i < total; i++) {
+    const row = i < top ? 0 : 1, col = row ? i - top : i;
+    const cx = X0 + col * SP + (row ? SP / 2 : 0), cy = row ? 104 : 64;
+    if (i < lit) flies += `<circle data-fly="lit" cx="${cx}" cy="${cy}" r="12" fill="#fde047" stroke="#f59e0b" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="5" fill="#fffbeb"/>`;
+    else if (!hide) flies += `<circle data-fly="empty" cx="${cx}" cy="${cy}" r="12" fill="#e2e8f0" fill-opacity=".6" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4"/>`;
+  }
+  const label = hide ? `${lit} fireflies are glowing in a jar that holds ${total}` : `a jar with ${lit} glowing fireflies and ${total - lit} empty spots`;
+  return `<div style="max-width:100%;margin:0 auto;background:#1e1b4b;border:3px solid #a5b4fc;border-radius:18px;padding:8px 6px;box-sizing:border-box">` +
+    `<svg viewBox="0 0 220 138" data-jar="${total}" data-lit="${lit}" style="width:260px;max-width:100%;height:auto;display:block;margin:0 auto" role="img" aria-label="${label}">` +
+    `<rect x="12" y="30" width="196" height="100" rx="22" fill="#312e81" stroke="#c7d2fe" stroke-width="4"/><rect x="48" y="14" width="124" height="18" rx="6" fill="#a5b4fc"/>` +
+    flies + (hide ? `<text x="110" y="124" text-anchor="middle" font-family="Nunito,system-ui,sans-serif" font-weight="800" font-size="15" fill="#e0e7ff">jar holds ${total}</text>` : '') +
+    `</svg></div>`;
+}
