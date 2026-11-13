@@ -16,6 +16,7 @@ interface HUDProps {
   onToggleMute: () => void;
   onPause: () => void;
   onInteract?: () => void;
+  onOpenMap?: () => void;
   todayStarNPC?: PrincessId;
 }
 
@@ -32,6 +33,7 @@ export const HUD: React.FC<HUDProps> = ({
   onToggleMute,
   onPause,
   onInteract,
+  onOpenMap,
   todayStarNPC,
 }) => {
   return (
@@ -102,6 +104,15 @@ export const HUD: React.FC<HUDProps> = ({
 
         {/* Right: Sound & Pause Controls */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {onOpenMap && (
+            <button
+              onClick={onOpenMap}
+              className="w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform"
+              aria-label="Kingdom Map"
+            >
+              🗺️
+            </button>
+          )}
           <button
             onClick={onToggleMute}
             className="w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform"

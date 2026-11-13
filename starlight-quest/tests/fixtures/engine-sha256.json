@@ -46,6 +46,7 @@
     "tests/harbor_check.mjs": "2007cea8698ea570d5cc0d4995ef2509529736fa959c841769d392feec2d6bfb",
     "tests/isle_check.mjs": "d0755b7a6f828b736f9bec133170b86c646cde619b264a8640b078e74215db52",
     "tests/jasmine_check.mjs": "abb7d9cd800502aa55783ac026828e7c729cc638d685ed2b851d279270bd2cac",
+    "tests/kingdommap_check.mjs": "1b979bf89e10591e63ec203956ee0409f11c1898d8f8f37d397c20dbc683788b",
     "tests/ladderwiring_check.mjs": "af13d25f6bf54f62bb6bf2a80741f6ae1324c569f946a74af8013036b5156a8e",
     "tests/lands_check.mjs": "082e6bc44406dba431e1243e47cdeccd99e707831b81a5b2bf9a219698f401f9",
     "tests/makeTen_check.mjs": "32b002ff2dd92188bd4454aa338973fc5f63052a6c6dafad093f2f2885bf0dd9",
