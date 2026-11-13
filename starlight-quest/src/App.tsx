@@ -73,6 +73,8 @@ import {
 } from './flow/outcomes.js';
 
 import { HUD } from './components/HUD';
+import { KingdomMap } from './components/KingdomMap';
+import { followLine, followSay, arrivedLine } from './flow/kingdommap.js';
 import { TitleModal } from './components/TitleModal';
 import { spoken } from './flow/screens.js';
 import { TutorialModal } from './components/TutorialModal';
@@ -140,6 +142,8 @@ export const App: React.FC = () => {
   };
 
   const [paused, setPaused] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapPlayer, setMapPlayer] = useState({ x: 0, z: 4 });
   const [pauseTab, setPauseTab] = useState<
     'menu' | 'wardrobe' | 'treasurebook' | 'tutorial' | 'parent'
   >('menu');
@@ -284,6 +288,25 @@ export const App: React.FC = () => {
     });
   };
 
+  // B2: the Kingdom Map. Opens only while roaming; the world pauses behind it (cover observer).
+  const openMap = () => {
+    if (phaseRef.current !== 'roam' || pausedRef.current || !worldRef.current) return;
+    try { const p = worldRef.current.getPlayerXZ(); if (p) setMapPlayer({ x: p.x, z: p.z }); } catch (e) { /* keep the last spot */ }
+    worldRef.current.setInputEnabled(false);
+    setMapOpen(true);
+  };
+  const closeMap = () => {
+    setMapOpen(false);
+    worldRef.current?.setInputEnabled(true);
+  };
+  const pickKingdom = (npcId: string) => {
+    closeMap();
+    if (!PRINCESSES[npcId]) return;
+    try { worldRef.current?.showTrail(npcId); } catch (e) { /* decoration only */ }
+    const name = PRINCESSES[npcId].landName;
+    showToast(followLine(name), 3500, followSay(name));
+  };
+
   // Talk to a princess: the same guard as js/main.js onInteractRequest. Used by E, tapping her and the HUD button.
   const requestInteract = (npcId: string | null) => {
     if (phaseRef.current !== 'roam' || pausedRef.current) return;
@@ -297,6 +320,7 @@ export const App: React.FC = () => {
     setActiveNPC(npcId);
     setPhase('dialogue');
     if (worldRef.current) {
+      worldRef.current.clearTrail?.();
       worldRef.current.setInputEnabled(false);
       worldRef.current.focus(npcId);
     }
@@ -638,6 +662,11 @@ export const App: React.FC = () => {
 
     if (containerRef.current) {
       const world = createWorld(containerRef.current, {
+        onTrailArrived(npcId: string) {
+          if (phaseRef.current !== 'roam' || !PRINCESSES[npcId]) return;
+          const nm = PRINCESSES[npcId].landName;
+          showToast(arrivedLine(nm), 3000, spoken(arrivedLine(nm)));
+        },
         onNearNPC(npcId: string) {
           nearNPCRef.current = npcId && PRINCESSES[npcId] ? (npcId as PrincessId) : null;
           if (phaseRef.current !== 'roam' || pausedRef.current || !npcId || !PRINCESSES[npcId]) {
@@ -783,9 +812,14 @@ export const App: React.FC = () => {
             onPause={handleTogglePause}
             onInteract={() => requestInteract(nearNPCRef.current)}
             todayStarNPC={todayStar}
+            onOpenMap={gameState === 'roam' ? openMap : undefined}
           />
           {gameState === 'roam' && <VirtualJoystick />}
         </>
+      )}
+
+      {mapOpen && (
+        <KingdomMap doneIds={doneLands} todayStar={todayStar} player={mapPlayer} onPick={pickKingdom} onClose={closeMap} />
       )}
 
       {/* Toast Notification */}

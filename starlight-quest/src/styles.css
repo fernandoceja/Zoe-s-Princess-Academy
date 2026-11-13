@@ -11,3 +11,9 @@ body{background:#1a1033;color:#1f2937;margin:0;padding:0;overflow:hidden;-webkit
 .zsq-toast{top:5.25rem;max-width:92vw;}
 @media (max-width:639px){.zsq-toast{top:7.5rem;}}   /* narrow portrait: the HUD is two rows */
 @media (orientation:landscape) and (max-height:520px){.zsq-toast{top:auto;bottom:9rem;}}
+
+/* Kingdom map: today's star land breathes gently (off under Reduce Motion). */
+@keyframes zsq-map-pulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}}
+.zsq-map-today{animation:zsq-map-pulse 2.4s ease-in-out infinite;}
+@media (prefers-reduced-motion:reduce){.zsq-map-today{animation:none;}}
+@media (orientation:landscape) and (max-height:500px){.zsq-map-body{flex-direction:row !important;}}
