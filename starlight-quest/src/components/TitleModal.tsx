@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { PORTRAIT_ZOE } from '../engine-core.js';
+import { PORTRAIT_ZOE, PRINCESSES, NPC_ORDER } from '../engine-core.js';
 import { Narrator } from '../engine-dom.js';
 import { TITLE, titleSay } from '../flow/screens.js';
 
@@ -45,9 +45,19 @@ export const TitleModal: React.FC<TitleModalProps> = ({
         <h1 className="text-2xl sm:text-3xl font-black text-amber-900 mb-1 tracking-tight">
           {TITLE.heading}
         </h1>
-        <p className="text-sm sm:text-base font-semibold text-purple-900/80 mb-6">
+        <p className="text-sm sm:text-base font-semibold text-purple-900/80 mb-4">
           {TITLE.sub}
         </p>
+
+        {/* All ten princesses wait in their kingdoms (decorative: the heading already says it all) */}
+        <div className="zsq-title-row flex flex-wrap justify-center gap-1.5 mb-5" aria-hidden="true">
+          {(NPC_ORDER as string[]).map((id) => {
+            const P = (PRINCESSES as any)[id];
+            return P && P.portrait ? (
+              <img key={id} src={P.portrait} alt="" className="w-10 h-10 rounded-full object-cover bg-yellow-100" style={{ border: `3px solid ${P.color || '#ebd373'}` }} />
+            ) : null;
+          })}
+        </div>
 
         {/* Start Button */}
         <div className="flex flex-col gap-3">

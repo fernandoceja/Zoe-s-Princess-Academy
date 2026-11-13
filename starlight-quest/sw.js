@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v44-20261113';
+const CACHE_VERSION = 'v45-20261113';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
