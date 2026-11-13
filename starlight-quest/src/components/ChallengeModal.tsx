@@ -291,7 +291,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             >
               <span>{item.name}</span>
               {!item.bin && (
-                <div className="flex gap-1">
+                <div className="flex flex-wrap justify-center gap-1">
                   {bins.map((b, bi) => (
                     <button
                       key={b}

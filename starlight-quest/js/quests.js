@@ -2216,7 +2216,7 @@ const TIERS = {
 // About 1 round in 6 of Belle's rounds is a vowel jar sort and 1 in 4 of Ariel's (tiers 2 and 3) a shell sort (M4).
 for (const t of [1, 2, 3]) {
   const base = TIERS.belle[t];
-  TIERS.belle[t] = (rng) => (rng() < 1 / 6 ? _vowelSort(t, rng) : base(rng));
+  TIERS.belle[t] = (rng) => (rng() < 0.36 ? _vowelSort(t, rng) : base(rng)); // the spelling wrapper below only passes ~47% of rounds here, so this is about 1 in 6 overall
 }
 for (const t of [2, 3]) {
   const base = TIERS.ariel[t];
