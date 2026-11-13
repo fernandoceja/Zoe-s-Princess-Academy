@@ -18,7 +18,12 @@ for (let total = 8; total <= 10; total++) for (let lit = 0; lit <= total; lit++)
   ok(svg.includes(`data-jar="${total}"`), 'jar total label', null);
   ok(hide ? svg.includes(`jar holds ${total}`) : !svg.includes('jar holds'), 'number label only when empty spots are hidden', null);
   const xs = [...svg.matchAll(/<circle data-fly="[a-z]+" cx="([\d.]+)"/g)].map((m) => +m[1]);
-  ok(xs.every((x) => x > 12 && x < 208), 'flies stay inside the jar', null);
+  ok(xs.every((x) => x - 12 > 12 && x + 12 < 208), 'flies stay inside the jar walls', null);
+  // the number label sits below the jar, clear of every fly
+  const ys = [...svg.matchAll(/<circle data-fly="[a-z]+" cx="[\d.]+" cy="([\d.]+)"/g)].map((m) => +m[1]);
+  const ty = svg.match(/<text [^>]*y="([\d.]+)"/);
+  if (ty) ok(ys.every((y) => y + 12 < +ty[1] - 15), 'label overlaps a fly', null);
+  ok(ys.every((y) => y + 12 < 130), 'flies stay above the jar bottom', null);
   // no two circles overlap
   const pts = [...svg.matchAll(/<circle data-fly="[a-z]+" cx="([\d.]+)" cy="([\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
   for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) ok(Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]) >= 26, 'circles overlap', null);
