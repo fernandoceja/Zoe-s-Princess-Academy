@@ -921,6 +921,9 @@ const BLEND_SETS = [
   ['clap', 'cap', 'clip'], ['plan', 'pan', 'plum'], ['trip', 'tip', 'trap'],
   ['snap', 'sap', 'snip'], ['stop', 'top', 'step'], ['grin', 'grab', 'pin'],
 ];
+/** Lead words of the blend and digraph rounds (M5 tells the skills apart by the answer word). */
+export const BLEND_WORDS = BLEND_SETS.map((set) => set[0]);
+export const DIGRAPH_WORDS = DIGRAPH_SETS.map((set) => set[0]);
 const SENTENCES = [
   ['The frog can hop.', '🐸', '🐟', '🐶', 'the frog'],
   ['A fish is in the dish.', '🐟', '🐸', '🐔', 'the fish'],

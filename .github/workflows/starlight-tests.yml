@@ -72,6 +72,8 @@ jobs:
         run: node starlight-quest/tests/chart120_check.mjs
       - name: Thursday practice test check
         run: node starlight-quest/tests/spelltest_check.mjs
+      - name: Parent skill view check
+        run: node starlight-quest/tests/skills_check.mjs
       - name: Jasmine story-order quests check
         run: node starlight-quest/tests/jasmine_check.mjs
       - name: Anna capital-letter and end-mark quests check
