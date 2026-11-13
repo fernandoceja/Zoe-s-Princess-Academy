@@ -9,6 +9,9 @@ interface DialogueModalProps {
   kind?: 'greeting' | 'praise' | 'encourage';
   onDone: () => void;
   actionLabel?: string;
+  // An optional second button on the last line (Belle's "Thursday test").
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }
 
 export const DialogueModal: React.FC<DialogueModalProps> = ({
@@ -17,6 +20,8 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
   kind = 'greeting',
   onDone,
   actionLabel = "Let's Go! ✨",
+  secondaryLabel,
+  onSecondary,
 }) => {
   const [lineIdx, setLineIdx] = useState(0);
   const princess = PRINCESSES[npcId];
@@ -94,12 +99,22 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
           <div className="text-xs font-bold text-slate-400">
             {lines.length > 1 && `${lineIdx + 1} of ${lines.length}`}
           </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+          {secondaryLabel && onSecondary && lineIdx >= lines.length - 1 && (
+            <button
+              onClick={() => { Narrator.stop(); onSecondary(); }}
+              className="min-h-[60px] px-5 py-3 rounded-full bg-white text-indigo-900 font-black text-base shadow-md border-2 border-indigo-200 hover:bg-indigo-50 active:scale-95 transition-all"
+            >
+              {secondaryLabel}
+            </button>
+          )}
           <button
             onClick={handleNext}
             className="min-h-[60px] px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base sm:text-lg shadow-md border-2 border-white hover:brightness-105 active:scale-95 transition-all"
           >
             {lineIdx < lines.length - 1 ? 'Next ➡️' : actionLabel}
           </button>
+          </div>
         </div>
       </div>
     </div>

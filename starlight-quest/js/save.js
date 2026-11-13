@@ -71,6 +71,55 @@ export function sanitizeOutfit(raw, unlocked) {
   return out;
 }
 
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** Thursday practice test results (M3): newest first, at most 4 weeks. Every field is re-checked; bad entries are dropped. Never throws. */
+export function sanitizeSpellTests(raw) {
+  const out = [];
+  if (!Array.isArray(raw)) return out;
+  for (const e of raw) {
+    if (out.length >= 4) break;
+    if (!e || typeof e !== 'object' || typeof e.weekOf !== 'string' || !DAY_RE.test(e.weekOf) || out.some((o) => o.weekOf === e.weekOf)) continue;
+    const words = {};
+    if (e.words && typeof e.words === 'object' && !Array.isArray(e.words)) {
+      for (const w of Object.keys(e.words)) {
+        if (Object.keys(words).length >= 15) break;
+        const v = e.words[w];
+        if (!/^[a-z]{1,12}$/.test(w) || !v || typeof v !== 'object' || typeof v.ok !== 'boolean') continue;
+        words[w] = {
+          built: typeof v.built === 'string' && /^[a-z]{0,12}$/.test(v.built.slice(0, 12)) ? v.built.slice(0, 12) : '',
+          ok: v.ok,
+          date: typeof v.date === 'string' && DAY_RE.test(v.date) ? v.date : e.weekOf,
+        };
+      }
+    }
+    const entry = { weekOf: e.weekOf, words, crown: e.crown === true };
+    const d = e.dictation;
+    if (d && typeof d === 'object' && typeof d.ok === 'boolean') {
+      entry.dictation = {
+        built: typeof d.built === 'string' ? d.built.replace(/[^A-Za-z' ,.?!]/g, '').slice(0, 80) : '',
+        ok: d.ok,
+        date: typeof d.date === 'string' && DAY_RE.test(d.date) ? d.date : e.weekOf,
+      };
+    }
+    out.push(entry);
+  }
+  return out;
+}
+/** Extras next to this week's pack (M3): the "week of" date and a grown-up's own test sentences, { word: sentence }. */
+export function sanitizeWeekMeta(raw) {
+  const out = { weekOf: '', sentences: {} };
+  if (!raw || typeof raw !== 'object') return out;
+  if (typeof raw.weekOf === 'string' && DAY_RE.test(raw.weekOf)) out.weekOf = raw.weekOf;
+  if (raw.sentences && typeof raw.sentences === 'object' && !Array.isArray(raw.sentences)) {
+    for (const w of Object.keys(raw.sentences)) {
+      if (Object.keys(out.sentences).length >= 15) break;
+      const t = raw.sentences[w];
+      if (/^[a-z]{1,12}$/.test(w) && typeof t === 'string' && t.length <= 60 && /^[A-Z][A-Za-z', ]*[.?!]$/.test(t) && t.toLowerCase().includes(w)) out.sentences[w] = t;
+    }
+  }
+  return out;
+}
+
 function defaults() {
   return {
     stars: 0,
@@ -88,6 +137,8 @@ function defaults() {
     ladder: {},   // per land: { tier, review } (see ladder.js)
     lastPlay: {}, // per land: local day of the last finished quest
     week: null,     // this week's school pack (Parent Corner); null = defaults
+    weekMeta: { weekOf: '', sentences: {} }, // "week of" date + grown-up's own test sentences (M3)
+    spellTests: [], // Thursday practice test results, newest first, last 4 weeks (M3, see sanitizeSpellTests)
     schoolWords: [] // teacher's sight words (Parent Corner); [] = built-in list
   };
 }
@@ -154,6 +205,9 @@ export function merge(raw) {
       dictation: typeof raw.week.dictation === 'string' ? raw.week.dictation.slice(0, 60) : ''
     };
   }
+
+  out.weekMeta = sanitizeWeekMeta(raw.weekMeta);
+  out.spellTests = sanitizeSpellTests(raw.spellTests);
 
   return out;
 }

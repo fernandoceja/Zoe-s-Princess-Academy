@@ -1071,6 +1071,57 @@ function _spellKind(tier, rng) {
   return tier === 1 ? _vowelRound(w, rng) : tier === 2 ? _endingRound(w, rng) : _spellRound(w, rng);
 }
 
+// ---- Thursday practice test (M3). Read the way her homework is: "Number 1. send. I will send a card. send." ----
+// A test is not a quest: it never goes through recordQuest, so the ladder, review queue and daily rest rule are untouched.
+// Each sentence uses its word once and is 8 words or fewer. A grown-up can type their own next to a word in Parent Corner.
+export const TEST_SENTENCES = {
+  lend: 'Can you lend me a pen?', send: 'I will send a card.', fast: 'The dog can run fast.', sink: 'The cup is in the sink.',
+  past: 'We ran past the tent.', lent: 'I lent him a book.', must: 'We must go home.', tent: 'We sat in the tent.', lost: 'I lost my red hat.',
+  best: 'You are the best.', bend: 'I can bend my arm.', hand: 'Give me your hand.', sand: 'We dig in the sand.', land: 'The kite came to land.',
+  band: 'The band can play.', list: 'Look at the list.', lift: 'I can lift the box.', left: 'Turn to the left.', mist: 'The mist is on the hill.',
+  mask: 'I made a mask.', task: 'That is a big task.', last: 'He is last in line.', pass: 'Pass me the cup.', test: 'We have a test.',
+  link: 'I made a link.', pink: 'My hat is pink.', wink: 'I can wink at you.', think: 'I think so.', milk: 'I like cold milk.',
+  nest: 'The bird made a nest.', rest: 'I will rest now.', vest: 'He has a red vest.', west: 'The sun sets in the west.',
+  jump: 'I can jump up high.', camp: 'We go to camp.', lamp: 'Turn on the lamp.', bump: 'I got a bump.', dust: 'There is dust on it.',
+  of: 'He has a box of pens.', he: 'He can run.',
+};
+/** The sentence read for a test word: the grown-up's own (if valid), else the built-in one, else a plain template. */
+export function testSentence(w, custom) {
+  const c = _weekSentence(custom);
+  if (c) return c;
+  return TEST_SENTENCES[w] || `I can spell ${w}.`;
+}
+/** One test word round: the tile builder, read "Number N. word. sentence. word." The shown text never holds the word. */
+export function testWordRound(w, n, sentence, rng) {
+  const base = _spellRound(w, rng);
+  return {
+    ...base,
+    prompt: `Number ${n}. Listen and build the word.`,
+    say: `Number ${n}. ${w}. ${sentence} ${w}.`,
+    replay: `Number ${n}. ${w}. ${sentence} ${w}.`,
+    hint: 'Good try! Listen again and say it slowly.',
+    hintSay: `Good try! Listen: ${w}. ${sentence} ${w}.`,
+    test: { n, word: w },
+    noChoiceSay: true,
+  };
+}
+/** The Thursday test: one tile round per spelling word (list order), then the dictation sentence as a tile build. sentences = { word: text }. */
+export function buildSpellTest(rng, tier, sentences = {}, week = WEEK) {
+  const words = week.spelling.filter((w) => w.length >= 2);
+  const rounds = words.map((w, i) => testWordRound(w, i + 1, testSentence(w, sentences && sentences[w]), rng));
+  const n = rounds.length + 1;
+  const d = _dictRound(Math.max(2, tier || 1), rng, week.dictation);
+  rounds.push({
+    ...d,
+    prompt: `Number ${n}. Listen and build the sentence.`,
+    say: `Number ${n}. ${week.dictation} Tap the words to build the sentence.`,
+    replay: `Number ${n}. ${week.dictation}`,
+    test: { n, dictation: true },
+    noChoiceSay: true,
+  });
+  return rounds;
+}
+
 // ---- Dictation sentence rounds (S3). They read WEEK.dictation when a round is made. ----
 // Extra practice sentences (sight words "of" and "he", plus short-vowel words), each 8 words or fewer.
 export const DICTATION_PRACTICE = [
@@ -1156,9 +1207,9 @@ const _END_HINT = {
   '.': 'Is it telling something? Then it ends with a period.',
   '!': 'Is it a big, excited sentence? Then it ends with an exclamation mark.',
 };
-function _dictRound(tier, rng) {
-  const useWeek = rng() < 0.5;
-  const text = useWeek ? WEEK.dictation : _pick(DICTATION_PRACTICE, rng);
+function _dictRound(tier, rng, forceText) {
+  const useWeek = forceText ? true : rng() < 0.5;
+  const text = forceText || (useWeek ? WEEK.dictation : _pick(DICTATION_PRACTICE, rng));
   const { words, end } = _parseSentence(text);
   const variants = dictationVariants(text, rng);
   const answer = String(text).trim().replace(/\s+/g, ' ');

@@ -46,7 +46,8 @@ import {
   plantLine,
   spellLine,
 } from './engine-core.js';
-import { builtSlotIds, openLandIds, today, shouldRunFinale } from './engine-core.js';
+import { builtSlotIds, openLandIds, today, shouldRunFinale, landState } from './engine-core.js';
+import { startSpellTest, newTestLog, noteWrong, finishRound, recordSpellTest, readBackLines, CROWN_STARS } from './flow/spelltest.js';
 import {
   createQuestbook,
   roundView,
@@ -99,6 +100,8 @@ interface Dialogue {
   kind: 'greeting' | 'praise';
   lines: string[];
   actionLabel?: string;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   onDone: () => void;
 }
 
@@ -259,7 +262,8 @@ export const App: React.FC = () => {
     dialogueSerial.current += 1;
     const id = dialogueSerial.current;
     const done = d.onDone;
-    setDialogue({ ...d, id, onDone: () => { setDialogue(null); done(); } });
+    const second = d.onSecondary;
+    setDialogue({ ...d, id, onDone: () => { setDialogue(null); done(); }, onSecondary: second ? () => { setDialogue(null); second(); } : undefined });
   };
 
   // Soft stop after one quest: rest, or one more right away (main.js showRest).
@@ -298,6 +302,19 @@ export const App: React.FC = () => {
     }
     setInteractPrompt(null);
     if (d.kind === 'rest') {
+      if (npcId === 'belle') {
+        // M3: the Thursday test works any day, so Belle offers it even when she has rested today.
+        openDialogue({
+          npcId,
+          kind: 'greeting',
+          lines: ['Want to try your Thursday practice test?'],
+          actionLabel: 'Thursday test 📝',
+          secondaryLabel: 'Rest 💤',
+          onSecondary: () => showRest(npcId),
+          onDone: () => beginSpellTest(),
+        });
+        return;
+      }
       showRest(npcId);
       return;
     }
@@ -307,7 +324,57 @@ export const App: React.FC = () => {
       kind: d.dialogue.kind,
       lines: d.dialogue.lines,
       actionLabel: d.practice ? undefined : 'Start Quest! ⭐',
+      secondaryLabel: npcId === 'belle' ? 'Thursday test 📝' : undefined,
+      onSecondary: npcId === 'belle' ? () => beginSpellTest() : undefined,
       onDone: () => showRound(npcId),
+    });
+  };
+
+  // ---- Thursday practice test (M3): the questbook runs it with qb.test set; no ladder, review queue or rest rule is touched. ----
+  const beginSpellTest = () => {
+    const tier = landState(Save.data.ladder.belle).tier;
+    const q = createQuestbook('belle', startSpellTest(Save.data, tier));
+    q.test = { log: newTestLog() };
+    qb.current = q;
+    setActiveNPC('belle');
+    showRound('belle');
+  };
+
+  // The test is over: file the results, Belle reads the words back, then the test crown (+3 stars the first time for that week).
+  const finishSpellTest = () => {
+    const q = qb.current;
+    if (!q || !q.test) return;
+    const { firstCrown } = recordSpellTest(Save.data, q.test.log, today());
+    if (firstCrown) Save.data.stars += CROWN_STARS;
+    Save.save();
+    setStars(Save.data.stars);
+    setView(null);
+    setFeedback(null);
+    const rounds = q.rounds;
+    openDialogue({
+      npcId: 'belle',
+      kind: 'praise',
+      lines: readBackLines(rounds),
+      onDone: () => {
+        SoundFX.chime();
+        setPhase('dialogue');
+        setCard({
+          kind: 'milestone',
+          title: 'Test crown! 👑',
+          sub: firstCrown ? `You finished your test! ⭐ +${CROWN_STARS} stars` : 'You finished your test again! Great practice!',
+          emoji: '👑',
+          say: firstCrown ? `You earned a test crown! Plus ${CROWN_STARS} stars!` : 'You finished your test again! Great practice!',
+          voice: 'belle',
+          onContinue: () => {
+            setCard(null);
+            const m = afterQuestCard(Save.data, 'belle');
+            if (!m) { endToRoam(); return; }
+            Save.save();
+            setUnlockedMilestones([...Save.data.milestones]);
+            setCard({ kind: 'milestone', title: m.title, sub: m.sub, emoji: m.emoji, say: m.say, voice: 'belle', onContinue: () => { setCard(null); endToRoam(); } });
+          },
+        });
+      },
     });
   };
 
@@ -317,15 +384,21 @@ export const App: React.FC = () => {
     if (!q || !view) return;
     const npcId = q.npcId as PrincessId;
     const round = view.round;
-    const kind = pick(q, pickedId, view.correctId, Save.data);
+    // A test never gives per-word stars or shards: pick() works on a scratch save.
+    const kind = pick(q, pickedId, view.correctId, q.test ? { stars: 0, done: ['belle'], shards: { belle: 0 } } : Save.data);
+
+    if (q.test && kind === 'spellwrong') noteWrong(q.test.log, info && info.index, info && info.tile);
+    if (q.test && kind === 'correct') finishRound(q.test.log, round, today());
 
     if (kind === 'correct') {
-      Save.save();
-      setStars(Save.data.stars);
+      if (!q.test) {
+        Save.save();
+        setStars(Save.data.stars);
+      }
       SoundFX.chime();
       const praise = praiseLine();
       Narrator.speakExact(npcId, praise);
-      setFeedback({ kind, pickedId, correctId: view.correctId, message: `⭐ +1 star! ${praise}` });
+      setFeedback({ kind, pickedId, correctId: view.correctId, message: q.test ? `Lovely! ${praise}` : `⭐ +1 star! ${praise}` });
     } else if (kind === 'reveal') {
       // Third miss: show the answer gently and count it as done (no star).
       SoundFX.pop();
@@ -365,7 +438,7 @@ export const App: React.FC = () => {
       showRound(q.npcId);
       return;
     }
-    if (nextRound(q)) completeQuest();
+    if (nextRound(q)) { if (q.test) finishSpellTest(); else completeQuest(); }
     else showRound(q.npcId);
   };
 
@@ -684,7 +757,9 @@ export const App: React.FC = () => {
   };
 
   // Challenge dots: 5 per quest (a missed round may come back), as main.js startRound.
-  const progress = { current: Math.min((qb.current ? qb.current.roundIdx : 0) + 1, 5), total: 5 };
+  // A quest is always 5 rounds; the Thursday test has one per spelling word plus the sentence (M3).
+  const progressTotal = qb.current && qb.current.test ? qb.current.rounds.length : 5;
+  const progress = { current: Math.min((qb.current ? qb.current.roundIdx : 0) + 1, progressTotal), total: progressTotal };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden select-none bg-[#1a1033] font-['Nunito',sans-serif]">
@@ -752,6 +827,8 @@ export const App: React.FC = () => {
           kind={dialogue.kind}
           onDone={dialogue.onDone}
           actionLabel={dialogue.actionLabel}
+          secondaryLabel={dialogue.secondaryLabel}
+          onSecondary={dialogue.onSecondary}
         />
       )}
 

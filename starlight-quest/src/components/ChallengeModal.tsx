@@ -169,7 +169,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         if (next.length === target.length) onPick('__spelldone');
       } else {
         setWrongStreak(wrongStreak + 1);
-        onPick('__spellwrong', { index, say: round.build ? dictationHint({ ...round.build, hint: round.hint }, index) : undefined });
+        onPick('__spellwrong', { index, tile, say: round.build ? dictationHint({ ...round.build, hint: round.hint }, index) : undefined });
       }
     };
     const handleUndo = () => {

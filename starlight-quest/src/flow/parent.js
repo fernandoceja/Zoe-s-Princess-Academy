@@ -5,7 +5,7 @@
  * The editors (R4 P4.2) save the same fields as ui.js: applyWeek / resetWeek (ui.js _weekBlock, 1537-1561)
  * and applyWords (ui.js _wordsBlock, 1478-1495). `saveData` is the live Save.data object; Save.save() persists it.
  */
-import { Save, WEEK, cleanWeek, setWeek, cleanWordList, setSchoolWords } from '../engine-core.js';
+import { Save, WEEK, cleanWeek, setWeek, cleanWordList, setSchoolWords, sanitizeWeekMeta } from '../engine-core.js';
 
 /** A fresh grown-up gate question. rng injectable (default Math.random), same draw order as ui.js. */
 export function gateQuestion(rng = Math.random) {
@@ -30,6 +30,10 @@ export function gateQuestion(rng = Math.random) {
 export function applyWeek(saveData, form) {
   const cleaned = cleanWeek(form);
   saveData.week = cleaned;
+  // M3: the "week of" date and the grown-up's own test sentences (only for words in this week's spelling list).
+  const sentences = {};
+  for (const w of cleaned.spelling) if (form && form.sentences && form.sentences[w]) sentences[w] = String(form.sentences[w]).trim();
+  saveData.weekMeta = sanitizeWeekMeta({ weekOf: form && form.weekOf, sentences });
   setWeek(cleaned);
   Save.save();
   return cleanWeek(WEEK);
@@ -38,6 +42,7 @@ export function applyWeek(saveData, form) {
 /** Back to the built-in pack (ui.js "Back to defaults"). Returns the pack now in use (WEEK_DEFAULT). */
 export function resetWeek(saveData) {
   saveData.week = null;
+  saveData.weekMeta = sanitizeWeekMeta(null);
   setWeek(null);
   Save.save();
   return cleanWeek(WEEK);

@@ -5,13 +5,16 @@ import {
   wordsStatus,
   wordsSavedNote,
 } from '../flow/parent.js';
-import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState } from '../engine-core.js';
+import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState, Save, testSentence } from '../engine-core.js';
+import { wordsToPractice } from '../flow/spelltest.js';
 
 export interface WeekForm {
   spelling: string;
   sight: string;
   dictation: string;
   vowels: string;
+  weekOf?: string;
+  sentences?: Record<string, string>;
 }
 
 // Field labels and placeholders copied from ui.js _weekBlock (1517-1523).
@@ -37,7 +40,13 @@ const weekToForm = (w: WeekPack): WeekForm => ({
   sight: w.sight.join(', '),
   dictation: w.dictation,
   vowels: w.vowels.join(', '),
+  weekOf: (Save.data.weekMeta && Save.data.weekMeta.weekOf) || '',
+  sentences: { ...((Save.data.weekMeta && Save.data.weekMeta.sentences) || {}) },
 });
+
+// "Nov 9" from 2026-11-09 (plain text, no time zone maths).
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const shortDay = (d: string) => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(d); return m ? `${MONTHS[+m[1] - 1] || ''} ${+m[2]}` : d; };
 
 interface ParentCornerProps {
   stars: number;
@@ -210,6 +219,38 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
                 </label>
               ))}
             </div>
+            <label className="flex flex-col gap-1 text-xs font-bold text-slate-700 mt-2">
+              Week of (optional, filed with the Thursday test)
+              <input
+                type="date"
+                value={weekFields.weekOf || ''}
+                onKeyDown={stopKey}
+                onChange={(e) => setWeekFields({ ...weekFields, weekOf: e.target.value })}
+                className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+              />
+            </label>
+            <div className="mt-2">
+              <div className="text-xs font-bold text-slate-700">Thursday test sentences (optional)</div>
+              <p className="text-[11px] text-slate-500 mb-1">Belle reads the word, then this sentence, then the word. It must contain the word. Blank uses a built-in sentence.</p>
+              <div className="flex flex-col gap-1">
+                {weekFields.spelling.split(/[,\n;]+/).map((x) => x.trim().toLowerCase()).filter((x, i, a) => /^[a-z]{1,12}$/.test(x) && a.indexOf(x) === i).slice(0, 15).map((w) => (
+                  <label key={w} className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <span className="w-14 shrink-0">{w}</span>
+                    <input
+                      type="text"
+                      value={(weekFields.sentences && weekFields.sentences[w]) || ''}
+                      placeholder={testSentence(w)}
+                      autoComplete="off"
+                      autoCapitalize="sentences"
+                      spellCheck={false}
+                      onKeyDown={stopKey}
+                      onChange={(e) => setWeekFields({ ...weekFields, sentences: { ...(weekFields.sentences || {}), [w]: e.target.value } })}
+                      className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-400"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleSaveWeek}
@@ -225,6 +266,40 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               </button>
             </div>
             {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* Thursday practice test history (M3): what she built, and the words to practice */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">Thursday tests</h3>
+            {(!Save.data.spellTests || Save.data.spellTests.length === 0) && (
+              <p className="text-xs text-slate-600">No test yet. Belle's "Thursday test" button starts one.</p>
+            )}
+            {(Save.data.spellTests || []).map((t: any) => {
+              const practice = wordsToPractice(t);
+              return (
+                <div key={t.weekOf} className="mt-2 first:mt-0">
+                  <div className="text-xs font-black text-indigo-900">Week of {shortDay(t.weekOf)} {t.crown ? '👑' : ''}</div>
+                  <ul className="text-xs text-slate-700">
+                    {Object.keys(t.words).map((w) => (
+                      <li key={w}>
+                        <span className="font-bold">{w}</span>
+                        {t.words[w].ok ? ' ✓' : ` · she built "${t.words[w].built}"`}
+                        <span className="text-slate-400"> · {shortDay(t.words[w].date)}</span>
+                      </li>
+                    ))}
+                    {t.dictation && (
+                      <li>
+                        <span className="font-bold">Sentence</span>
+                        {t.dictation.ok ? ' ✓' : ` · she built "${t.dictation.built}"`}
+                      </li>
+                    )}
+                  </ul>
+                  {practice.length > 0 && (
+                    <p className="text-xs font-bold text-amber-700 mt-1">Words to practice: {practice.join(', ')}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Class sight words (ui.js _wordsBlock) */}
