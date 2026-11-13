@@ -209,3 +209,184 @@ export function shouldRunFinale(doneIds, orderIds, builtCount) {
   const done = Array.isArray(doneIds) ? doneIds : [];
   return builtCount >= NEW_LAND_SLOTS.length && orderIds.length > 0 && orderIds.every((id) => done.includes(id));
 }
+
+// ============================================================================
+// B2: kingdom map + firefly trail. Pure functions: where every land is, and a walking route that leads Zoe there.
+// ============================================================================
+export const INNER_PAD_DIST = 18.5;   // an inner land's princess stands this far from the hub, on the land's angle (world.js uses this too)
+export const CASTLE_R = 5.2;          // the castle's collider radius (world.js adds it at CASTLE_POS)
+
+// Princess -> land id (the same pairs as world.js NPC_DEFS and treasures.js).
+export const NPC_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle', jasmine: 'garden', anna: 'harbor', tiana: 'bayou', aurora: 'glen' };
+
+const OUTER_GEOMETRY = { cove: coveGeometry, isle: isleGeometry, garden: gardenGeometry, harbor: harborGeometry, bayou: bayouGeometry, glen: glenGeometry };
+const OUTER_SLOT = { cove: COVE.slot, isle: ISLE.slot, garden: GARDEN.slot, harbor: HARBOR.slot, bayou: BAYOU.slot, glen: GLEN.slot };
+
+/** All ten lands for the map and the trail: [{ npc, land, center: {x,z}, pad: {x,z}, open }]. Inner lands are always open;
+ * the six outer ones are open when built (or previewed). */
+export function kingdomLands(search) {
+  const open = new Set(openLandIds(search));
+  return Object.entries(NPC_LAND).map(([npc, land]) => {
+    if (Object.prototype.hasOwnProperty.call(INNER_LAND_ANGLES, land)) {
+      const a = INNER_LAND_ANGLES[land];
+      return { npc, land, center: { x: Math.cos(a) * LAND_DIST, z: Math.sin(a) * LAND_DIST }, pad: { x: Math.cos(a) * INNER_PAD_DIST, z: Math.sin(a) * INNER_PAD_DIST }, open: true };
+    }
+    const g = OUTER_GEOMETRY[land]();
+    return { npc, land, center: { x: g.center.x, z: g.center.z }, pad: { x: g.pad.x, z: g.pad.z }, open: open.has(land) };
+  });
+}
+
+// --- geometry helpers ---
+const _d = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+function closestOnSegment(p, a, b) {
+  const dx = b.x - a.x, dz = b.z - a.z, len2 = dx * dx + dz * dz;
+  const t = len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2)) : 0;
+  return { x: a.x + dx * t, z: a.z + dz * t, t };
+}
+
+/** The walkable paths as a graph: hub, each inner land's pad (straight along its angle), and for every outer slot the trunk,
+ * the branch and the princess's pad on the branch. Built from pathSegments() so it cannot drift from the 3D paths. */
+export function walkGraph(search) {
+  const nodes = [{ x: 0, z: 0 }];           // 0 = hub
+  const edges = [];
+  const at = (p) => {                       // reuse a node already there
+    const i = nodes.findIndex((n) => _d(n, p) < 0.01);
+    if (i >= 0) return i;
+    nodes.push({ x: p.x, z: p.z });
+    return nodes.length - 1;
+  };
+  const link = (a, b) => { if (a !== b) edges.push([a, b]); };
+  for (const l of kingdomLands(search)) {
+    if (!l.open) continue;
+    if (Object.prototype.hasOwnProperty.call(INNER_LAND_ANGLES, l.land)) link(0, at(l.pad));
+  }
+  for (const sg of pathSegments()) {
+    if (sg.kind === 'trunk') link(0, at(sg.from)), link(at(sg.from), at(sg.to));
+  }
+  for (const l of kingdomLands(search)) {
+    if (!l.open || Object.prototype.hasOwnProperty.call(INNER_LAND_ANGLES, l.land)) continue;
+    const sg = pathSegments().find((s) => s.kind === 'branch' && s.slot === OUTER_SLOT[l.land]);
+    const from = at(sg.from);
+    link(from, at(l.pad));                  // the pad sits on the branch, near the land's entrance: a spur, so a route never runs through the princess
+    link(from, at(sg.to));                  // the branch runs on to the land's centre (and bends around any princess standing on it)
+  }
+  return { nodes, edges };
+}
+
+/** Push route points out of round obstacles ({x, z, r}): any segment closer than r + margin gets a waypoint beside the obstacle. */
+export function avoidColliders(pts, colliders, margin = 0.8) {
+  let out = pts.map((p) => ({ x: p.x, z: p.z }));
+  for (let pass = 0; pass < 4; pass++) {
+    let changed = false;
+    const next = [out[0]];
+    for (let i = 1; i < out.length; i++) {
+      const a = out[i - 1], b = out[i];
+      let worst = null;
+      for (const c of colliders || []) {
+        const need = c.r + margin;
+        if (_d(a, c) < need || _d(b, c) < need) continue;   // an end of this leg is inside the obstacle (a pad, or where she stands): it cannot be avoided
+        const near = closestOnSegment(c, a, b);
+        const d = Math.hypot(near.x - c.x, near.z - c.z);
+        if (d < need - 1e-6 && (!worst || need - d > worst.gap)) worst = { c, near, gap: need - d, need };
+      }
+      if (worst) {
+        const { c, near } = worst;
+        let dx = near.x - c.x, dz = near.z - c.z, len = Math.hypot(dx, dz);
+        if (len < 1e-6) { const sx = b.x - a.x, sz = b.z - a.z, sl = Math.hypot(sx, sz) || 1; dx = -sz / sl; dz = sx / sl; len = 1; }   // dead centre: step sideways
+        const r = c.r + margin + 0.7;
+        next.push({ x: c.x + (dx / len) * r, z: c.z + (dz / len) * r });
+        changed = true;
+      }
+      next.push(b);
+    }
+    out = next;
+    if (!changed) break;
+  }
+  return out.map((p) => {                    // stay inside the invisible wall
+    const r = Math.hypot(p.x, p.z), max = WORLD_RADIUS - 1;
+    return r > max ? { x: (p.x / r) * max, z: (p.z / r) * max } : p;
+  });
+}
+
+const routeLen = (r) => r.reduce((t, p, i) => (i ? t + _d(p, r[i - 1]) : 0), 0);
+const dedupeRoute = (r) => r.filter((p, i) => i === 0 || _d(p, r[i - 1]) > 0.05);   // drop zero-length hops (the entry point is often where she stands)
+
+/** The route from `start` to the princess pad of `npcId`: straight if she is already inside that land, otherwise onto the nearest path,
+ * along the paths (shortest way) to the pad, with the obstacles stepped around. Returns [{x, z}, ...] (start first, pad last), or [] for an unknown or closed land. */
+export function trailRoute(start, npcId, colliders = [], search) {
+  const land = kingdomLands(search).find((l) => l.npc === npcId);
+  if (!land || !land.open || !start || !Number.isFinite(start.x) || !Number.isFinite(start.z)) return [];
+  const s = { x: start.x, z: start.z }, pad = land.pad;
+  if (_d(s, land.center) <= LAND_DISC_R) return avoidColliders([s, pad], colliders);
+  const { nodes, edges } = walkGraph(search);
+  // Entry: the nearest point on any path.
+  const otherPads = kingdomLands(search).filter((l) => l.npc !== npcId).map((l) => l.pad);
+  let best = null;
+  edges.forEach(([a, b], i) => {
+    const q = closestOnSegment(s, nodes[a], nodes[b]);
+    let d = _d(s, q);
+    if (otherPads.some((o) => _d(o, q) < 3)) d += 1000;   // never step onto the path right where another princess stands
+    if (!best || d < best.d) best = { d, i, q };
+  });
+  const [ea, eb] = edges[best.i];
+  const g = nodes.map(() => []);            // adjacency with the entry point inserted on its edge
+  const add = (a, b) => { const w = _d(allNodes[a], allNodes[b]); g[a].push([b, w]); g[b].push([a, w]); };
+  const allNodes = [...nodes, { x: best.q.x, z: best.q.z }];
+  g.push([]);
+  const ENTRY = nodes.length;
+  edges.forEach(([a, b], i) => { if (i !== best.i) add(a, b); });
+  add(ea, ENTRY); add(ENTRY, eb);
+  const goal = nodes.findIndex((n) => _d(n, pad) < 0.01);
+  if (goal < 0) return avoidColliders([s, pad], colliders);
+  const dist = allNodes.map(() => Infinity), prev = allNodes.map(() => -1), done = allNodes.map(() => false);
+  dist[ENTRY] = 0;
+  for (;;) {                                // Dijkstra on at most ~20 nodes
+    let u = -1;
+    for (let i = 0; i < dist.length; i++) if (!done[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || u === goal) break;
+    done[u] = true;
+    for (const [v, w] of g[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
+  }
+  if (dist[goal] === Infinity) return avoidColliders([s, pad], colliders);
+  const chain = [];
+  for (let n = goal; n >= 0; n = prev[n]) chain.push(allNodes[n]);
+  chain.reverse();
+  const viaPaths = dedupeRoute(avoidColliders([s, ...chain], colliders));
+  // Walking the paths is nicest, but if that is a long detour (she is far out on the grass) lead her straight across instead.
+  const straight = dedupeRoute(avoidColliders([s, pad], colliders));
+  return routeLen(viaPaths) <= 1.6 * routeLen(straight) + 6 ? viaPaths : straight;
+}
+
+/** Dots along a route: [{x, z, arc}] every `spacing` units (the first one is one step in), at most `max`. */
+export function sampleTrail(route, spacing = 1.6, max = 200) {
+  const out = [];
+  if (!Array.isArray(route) || route.length < 2 || !(spacing > 0)) return out;
+  let arc = 0, next = spacing;
+  for (let i = 1; i < route.length && out.length < max; i++) {
+    const a = route[i - 1], b = route[i], len = _d(a, b);
+    while (next <= arc + len && out.length < max) {
+      const t = len ? (next - arc) / len : 0;
+      out.push({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, arc: next });
+      next += spacing;
+    }
+    arc += len;
+  }
+  return out;
+}
+
+/** How far along the route a point is: { arc, dist } = distance from the start to the nearest point on the route, and how far off it she is. */
+export function progressAlong(route, x, z) {
+  let best = { arc: 0, dist: Infinity }, acc = 0;
+  for (let i = 1; i < (route || []).length; i++) {
+    const a = route[i - 1], b = route[i], len = _d(a, b);
+    const q = closestOnSegment({ x, z }, a, b), d = Math.hypot(x - q.x, z - q.z);
+    if (d < best.dist) best = { arc: acc + len * q.t, dist: d };
+    acc += len;
+  }
+  return best;
+}
+
+/** Has she reached the princess's pad? */
+export function trailArrived(x, z, pad, r = 3.5) {
+  return !!pad && Math.hypot(x - pad.x, z - pad.z) < r;
+}

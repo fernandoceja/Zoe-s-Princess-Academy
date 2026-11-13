@@ -82,6 +82,8 @@ jobs:
         run: node starlight-quest/tests/vowelsort_check.mjs
       - name: Fonts and type scale check
         run: node starlight-quest/tests/fonts_check.mjs
+      - name: Firefly trail route check
+        run: node starlight-quest/tests/trail_check.mjs
       - name: Jasmine story-order quests check
         run: node starlight-quest/tests/jasmine_check.mjs
       - name: Anna capital-letter and end-mark quests check

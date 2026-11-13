@@ -20,6 +20,7 @@ import { buildBayou } from './bayou.js?v=20261028r3';
 import {
   INNER_LAND_ANGLES, LAND_DIST as LAND_DIST_M, WORLD_RADIUS as WORLD_RADIUS_M, OUTER_DIST, PATH_WIDTH,
   closedSlots, slotPos, pathSegments, distToSegment, isCoveOpen, coveGeometry, COVE, isIsleOpen, isleGeometry, ISLE, openLandIds, isGardenOpen, gardenGeometry, GARDEN, isHarborOpen, harborGeometry, HARBOR, isBayouOpen, bayouGeometry, BAYOU, isGlenOpen, glenGeometry, GLEN,
+  INNER_PAD_DIST, CASTLE_POS, CASTLE_R, trailRoute, sampleTrail, progressAlong, trailArrived,
 } from './worldmap.js?v=20261028r3';
 
 // ---------------------------------------------------------------------------
@@ -249,6 +250,7 @@ export function createWorld(container, hooks) {
   const onWorldTap = typeof hooks.onWorldTap === 'function' ? hooks.onWorldTap : () => {};
   const onSecretTap = typeof hooks.onSecretTap === 'function' ? hooks.onSecretTap : () => {};
   const onGateTap = typeof hooks.onGateTap === 'function' ? hooks.onGateTap : () => {};
+  const onTrailArrived = typeof hooks.onTrailArrived === 'function' ? hooks.onTrailArrived : () => {};
   const onTreasure = typeof hooks.onTreasure === 'function' ? hooks.onTreasure : () => {};
   const treasuresGot = typeof hooks.treasuresGot === 'function' ? hooks.treasuresGot : () => [];
 
@@ -449,13 +451,13 @@ export function createWorld(container, hooks) {
   castleCrown.add(crownPoints, crownGems);
   castleCrown.position.set(0, 8.8, -1.2); castleCrown.visible = false; castle.add(castleCrown);
   // Off to the north-west so it never stands between the camera and Belle's path.
-  castle.position.set(-11.5, 0, -8.5);
+  castle.position.set(CASTLE_POS.x, 0, CASTLE_POS.z);
   scene.add(castle);
-  addCollider(-11.5, -8.5, 5.2);
+  addCollider(CASTLE_POS.x, CASTLE_POS.z, CASTLE_R);
 
   // --- Lands ----------------------------------------------------------------
   const LAND_DIST = LAND_DIST_M; // land center distance from origin
-  const PAD_DIST = 18.5;        // NPC pad distance (near land entrance)
+  const PAD_DIST = INNER_PAD_DIST;   // NPC pad distance (near land entrance); shared with worldmap.js so the map and the firefly trail agree
   const landCenters = {};
   const landPads = {};
 
@@ -1915,6 +1917,82 @@ export function createWorld(container, hooks) {
     trailGeo.attributes.color.needsUpdate = true;
   }
 
+  // --- Firefly trail to a chosen land (B2) ---
+  // One pooled Points (48 slots, +1 draw call, the same soft dot as the sparkle trail: no new texture). The route comes from worldmap.js
+  // trailRoute() (along the paths, around the colliders). Only the dots ahead of Zoe light up, so the trail "eats" behind her; if she wanders
+  // more than 6 units off it, the route is worked out again from where she stands. At the pad it fades and calls hooks.onTrailArrived(npcId).
+  const FLY_N = 48, FLY_SPACING = 1.6, FLY_LOST = 6, FLY_FADE = 0.8;
+  const flyPos = new Float32Array(FLY_N * 3), flyCol = new Float32Array(FLY_N * 3);
+  const flyGeo = new THREE.BufferGeometry();
+  flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
+  flyGeo.setAttribute('color', new THREE.BufferAttribute(flyCol, 3));
+  const flyPoints = new THREE.Points(flyGeo, new THREE.PointsMaterial({
+    map: softDot, size: 1.4, sizeAttenuation: true, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  flyPoints.frustumCulled = false; flyPoints.visible = false; flyPoints.raycast = () => {};
+  scene.add(flyPoints);
+  const flyGold = new THREE.Color(0xffd95a), flyMint = new THREE.Color(0x8fd6c4);
+  let flyTo = null, flyRoute = [], flyDots = [], flyFade = 0, flyEnding = -1, flyCheck = 0;   // flyFade: 0..1 fade-in; flyEnding: fade-out progress, -1 = not ending
+  function flyBuild() {
+    flyRoute = trailRoute({ x: playerPos.x, z: playerPos.z }, flyTo, colliders);
+    flyDots = sampleTrail(flyRoute, FLY_SPACING, 400);
+  }
+  function showTrail(npcId) {
+    if (!npcs[npcId]) return false;
+    flyTo = npcId; flyFade = calmMotion ? 1 : 0; flyEnding = -1; flyCheck = 0;
+    flyBuild();
+    flyPoints.visible = flyDots.length > 0;
+    return flyDots.length > 0;
+  }
+  function clearTrail() {
+    flyTo = null; flyRoute = []; flyDots = []; flyEnding = -1; flyPoints.visible = false;
+  }
+  function getPlayerXZ() { return { x: playerPos.x, z: playerPos.z }; }
+  function updateTrail(dt, t) {
+    if (!flyTo) return;
+    const land = npcs[flyTo];
+    const pad = land && land.group ? land.group.position : null;   // {x, y, z}: read in place, nothing allocated per frame
+    if (flyEnding < 0 && pad && trailArrived(playerPos.x, playerPos.z, pad)) {
+      const id = flyTo;
+      if (calmMotion) { clearTrail(); } else { flyEnding = 0; }
+      onTrailArrived(id);
+      if (!flyTo) return;
+    }
+    if (flyEnding >= 0) {
+      flyEnding += dt / FLY_FADE;
+      if (flyEnding >= 1) { clearTrail(); return; }
+    } else {
+      flyCheck += dt;
+      if (flyCheck >= 0.5) {          // she wandered off the route: lead her from where she is now
+        flyCheck = 0;
+        const pr = progressAlong(flyRoute, playerPos.x, playerPos.z);
+        if (pr.dist > FLY_LOST) flyBuild();
+      }
+      if (flyFade < 1) flyFade = Math.min(1, flyFade + dt / 0.4);
+    }
+    const here = progressAlong(flyRoute, playerPos.x, playerPos.z).arc;
+    let first = 0;
+    while (first < flyDots.length && flyDots[first].arc < here + 0.8) first++;   // dots she has passed are gone
+    const master = (flyEnding >= 0 ? 1 - flyEnding : 1) * flyFade;
+    let lit = 0;
+    for (let i = 0; i < FLY_N; i++) {
+      const dot = flyDots[first + i];
+      if (!dot) { flyCol[i * 3] = flyCol[i * 3 + 1] = flyCol[i * 3 + 2] = 0; flyPos[i * 3 + 1] = -50; continue; }
+      const k = calmMotion ? 0.7 : 0.55 + 0.45 * Math.sin(t * 3 - (first + i) * 0.8);   // a soft wave runs ahead of her
+      const mix = ((first + i) % 2) * 0.5;
+      const b = Math.max(0, k * master * 0.9);
+      flyPos[i * 3] = dot.x; flyPos[i * 3 + 2] = dot.z;
+      flyPos[i * 3 + 1] = 0.6 + (calmMotion ? 0 : Math.sin(t * 2 + (first + i) * 1.3) * 0.18);
+      flyCol[i * 3] = (flyGold.r + (flyMint.r - flyGold.r) * mix) * b;
+      flyCol[i * 3 + 1] = (flyGold.g + (flyMint.g - flyGold.g) * mix) * b;
+      flyCol[i * 3 + 2] = (flyGold.b + (flyMint.b - flyGold.b) * mix) * b;
+      lit++;
+    }
+    flyPoints.visible = lit > 0;
+    flyGeo.attributes.position.needsUpdate = true;
+    flyGeo.attributes.color.needsUpdate = true;
+  }
+
   // --- Wardrobe (N10): outfit recolors + butterfly friend -------------------------
   // Zoe's dress and tiara-gem materials are hers alone (buildPrincess makes the dress per princess and
   // clones the gem), so recoloring never touches the other princesses. Buddy = 2 wing meshes (+2 draws).
@@ -2268,6 +2346,9 @@ export function createWorld(container, hooks) {
     // ---- Butterflies ----
     butterflyFlutter(t);
 
+    // ---- Firefly trail to the chosen land ----
+    updateTrail(dt, t);
+
     // ---- Celebration bursts ----
     for (let i = bursts.length - 1; i >= 0; i--) {
       const b = bursts[i];
@@ -2369,12 +2450,15 @@ export function createWorld(container, hooks) {
     setInputEnabled(bool) { inputEnabled = !!bool; },
     setCastleCrown(visible) { castleCrown.visible = !!visible; },
     // Frame Zoe + one princess for a conversation; unfocus returns to the normal follow.
-    focus(npcId) { if (npcs[npcId]) { focusNpc = npcs[npcId]; camSnap = calmMotion; } },
+    focus(npcId) { if (npcs[npcId]) { focusNpc = npcs[npcId]; camSnap = calmMotion; clearTrail(); } },
     unfocus() { if (focusNpc) { focusNpc = null; camSnap = calmMotion; } },
     celebrate,
     setNPCState,
     setOutfit,
     setTodayStar,
+    showTrail,
+    clearTrail,
+    getPlayerXZ,
     setClockTime,
     pause: pauseRendering,
     resume: resumeRendering,
