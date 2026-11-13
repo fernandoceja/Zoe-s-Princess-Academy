@@ -320,10 +320,12 @@ export function trailRoute(start, npcId, colliders = [], search) {
   if (_d(s, land.center) <= LAND_DISC_R) return avoidColliders([s, pad], colliders);
   const { nodes, edges } = walkGraph(search);
   // Entry: the nearest point on any path.
+  const otherPads = kingdomLands(search).filter((l) => l.npc !== npcId).map((l) => l.pad);
   let best = null;
   edges.forEach(([a, b], i) => {
     const q = closestOnSegment(s, nodes[a], nodes[b]);
-    const d = _d(s, q);
+    let d = _d(s, q);
+    if (otherPads.some((o) => _d(o, q) < 3)) d += 1000;   // never step onto the path right where another princess stands
     if (!best || d < best.d) best = { d, i, q };
   });
   const [ea, eb] = edges[best.i];
