@@ -15,6 +15,7 @@
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
 import { chartT1, chartT2, chartT3 } from './chart120.js?v=20261028r3';
+import { paintT1, paintT2, paintT3 } from './colorbynum.js?v=20261028r3';
 import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261028r3';
 import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261028r3';
 import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261028r3';
@@ -2221,6 +2222,12 @@ for (const t of [1, 2, 3]) {
 for (const t of [2, 3]) {
   const base = TIERS.ariel[t];
   TIERS.ariel[t] = (rng) => (rng() < 1 / 4 ? _shellSort(t, rng) : base(rng));
+}
+
+// About 1 Rapunzel round in 3 is a paint-the-garden number fact (B3); the rest are her plant science as before.
+for (const t of [1, 2, 3]) {
+  const base = TIERS.rapunzel[t], paint = [null, paintT1, paintT2, paintT3][t];
+  TIERS.rapunzel[t] = (rng) => (rng() < 1 / 3 ? paint(rng) : base(rng));
 }
 
 // About 1 Tiana round in 3 is a firefly jar; the rest are tally marks as before.

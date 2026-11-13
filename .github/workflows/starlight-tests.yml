@@ -145,5 +145,7 @@ jobs:
         run: node starlight-quest/tests/screens_check.mjs
       - name: Tap size check (Q4)
         run: node starlight-quest/tests/tapsize_check.mjs
+      - name: Paint the garden check (B3)
+        run: node starlight-quest/tests/paint_check.mjs
       - name: Kingdom map check (B2)
         run: node starlight-quest/tests/kingdommap_check.mjs
