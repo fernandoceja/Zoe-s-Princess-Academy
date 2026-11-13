@@ -89,7 +89,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
 
         {/* Speech Bubble / Dialogue Text */}
         <div className="bg-white/90 border-2 border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-5 shadow-inner min-h-[5rem] flex items-center">
-          <p className="text-lg sm:text-xl font-bold text-slate-800 leading-snug">
+          <p className="font-read text-read font-bold text-ink">
             "{currentLine}"
           </p>
         </div>

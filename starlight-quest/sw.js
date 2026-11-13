@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v39-20261113';
+const CACHE_VERSION = 'v40-20261113';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -10,6 +10,9 @@ const PRECACHE_URLS = [
   './vendor/three.module.js',
   './vendor/fonts/nunito.css?v=20261028r3',
   './vendor/fonts/nunito-latin-var.woff2',
+  './vendor/fonts/andika.css?v=20261028r3',
+  './vendor/fonts/andika-latin-400.woff2',
+  './vendor/fonts/andika-latin-700.woff2',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
   './icons/icon-192.png',
