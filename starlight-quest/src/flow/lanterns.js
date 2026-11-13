@@ -57,4 +57,4 @@ export const expectedArrival = (step) => (step && step.lantern != null ? `lanter
 export const legLine = (step) => (step.lantern != null ? `Follow the fireflies to lantern ${step.num}!` : 'Follow the fireflies back to Jasmine!');
 export const legSay = (step) => spoken(step.lantern != null ? `Follow the fireflies to lantern ${WORDS[step.num] || ''}!` : legLine(step));
 export const chipText = (step, n) => (step.lantern != null ? `Lantern ${step.num} of ${n}` : 'Back to Jasmine');
-export const SCOOT_TEXT = { ask: 'Ask here', stop: 'Stop', litSay: 'The lantern is lit!' };
+export const SCOOT_TEXT = { ask: 'Ask here', stop: 'Stop', stopSure: 'Really stop?', litSay: 'The lantern is lit!' };

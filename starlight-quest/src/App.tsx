@@ -147,6 +147,7 @@ export const App: React.FC = () => {
   const [mapOpen, setMapOpen] = useState(false);
   const scootRef = useRef<any>(null);   // B4 lantern scoot: { plan, i } while she walks Jasmine's lanterns
   const [scootChip, setScootChip] = useState<string | null>(null);
+  const [stopArmed, setStopArmed] = useState(false);   // Stop asks twice, so a stray tap does not end the walk
   const [mapPlayer, setMapPlayer] = useState({ x: 0, z: 4 });
   const [pauseTab, setPauseTab] = useState<
     'menu' | 'wardrobe' | 'treasurebook' | 'tutorial' | 'parent'
@@ -243,6 +244,7 @@ export const App: React.FC = () => {
     const nextPaused = !pausedRef.current;
     pausedRef.current = nextPaused;
     setPaused(nextPaused);
+    if (!nextPaused && scootRef.current && scootRef.current.pending && phaseRef.current === 'scoot') window.setTimeout(() => arriveLeg(), 0);
     setPauseTab('menu');
     // The world keeps running under the pause menu (it delivers the gamepad resume key); see the cover rule at boot.
     if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused);
@@ -326,7 +328,9 @@ export const App: React.FC = () => {
     const w = worldRef.current, sc = scootRef.current;
     if (!w || !sc) return;
     const step = sc.plan.steps[i];
+    if (!step) { endScoot(); completeQuest(); return; }
     sc.i = i;
+    setStopArmed(false);
     setPhase('scoot');
     setView(null);
     setFeedback(null);
@@ -345,8 +349,9 @@ export const App: React.FC = () => {
     for (let i = 0; i < LANTERN_TOTAL; i++) { const s = w.gardenLanternXZ(i); if (!s) return false; spots.push(s); }
     const tier = landState(Save.data.ladder.jasmine).tier;
     const plan = scootPlan(tier, spots, w.getPlayerXZ());
-    q.rounds = withBonus(q.rounds, () => buildRounds('jasmine', Math.random, { tier, review: [] }), plan.total);
-    if (q.rounds.length < plan.total) return false;   // could not make enough rounds: play the ordinary quest
+    const rounds = withBonus(q.rounds, () => buildRounds('jasmine', Math.random, { tier, review: [] }), plan.total).slice(0, plan.total);
+    if (rounds.length < plan.total) return false;   // could not make enough rounds: play the ordinary quest, untouched
+    q.rounds = rounds;
     scootRef.current = { plan, spots, i: 0 };
     for (let i = 0; i < LANTERN_TOTAL; i++) w.gardenLantern(i, 'off');
     beginLeg(0);
@@ -354,19 +359,25 @@ export const App: React.FC = () => {
   };
   const arriveLeg = () => {
     if (!scootRef.current || phaseRef.current !== 'scoot') return;
+    if (pausedRef.current) { scootRef.current.pending = true; return; }   // she slid up to the lantern as she paused: ask when she resumes
+    scootRef.current.pending = false;
     worldRef.current?.clearTrail();
     worldRef.current?.setInputEnabled(false);
     setScootChip(null);
     setToastMsg(null);
     showRound('jasmine');
   };
-  const endScoot = () => {
+  const endScoot = (keepLights = false) => {
     scootRef.current = null;
     setScootChip(null);
-    resetLanterns();
+    setStopArmed(false);
+    if (!keepLights) resetLanterns();   // after a finished quest the last lantern stays lit until she is back to roaming (endToRoam)
     worldRef.current?.clearTrail();
   };
-  const stopScoot = () => { endScoot(); Narrator.stop(); endToRoam(); };
+  const stopScoot = () => {
+    if (!stopArmed) { setStopArmed(true); window.setTimeout(() => setStopArmed(false), 3000); return; }
+    endScoot(); Narrator.stop(); endToRoam();
+  };
 
   // Start Quest with NPC (main.js startQuest)
   const startQuest = (npcId: PrincessId, opts: { again?: boolean } = {}) => {
@@ -521,7 +532,7 @@ export const App: React.FC = () => {
       const step = sc.plan.steps[sc.i];
       if (step && step.lantern != null) worldRef.current?.gardenLantern(step.lantern, 'lit');
       SoundFX.chime();
-      if (nextRound(q)) { endScoot(); completeQuest(); } else beginLeg(sc.i + 1);
+      if (nextRound(q)) { endScoot(true); completeQuest(); } else beginLeg(sc.i + 1);
       return;
     }
     if (nextRound(q)) { if (q.test) finishSpellTest(); else completeQuest(); }
@@ -608,6 +619,7 @@ export const App: React.FC = () => {
   };
 
   const endToRoam = () => {
+    if (!scootRef.current) resetLanterns();
     qb.current = null;
     setActiveNPC(null);
     setView(null);
@@ -880,10 +892,10 @@ export const App: React.FC = () => {
           />
           {(gameState === 'roam' || gameState === 'scoot') && <VirtualJoystick />}
           {gameState === 'scoot' && scootChip && (
-            <div className="fixed left-1/2 -translate-x-1/2 bottom-44 z-30 flex items-center gap-2 pointer-events-auto flex-wrap justify-center px-2">
+            <div className="fixed inset-x-0 mx-auto w-fit max-w-[calc(100vw-1rem)] bottom-44 z-30 flex items-center gap-2 pointer-events-auto flex-wrap justify-center">
               <span className="min-h-[60px] px-4 flex items-center whitespace-nowrap rounded-full bg-gold text-ink font-read font-bold text-xl border-2 border-white shadow-md">🏮 {scootChip}</span>
               <button onClick={arriveLeg} className="min-h-[60px] px-4 rounded-full bg-cream text-ink font-read font-bold text-xl border-2 border-gold shadow-md active:scale-95">{SCOOT_TEXT.ask} ✨</button>
-              <button onClick={stopScoot} className="min-h-[60px] px-4 rounded-full bg-night text-cream font-read font-bold text-xl border-2 border-white shadow-md active:scale-95">{SCOOT_TEXT.stop} 🌙</button>
+              <button onClick={stopScoot} className="min-h-[60px] px-4 rounded-full bg-night text-cream font-read font-bold text-xl border-2 border-white shadow-md active:scale-95">{stopArmed ? SCOOT_TEXT.stopSure : SCOOT_TEXT.stop} 🌙</button>
             </div>
           )}
         </>

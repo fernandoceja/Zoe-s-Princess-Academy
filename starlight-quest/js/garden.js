@@ -52,7 +52,9 @@ export const LANTERN_POSTS = [
 ];
 
 // B4 lantern scoot: the eight lanterns she walks to, in garden-local metres: the seven posts, then the lantern in the vine arch (HALOS 0-7).
+// Where she walks to for each (the ring of hedge round the first post is open only toward the pool, so that one is reached just outside the gap).
 export const QUEST_LANTERNS = [...LANTERN_POSTS.map((l) => ({ x: l.x, z: l.z })), { x: 0.8, z: 9.3 }];
+QUEST_LANTERNS[0] = { x: -3.0, z: 5.2 };
 
 /** True when a garden-local spot is in the reflecting pool or the fountain basin: treasures stay on dry ground. */
 export function gardenWet(lx, lz) {
