@@ -2,12 +2,12 @@
  * Every finished quest files each round's first-try result under a school skill (recordSkillResults, called from questComplete);
  * the Parent Corner shows one row per skill: Mastered, Practicing or Not started.
  * Mastered = 8 of her last 10 first-try answers right, across at least 2 different days. A Thursday test never counts here. */
-import { BLEND_WORDS, DIGRAPH_WORDS, SKILL_IDS } from '../engine-core.js';
+import { SKILL_IDS } from '../engine-core.js';
 
 export const SKILLS = [
   { id: 'doubles', label: 'Doubles (5 + 5, 8 + 8)' },
   { id: 'neardoubles', label: 'Doubles plus one (5 + 6)' },
-  { id: 'maketen', label: 'Make 10 (firefly jars)' },
+  { id: 'maketen', label: 'Make 10 (firefly jars)', soon: true },
   { id: 'chart120', label: '120 chart' },
   { id: 'cvc', label: 'CVC sounding out' },
   { id: 'blends', label: 'Blends (fr, st, cl)' },
@@ -19,33 +19,21 @@ export const MASTER_OF = 10;
 export const MASTER_OK = 8;
 export const MASTER_DAYS = 2;
 
-/** Which school skill a round practices, or null for rounds the view does not track. */
+/** Which school skill a round practices, or null for rounds the view does not track.
+ * The generators tag the math and word rounds (round.skill); a round with no tag (an older saved review round) is not counted,
+ * except Sound-it-out and dictation rounds, which read unambiguously from their own shape. */
 export function skillOf(npcId, round) {
   if (!round || typeof round !== 'object') return null;
+  if (round.test) return null; // a Thursday test never counts
   const prompt = typeof round.prompt === 'string' ? round.prompt : '';
-  if (npcId === 'elsa') {
-    if (round.kind === 'maketen') return 'maketen';
-    // "What is 6 + 6?" is a double, "What is 6 + 7?" or "7 + 6?" is a double plus one (read from the sum itself, at every level).
-    const m = /(\d+) \+ (\d+)\?$/.exec(prompt);
-    if (m && Number(round.answer) === Number(m[1]) + Number(m[2])) {
-      const d = Math.abs(Number(m[1]) - Number(m[2]));
-      if (d === 0) return 'doubles';
-      if (d === 1) return 'neardoubles';
-    }
-    return null;
-  }
+  const tag = typeof round.skill === 'string' ? round.skill : '';
+  if (npcId === 'elsa') return tag === 'doubles' || tag === 'neardoubles' || tag === 'maketen' ? tag : null;
+  if (npcId === 'tiana') return tag === 'maketen' ? 'maketen' : null;
   if (npcId === 'moana') return typeof round.kind === 'string' && round.kind.startsWith('chart') ? 'chart120' : null;
-  if (npcId === 'tiana') return round.kind === 'maketen' ? 'maketen' : null;
   if (npcId === 'belle') {
-    if (round.test) return null;
     if (prompt.startsWith('Sound it out')) return 'cvc';
     if ((round.build && round.build.sentence) || prompt === 'Which sentence did you hear?') return 'dictation';
-    if (prompt.startsWith('Which word says')) {
-      const a = round.answer;
-      if (BLEND_WORDS.includes(a)) return 'blends';
-      if (DIGRAPH_WORDS.includes(a)) return null;
-      return 'sight';
-    }
+    return tag === 'blends' || tag === 'sight' ? tag : null;
   }
   return null;
 }
@@ -77,7 +65,7 @@ export function skillRows(saveData) {
   return SKILLS.map((s) => {
     const l = Array.isArray(skills[s.id]) ? skills[s.id].slice(-MASTER_OF) : [];
     const status = skillStatus(l);
-    const detail = status === 'notstarted' ? 'Not started yet'
+    const detail = status === 'notstarted' ? (s.soon ? 'Not in the game yet' : 'Not started yet')
       : `${l.filter((e) => e.ok).length} of her last ${l.length} first-try answers right`;
     return { id: s.id, label: s.label, status, detail };
   });

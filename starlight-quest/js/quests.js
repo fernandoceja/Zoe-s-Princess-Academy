@@ -921,9 +921,6 @@ const BLEND_SETS = [
   ['clap', 'cap', 'clip'], ['plan', 'pan', 'plum'], ['trip', 'tip', 'trap'],
   ['snap', 'sap', 'snip'], ['stop', 'top', 'step'], ['grin', 'grab', 'pin'],
 ];
-/** Lead words of the blend and digraph rounds (M5 tells the skills apart by the answer word). */
-export const BLEND_WORDS = BLEND_SETS.map((set) => set[0]);
-export const DIGRAPH_WORDS = DIGRAPH_SETS.map((set) => set[0]);
 const SENTENCES = [
   ['The frog can hop.', '🐸', '🐟', '🐶', 'the frog'],
   ['A fish is in the dish.', '🐟', '🐸', '🐔', 'the fish'],
@@ -947,7 +944,7 @@ function _sightRound(w, pool, rng) {
   const d = [...new Set([...close, ..._shuffle(others, rng)])].slice(0, 2);
   // Sight words are not decodable (know, give, here), so no letter-sound clip.
   const { sound, ...r } = _wordRound(w, d);
-  return r;
+  return { ...r, skill: 'sight' }; // M5: sight words, told apart from blend and digraph rounds by this tag
 }
 function _cvcRound(set) {
   const w = set[0];
@@ -1327,6 +1324,7 @@ function _countOnRound(tier, rng) {
     r.say = `What is ${x} plus ${y}?`;
   }
   if (tier <= 2) r.visual = { kind: 'counton', start: big, hop: sm };
+  r.skill = 'counton'; // M5: counting on is not tracked as doubles plus one, even when it looks like it
   return r;
 }
 function _doublesRound(tier, rng) {
@@ -1345,6 +1343,7 @@ function _doublesRound(tier, rng) {
     hint: `Good try! A double is the same number twice. Count ${n} and ${n} more.`,
   };
   if (tier <= 2) r.visual = { kind: 'doubles', n, style: tier === 1 ? 'flakes' : 'frames' };
+  r.skill = 'doubles'; // M5: the parent skill view files rounds by this tag
   return r;
 }
 // Doubles plus one (1.OA.6): "6 + 6 is 12, so 6 + 7 is one more." Easy: the double's answer is given, picture shows both frames plus the extra dot.
@@ -1367,6 +1366,7 @@ function _nearDoublesRound(tier, rng) {
     r.say = `What is ${x} plus ${y}?`;
     if (tier === 2) r.visual = { kind: 'neardoubles', n, style: 'frames' };
   }
+  r.skill = 'neardoubles';
   return r;
 }
 function _elsaNew(tier, rng) {
@@ -2120,7 +2120,7 @@ const TIERS = {
       return rng() < 0.5 ? _cvcRound(_pick(CVC_SETS, rng)) : _sightRound(_pick(easy, rng), easy, rng);
     },
     2: (rng) => {
-      if (rng() < 0.5) { const dg = _pick(DIGRAPH_SETS, rng); return _wordRound(dg[0], dg.slice(1)); }
+      if (rng() < 0.5) { const dg = _pick(DIGRAPH_SETS, rng); return { ..._wordRound(dg[0], dg.slice(1)), skill: 'digraph' }; }
       // The week's sight words are always in the pool, with the class list or built-in list.
       const sight = [...new Set([...WEEK.sight, ...(SCHOOL_WORDS.length >= 3 ? SCHOOL_WORDS : SIGHT_1ST)])];
       // Half of these rounds practice this week's sight words, so they come up often.
@@ -2128,7 +2128,7 @@ const TIERS = {
       return _sightRound(w, [...new Set([...sight, ...DOLCH_1ST])], rng);
     },
     3: (rng) => {
-      if (rng() < 0.5) { const bl = _pick(BLEND_SETS, rng); return _wordRound(bl[0], bl.slice(1)); }
+      if (rng() < 0.5) { const bl = _pick(BLEND_SETS, rng); return { ..._wordRound(bl[0], bl.slice(1)), skill: 'blends' }; }
       return _sentenceRound(_pick(SENTENCES, rng));
     },
   },

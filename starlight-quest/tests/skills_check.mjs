@@ -17,12 +17,14 @@ for (const npc of ['belle', 'elsa', 'moana']) {
       for (const r of buildRounds(npc, rngFrom(seed * 13 + tier), { tier, review: [] })) {
         const id = skillOf(npc, r);
         if (id) seen[id]++;
+        if (npc === 'elsa' && /(\d+) \+ (\d+)\?$/.test(r.prompt) && r.skill === 'counton') ok(id === null, `count-on filed as ${id}: ${r.prompt}`);
         if (id === 'doubles') { const m = /(\d+) \+ (\d+)\?$/.exec(r.prompt); ok(npc === 'elsa' && m && m[1] === m[2] && Number(r.answer) === 2 * Number(m[1]), `doubles round ${r.prompt}`); }
         if (id === 'neardoubles') { const m = /(\d+) \+ (\d+)\?$/.exec(r.prompt); ok(npc === 'elsa' && m && Math.abs(m[1] - m[2]) === 1 && Number(r.answer) === Number(m[1]) + Number(m[2]), `near double ${r.prompt}`); }
         if (id === 'chart120') ok(npc === 'moana' && r.visual && r.visual.kind === 'chart', 'chart rounds carry a chart picture');
         if (id === 'cvc') ok(npc === 'belle' && /^Sound it out/.test(r.prompt), 'cvc prompt');
+        if (npc === 'belle' && /^Which word says/.test(r.prompt)) ok(['blends', 'sight', null].includes(id) && (r.skill === 'digraph' ? id === null : true), `word round ${r.prompt} -> ${id} (tag ${r.skill})`);
         if (id === 'blends') ok(/^Which word says/.test(r.prompt) && ['frog', 'flag', 'crab', 'drum', 'step', 'swim', 'clap', 'plan', 'trip', 'snap', 'stop', 'grin'].includes(r.answer), `blend answer ${r.answer}`);
-        if (id === 'sight') ok(/^Which word says/.test(r.prompt) && !['ship', 'chip', 'shop', 'chop', 'fish', 'dish', 'wish', 'shell', 'chin', 'much', 'lunch', 'rich', 'this', 'that', 'then', 'with', 'bath', 'math'].includes(r.answer), `sight answer ${r.answer}`);
+        if (id === 'sight') ok(/^Which word says/.test(r.prompt) && r.skill === 'sight' && !r.sound, `sight round ${r.prompt}`);
         if (id === 'dictation') ok(npc === 'belle' && (r.build || /Which sentence/.test(r.prompt)), 'dictation shape');
         if (r.test) ok(skillOf(npc, r) === null, 'a test round is never filed');
       }
@@ -30,13 +32,17 @@ for (const npc of ['belle', 'elsa', 'moana']) {
   }
 }
 for (const [id, n] of Object.entries(seen)) ok(n > 0, `no ${id} round was ever classified`);
-ok(skillOf('belle', null) === null && skillOf('belle', 'x') === null && skillOf('aurora', { kind: 'doubles' }) === null, 'junk and other lands give null');
+ok(skillOf('belle', null) === null && skillOf('belle', 'x') === null && skillOf('aurora', { skill: 'doubles' }) === null, 'junk and other lands give null');
+ok(skillOf('elsa', { prompt: 'Start at 3 and count on 2. What is 3 + 2?', answer: '5', skill: 'counton' }) === null, 'count-on is not doubles plus one');
+ok(skillOf('elsa', { prompt: 'What is 2 + 1?', answer: '3' }) === null, 'an untagged addition round is not guessed');
+ok(skillOf('belle', { prompt: "Which word says 'then'?", answer: 'then', skill: 'sight' }) === 'sight' && skillOf('belle', { prompt: "Which word says 'stop'?", answer: 'stop', skill: 'sight' }) === 'sight', 'sight words that look like digraph or blend words stay sight words');
+ok(skillOf('belle', { prompt: "Which word says 'ship'?", answer: 'ship', skill: 'digraph' }) === null, 'digraphs are not tracked');
 ok(skillOf('belle', { test: { n: 1 }, prompt: 'Sound it out' }) === null, 'a test round is not filed');
 
 // 2. Filing results, 10 kept per skill.
 {
   const save = { skills: {} };
-  const r = (kind, firstTry) => ({ round: kind === 'doubles' ? { prompt: 'What is 4 + 4?', answer: '8' } : { kind, prompt: 'x', answer: '1' }, firstTry });
+  const r = (kind, firstTry) => ({ round: kind === 'doubles' ? { prompt: 'What is 4 + 4?', answer: '8', skill: 'doubles' } : { kind, prompt: 'x', answer: '1' }, firstTry });
   for (let i = 0; i < 14; i++) recordSkillResults(save, 'elsa', [r('doubles', i % 2 === 0)], `2026-11-${String(10 + (i % 3)).padStart(2, '0')}`);
   ok(save.skills.doubles.length === 10, `kept ${save.skills.doubles.length}`);
   ok(!save.skills.neardoubles, 'untouched skills stay empty');
@@ -56,6 +62,7 @@ ok(skillOf('belle', { test: { n: 1 }, prompt: 'Sound it out' }) === null, 'a tes
   ok(skillStatus(mk([...Array(8).fill(true)], ['2026-11-10', '2026-11-11'])) === 'practicing', 'fewer than 10 answers is not mastered');
   ok(skillStatus(mk([false, false, false, false, ...Array(10).fill(true)], ['2026-11-10', '2026-11-11'])) === 'mastered', 'only the last 10 count');
   const rows = skillRows({ skills: { cvc: mk([...Array(9).fill(true), false], ['2026-11-10', '2026-11-12']) } });
+  ok(rows.find((x) => x.id === 'maketen').detail === 'Not in the game yet', 'make 10 says it is not in the game yet');
   ok(rows.length === SKILLS.length && rows.find((x) => x.id === 'cvc').status === 'mastered' && rows.find((x) => x.id === 'blends').status === 'notstarted', 'rows');
   ok(rows.find((x) => x.id === 'cvc').detail === '9 of her last 10 first-try answers right', 'row detail');
   ok(skillRows(null).every((x) => x.status === 'notstarted'), 'rows on a missing save');
