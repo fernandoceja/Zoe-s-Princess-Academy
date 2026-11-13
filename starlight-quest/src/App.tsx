@@ -20,6 +20,7 @@ import {
   setSchoolWords,
   setWeek,
   Save,
+  buildRounds,
 } from './engine-core.js';
 import {
   todayKey,
@@ -75,6 +76,7 @@ import {
 import { HUD } from './components/HUD';
 import { KingdomMap } from './components/KingdomMap';
 import { followLine, followSay, arrivedLine } from './flow/kingdommap.js';
+import { scootPlan, withBonus, expectedArrival, legLine, legSay, chipText, SCOOT_TEXT, LANTERN_TOTAL } from './flow/lanterns.js';
 import { TitleModal } from './components/TitleModal';
 import { spoken } from './flow/screens.js';
 import { TutorialModal } from './components/TutorialModal';
@@ -94,7 +96,7 @@ const NPC_IDS = NPC_ORDER as PrincessId[];
 // Let the star burst and happy hop play out before a full-screen card covers the world (main.js CELEBRATE_VIEW_MS).
 const CELEBRATE_VIEW_MS = 1800;
 
-type Phase = 'title' | 'tutorial' | 'roam' | 'dialogue' | 'challenge' | 'celebrate' | 'finale';
+type Phase = 'title' | 'tutorial' | 'roam' | 'scoot' | 'dialogue' | 'challenge' | 'celebrate' | 'finale';
 
 interface Dialogue {
   id: number;
@@ -143,6 +145,9 @@ export const App: React.FC = () => {
 
   const [paused, setPaused] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
+  const scootRef = useRef<any>(null);   // B4 lantern scoot: { plan, i } while she walks Jasmine's lanterns
+  const [scootChip, setScootChip] = useState<string | null>(null);
+  const [stopArmed, setStopArmed] = useState(false);   // Stop asks twice, so a stray tap does not end the walk
   const [mapPlayer, setMapPlayer] = useState({ x: 0, z: 4 });
   const [pauseTab, setPauseTab] = useState<
     'menu' | 'wardrobe' | 'treasurebook' | 'tutorial' | 'parent'
@@ -231,7 +236,7 @@ export const App: React.FC = () => {
 
   // Toggle Pause
   const handleTogglePause = () => {
-    if (phaseRef.current !== 'roam') {
+    if (phaseRef.current !== 'roam' && phaseRef.current !== 'scoot') {
       // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
       showToast('Finish talking first, then you can pause! ⏸️', 2200, false);   // she is mid-sentence: do not cut her off
       return;
@@ -239,6 +244,7 @@ export const App: React.FC = () => {
     const nextPaused = !pausedRef.current;
     pausedRef.current = nextPaused;
     setPaused(nextPaused);
+    if (!nextPaused && scootRef.current && scootRef.current.pending && phaseRef.current === 'scoot') window.setTimeout(() => arriveLeg(), 0);
     setPauseTab('menu');
     // The world keeps running under the pause menu (it delivers the gamepad resume key); see the cover rule at boot.
     if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused);
@@ -316,6 +322,63 @@ export const App: React.FC = () => {
     startQuest(npcId as PrincessId);
   };
 
+  // ---- B4 lantern scoot (Jasmine): walk to each lantern, answer one round, the lantern lights. The graded quest stays five rounds. ----
+  const resetLanterns = () => { for (let i = 0; i < LANTERN_TOTAL; i++) worldRef.current?.gardenLantern?.(i, 'reset'); };
+  const beginLeg = (i: number) => {
+    const w = worldRef.current, sc = scootRef.current;
+    if (!w || !sc) return;
+    const step = sc.plan.steps[i];
+    if (!step) { endScoot(); completeQuest(); return; }
+    sc.i = i;
+    setStopArmed(false);
+    setPhase('scoot');
+    setView(null);
+    setFeedback(null);
+    setDialogue(null);
+    w.unfocus();
+    w.setInputEnabled(true);
+    if (step.lantern != null) w.gardenLantern(step.lantern, 'next');
+    try { if (step.lantern != null) w.showTrailTo(expectedArrival(step), sc.spots[step.lantern]); else w.showTrail('jasmine'); } catch (e) { /* decoration only */ }
+    setScootChip(chipText(step, sc.plan.n));
+    showToast(legLine(step), 3500, legSay(step));
+  };
+  const beginScoot = (): boolean => {
+    const w = worldRef.current, q = qb.current;
+    if (!w || !q || q.test || !w.gardenLanternXZ) return false;
+    const spots = [];
+    for (let i = 0; i < LANTERN_TOTAL; i++) { const s = w.gardenLanternXZ(i); if (!s) return false; spots.push(s); }
+    const tier = landState(Save.data.ladder.jasmine).tier;
+    const plan = scootPlan(tier, spots, w.getPlayerXZ());
+    const rounds = withBonus(q.rounds, () => buildRounds('jasmine', Math.random, { tier, review: [] }), plan.total).slice(0, plan.total);
+    if (rounds.length < plan.total) return false;   // could not make enough rounds: play the ordinary quest, untouched
+    q.rounds = rounds;
+    scootRef.current = { plan, spots, i: 0 };
+    for (let i = 0; i < LANTERN_TOTAL; i++) w.gardenLantern(i, 'off');
+    beginLeg(0);
+    return true;
+  };
+  const arriveLeg = () => {
+    if (!scootRef.current || phaseRef.current !== 'scoot') return;
+    if (pausedRef.current) { scootRef.current.pending = true; return; }   // she slid up to the lantern as she paused: ask when she resumes
+    scootRef.current.pending = false;
+    worldRef.current?.clearTrail();
+    worldRef.current?.setInputEnabled(false);
+    setScootChip(null);
+    setToastMsg(null);
+    showRound('jasmine');
+  };
+  const endScoot = (keepLights = false) => {
+    scootRef.current = null;
+    setScootChip(null);
+    setStopArmed(false);
+    if (!keepLights) resetLanterns();   // after a finished quest the last lantern stays lit until she is back to roaming (endToRoam)
+    worldRef.current?.clearTrail();
+  };
+  const stopScoot = () => {
+    if (!stopArmed) { setStopArmed(true); window.setTimeout(() => setStopArmed(false), 3000); return; }
+    endScoot(); Narrator.stop(); endToRoam();
+  };
+
   // Start Quest with NPC (main.js startQuest)
   const startQuest = (npcId: PrincessId, opts: { again?: boolean } = {}) => {
     const d = questStart(Save.data, npcId, opts, today());
@@ -352,7 +415,7 @@ export const App: React.FC = () => {
       actionLabel: d.practice ? undefined : 'Start Quest! ⭐',
       secondaryLabel: npcId === 'belle' ? 'Thursday test 📝' : undefined,
       onSecondary: npcId === 'belle' ? () => beginSpellTest() : undefined,
-      onDone: () => showRound(npcId),
+      onDone: () => { if (npcId === 'jasmine' && beginScoot()) return; showRound(npcId); },
     });
   };
 
@@ -464,6 +527,14 @@ export const App: React.FC = () => {
       showRound(q.npcId);
       return;
     }
+    const sc = scootRef.current;
+    if (sc) {
+      const step = sc.plan.steps[sc.i];
+      if (step && step.lantern != null) worldRef.current?.gardenLantern(step.lantern, 'lit');
+      SoundFX.chime();
+      if (nextRound(q)) { endScoot(true); completeQuest(); } else beginLeg(sc.i + 1);
+      return;
+    }
     if (nextRound(q)) { if (q.test) finishSpellTest(); else completeQuest(); }
     else showRound(q.npcId);
   };
@@ -548,6 +619,7 @@ export const App: React.FC = () => {
   };
 
   const endToRoam = () => {
+    if (!scootRef.current) resetLanterns();
     qb.current = null;
     setActiveNPC(null);
     setView(null);
@@ -665,6 +737,8 @@ export const App: React.FC = () => {
     if (containerRef.current) {
       const world = createWorld(containerRef.current, {
         onTrailArrived(npcId: string) {
+          const sc = scootRef.current;
+          if (sc && phaseRef.current === 'scoot') { if (npcId === expectedArrival(sc.plan.steps[sc.i])) arriveLeg(); return; }
           if (phaseRef.current !== 'roam' || !PRINCESSES[npcId]) return;
           const nm = PRINCESSES[npcId].landName;
           showToast(arrivedLine(nm), 3000, spoken(arrivedLine(nm)));
@@ -816,7 +890,14 @@ export const App: React.FC = () => {
             todayStarNPC={todayStar}
             onOpenMap={gameState === 'roam' ? openMap : undefined}
           />
-          {gameState === 'roam' && <VirtualJoystick />}
+          {(gameState === 'roam' || gameState === 'scoot') && <VirtualJoystick />}
+          {gameState === 'scoot' && scootChip && (
+            <div className="fixed inset-x-0 mx-auto w-fit max-w-[calc(100vw-1rem)] bottom-44 z-30 flex items-center gap-2 pointer-events-auto flex-wrap justify-center">
+              <span className="min-h-[60px] px-4 flex items-center whitespace-nowrap rounded-full bg-gold text-ink font-read font-bold text-xl border-2 border-white shadow-md">🏮 {scootChip}</span>
+              <button onClick={arriveLeg} className="min-h-[60px] px-4 rounded-full bg-cream text-ink font-read font-bold text-xl border-2 border-gold shadow-md active:scale-95">{SCOOT_TEXT.ask} ✨</button>
+              <button onClick={stopScoot} className="min-h-[60px] px-4 rounded-full bg-night text-cream font-read font-bold text-xl border-2 border-white shadow-md active:scale-95">{stopArmed ? SCOOT_TEXT.stopSure : SCOOT_TEXT.stop} 🌙</button>
+            </div>
+          )}
         </>
       )}
 
