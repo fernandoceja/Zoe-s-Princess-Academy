@@ -99,5 +99,7 @@ export interface SaveData {
   ladder: Record<string, any>;
   lastPlay: Record<string, string>;
   week: any;
+  weekMeta: { weekOf: string; sentences: Record<string, string> };
+  spellTests: any[];
   schoolWords: string[];
 }

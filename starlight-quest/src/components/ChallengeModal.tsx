@@ -77,7 +77,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   }, [view]);
 
   const replay = () => {
-    const text = feedback && feedback.message
+    // The Thursday test word is never on screen, so 🔊 always repeats "Number N. word. sentence. word." (even after a hint).
+    const text = feedback && feedback.message && !round.test
       ? feedback.message
       : view.replayText || view.voiceText || round.prompt;
     Narrator.speakExact(npcId, text);
@@ -169,7 +170,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         if (next.length === target.length) onPick('__spelldone');
       } else {
         setWrongStreak(wrongStreak + 1);
-        onPick('__spellwrong', { index, say: round.build ? dictationHint({ ...round.build, hint: round.hint }, index) : undefined });
+        onPick('__spellwrong', { index, tile, say: round.build ? dictationHint({ ...round.build, hint: round.hint }, index) : undefined });
       }
     };
     const handleUndo = () => {
