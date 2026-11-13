@@ -35,11 +35,14 @@ for (const tier of [1, 2, 3]) {
     });
     const d = rounds[rounds.length - 1];
     ok(d.build && d.build.sentence && d.test.dictation && d.answer === WEEK_DEFAULT.dictation, `t${tier}: last round is not the dictation build`);
-    ok(d.prompt === `Number ${words.length + 1}. Listen and build the sentence.`, `t${tier}: dictation prompt`);
+    ok(d.prompt.startsWith(`Number ${words.length + 1}. Listen`), `t${tier}: dictation prompt`);
     // (i) tile rounds have no choice buttons, so voiceText adds no "Is it...?"
     for (const r of rounds) ok(!/Is it /.test(voiceText('belle', r, [])), 'voice adds an A/B/C line');
   }
 }
+
+// Tier 3 dictation tells her about the capital and end mark.
+{ const r3 = buildSpellTest(rngFrom(4), 3); const d3 = r3[r3.length - 1]; ok(/capital/.test(d3.say) && /capital/.test(d3.prompt), 'tier 3 test sentence mentions the capital letter and end mark'); }
 
 // (c) sentence priority: parent > built-in > template; an invalid parent sentence falls back.
 ok(testSentence('send', 'Please send it now.') === 'Please send it now.', 'parent sentence wins');
@@ -66,7 +69,10 @@ for (const [w, t] of Object.entries(TEST_SENTENCES)) {
   for (const day of ['2026-11-02', '2026-10-26', '2026-10-19', '2026-10-12']) recordSpellTest(save, log, day);
   ok(save.spellTests.length === 4 && save.spellTests[0].weekOf === '2026-11-09' && save.spellTests[3].weekOf === '2026-10-19', `4 weeks kept newest first: ${save.spellTests.map((e) => e.weekOf)}`);
   ok(wordsToPractice(save.spellTests[0]).join() === 'lend', 'words to practice');
-  ok(effectiveWeekOf({ weekMeta: { weekOf: '2026-11-02' } }, '2026-11-12') === '2026-11-02', 'a typed week-of wins');
+  ok(effectiveWeekOf({ weekMeta: { weekOf: '2026-11-09' } }, '2026-11-12') === '2026-11-09', 'a typed week-of wins this week');
+  ok(effectiveWeekOf({ weekMeta: { weekOf: '2026-11-02' } }, '2026-11-12') === '2026-11-09', 'a stale week-of falls back to this Monday');
+  ok(effectiveWeekOf({ weekMeta: { weekOf: '' } }, '2026-11-12') === '2026-11-09', 'no week-of uses Monday');
+  { const sv = { spellTests: [], weekMeta: { weekOf: '2026-01-05', sentences: {} } }; const r1 = recordSpellTest(sv, log, '2026-11-12'); const r2 = recordSpellTest(sv, log, '2026-11-13'); ok(r1.firstCrown && !r2.firstCrown && sv.spellTests.length === 1 && sv.spellTests[0].weekOf === '2026-11-09', 'a stale typed date cannot lose results or re-award the crown'); }
   ok(mondayOf('2026-11-15') === '2026-11-09' && mondayOf('2026-11-09') === '2026-11-09' && mondayOf('bad') === '', 'mondayOf');
   const lines = readBackLines(rounds);
   ok(lines[1] === 'Number 1. lend.' && lines.length === rounds.length + 1 - 0, `read back lines ${JSON.stringify(lines)}`);

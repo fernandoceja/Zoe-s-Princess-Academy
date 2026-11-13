@@ -77,7 +77,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   }, [view]);
 
   const replay = () => {
-    const text = feedback && feedback.message
+    // The Thursday test word is never on screen, so 🔊 always repeats "Number N. word. sentence. word." (even after a hint).
+    const text = feedback && feedback.message && !round.test
       ? feedback.message
       : view.replayText || view.voiceText || round.prompt;
     Narrator.speakExact(npcId, text);

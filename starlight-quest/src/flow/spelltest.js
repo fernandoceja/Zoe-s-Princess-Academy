@@ -16,10 +16,14 @@ export function mondayOf(day) {
   return d.toISOString().slice(0, 10);
 }
 
-/** The "week of" date results are filed under: the grown-up's date, else this week's Monday. */
+const _dayNum = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000 : NaN; };
+
+/** The "week of" date results are filed under: the grown-up's date while it is this week's (within 6 days before today, or a day ahead),
+ * else this week's Monday. A date nobody updated therefore never files a new week's test under an old week. */
 export function effectiveWeekOf(saveData, day) {
   const w = saveData && saveData.weekMeta && saveData.weekMeta.weekOf;
-  return w || mondayOf(day);
+  const age = _dayNum(day) - _dayNum(w);
+  return w && age >= -7 && age <= 6 ? w : mondayOf(day);
 }
 
 /** The rounds for one test, from the live WEEK pack and the grown-up's own sentences. */

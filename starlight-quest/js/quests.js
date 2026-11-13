@@ -1113,8 +1113,10 @@ export function buildSpellTest(rng, tier, sentences = {}, week = WEEK) {
   const d = _dictRound(Math.max(2, tier || 1), rng, week.dictation);
   rounds.push({
     ...d,
-    prompt: `Number ${n}. Listen and build the sentence.`,
-    say: `Number ${n}. ${week.dictation} Tap the words to build the sentence.`,
+    prompt: d.build && d.build.hints ? `Number ${n}. Listen. Build the sentence with a capital and an end mark.` : `Number ${n}. Listen and build the sentence.`,
+    say: `Number ${n}. ${week.dictation} ` + (d.build && d.build.hints
+      ? 'Tap the words to build it. Start with a capital letter and finish with the right end mark.'
+      : 'Tap the words to build the sentence.'),
     replay: `Number ${n}. ${week.dictation}`,
     test: { n, dictation: true },
     noChoiceSay: true,
