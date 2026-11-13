@@ -52,8 +52,8 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
   };
 
   return (
-    <div className="zsq-sheet fixed inset-0 z-40 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in pointer-events-auto">
-      <div className="w-full max-w-xl bg-gradient-to-b from-white via-[#fdfcf7] to-[#f7f4e9] rounded-3xl border-4 border-[#ebd373] p-5 sm:p-7 shadow-2xl relative">
+    <div className="zsq-sheet fixed inset-0 z-40 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in pointer-events-auto overflow-y-auto">
+      <div className="w-full max-w-xl bg-gradient-to-b from-white via-[#fdfcf7] to-[#f7f4e9] rounded-3xl border-4 border-[#ebd373] p-5 sm:p-7 shadow-2xl relative my-auto">
         {/* Princess Info Header */}
         <div className="flex items-center gap-4 mb-4">
           <div
@@ -89,7 +89,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
 
         {/* Speech Bubble / Dialogue Text */}
         <div className="bg-white/90 border-2 border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-5 shadow-inner min-h-[5rem] flex items-center">
-          <p className="text-lg sm:text-xl font-bold text-slate-800 leading-snug">
+          <p className="font-read text-read font-bold text-ink">
             "{currentLine}"
           </p>
         </div>

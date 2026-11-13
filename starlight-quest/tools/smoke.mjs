@@ -193,7 +193,7 @@ async function offline(browser, base) {
   // First round visible: the quest pill reads "Belle · 1/5" and the round has answer buttons.
   const pill = page.locator('header').first();
   await poll(async () => /Belle\s*·\s*1\/5/.test(await pill.innerText()), 30000, 'Belle 1/5 quest pill').then(() => true, () => check(false, 'offline: quest pill never showed "Belle · 1/5"'));
-  const choices = await page.locator('.zsq-modal-wrap button.rounded-2xl').count();
+  const choices = await page.locator('.zsq-modal-wrap button.rounded-2xl, .zsq-modal-wrap button.rounded-xl').count();
   check(choices >= 2, `offline: first round shows ${choices} answer buttons, expected at least 2`);
   await shot(page, 'offline-belle-round1');
 

@@ -122,7 +122,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             <button
               key={i}
               onClick={() => playSound(l, i)}
-              className={`w-[60px] min-h-[64px] h-16 sm:w-16 sm:h-20 rounded-2xl border-4 font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md active:scale-95 transition-all ${
+              className={`w-[60px] min-h-[64px] h-16 sm:w-16 sm:h-20 rounded-2xl border-4 font-read font-bold text-tile flex items-center justify-center shadow-md active:scale-95 transition-all ${
                 activeBlendLetter === i
                   ? 'bg-amber-400 text-amber-950 border-white scale-110 shadow-lg'
                   : 'bg-white text-purple-950 border-purple-200 hover:border-purple-300'
@@ -200,7 +200,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           {target.map((_: any, i: number) => (
             <div
               key={i}
-              className={`min-w-[42px] h-12 px-3 rounded-xl border-2 flex items-center justify-center font-black text-lg ${
+              className={`min-w-[44px] h-14 px-2 rounded-xl border-2 flex items-center justify-center font-read font-bold text-tile ${
                 placedTiles[i]
                   ? 'bg-white border-amber-400 text-amber-950 shadow-xs'
                   : i === placedTiles.length
@@ -211,7 +211,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
               {placedTiles[i] || ''}
             </div>
           ))}
-          {round.build?.end && <div className="text-2xl font-black text-amber-950">{round.build.end}</div>}
+          {round.build?.end && <div className="font-read text-tile font-bold text-amber-950">{round.build.end}</div>}
         </div>
         {/* Tile Bank */}
         <div className="flex flex-wrap justify-center gap-2">
@@ -223,7 +223,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 key={i}
                 disabled={isUsed || locked}
                 onClick={() => handleTileTap(t)}
-                className={`min-h-[60px] min-w-[60px] px-4 py-2.5 rounded-xl border-2 font-black text-xl sm:text-2xl shadow-sm transition-all active:scale-95 ${
+                className={`min-h-[60px] min-w-[60px] px-3 py-1.5 rounded-xl border-2 font-read font-bold text-tile shadow-sm transition-all active:scale-95 ${
                   isUsed
                     ? 'opacity-30 bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
                     : isGlow
@@ -283,7 +283,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           {sortedItems.map((item, i) => (
             <div
               key={i}
-              className={`px-3 py-2 rounded-xl border-2 font-black text-sm flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-xl border-2 font-read font-bold text-read flex flex-wrap items-center justify-center gap-2 ${
                 item.bin
                   ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
                   : 'bg-white border-purple-200 text-purple-950 shadow-sm'
@@ -296,7 +296,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                     <button
                       key={b}
                       onClick={() => handleSortItem(i, bi)}
-                      className="min-h-[60px] min-w-[60px] px-3 py-1 rounded-xl bg-purple-100 hover:bg-purple-200 text-sm font-bold text-purple-900 active:scale-95"
+                      className="min-h-[60px] min-w-[60px] px-3 py-1 rounded-xl bg-purple-100 hover:bg-purple-200 text-xl font-read font-bold text-purple-900 active:scale-95"
                     >
                       {b}
                     </button>
@@ -354,7 +354,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         </div>
         {/* Question Prompt */}
         <div className="bg-white/95 border-2 border-amber-200/90 rounded-2xl p-3 sm:p-4 mb-2 shadow-xs flex items-center justify-between gap-3">
-          <p className="text-lg sm:text-xl font-black text-slate-800 leading-snug">
+          <p className="font-read text-read font-bold text-ink">
             {round.prompt}
           </p>
           <button
@@ -371,7 +371,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           <div className="my-2 flex justify-center" dangerouslySetInnerHTML={{ __html: view.visualHtml }} />
         )}
         {view.bigWord && (
-          <div className="my-2 text-center text-3xl sm:text-4xl font-black tracking-widest text-slate-800">{view.bigWord}</div>
+          <div className="my-2 text-center font-read text-tile font-bold tracking-widest text-ink">{view.bigWord}</div>
         )}
         {renderBlendLetters()}
         {renderTileBuilder()}
@@ -397,9 +397,9 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   disabled={locked}
                   onClick={() => onPick(choice.id)}
                   style={dim ? { opacity: 0.55 } : undefined}
-                  className={`min-h-[64px] sm:min-h-[80px] p-3 rounded-2xl border-3 font-black text-lg sm:text-xl flex items-center justify-center text-center shadow-sm active:scale-95 transition-all select-none ${btnStyle}`}
+                  className={`min-h-[64px] sm:min-h-[80px] p-3 rounded-2xl border-3 font-read font-bold text-read flex items-center justify-center text-center shadow-sm active:scale-95 transition-all select-none ${btnStyle}`}
                 >
-                  <span className="leading-snug break-words">{choice.label}</span>
+                  <span className="leading-tight break-words max-w-full">{choice.label}</span>
                 </button>
               );
             })}
@@ -408,7 +408,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         {/* Encouraging Feedback Banner (the picture hint for tile and sort misses too) */}
         {feedback && feedback.message && (
           <div
-            className={`mt-4 p-3 rounded-2xl border-2 text-center font-black text-sm sm:text-base animate-fade-in ${
+            className={`mt-4 p-3 rounded-2xl border-2 text-center font-read font-bold text-read animate-fade-in ${
               feedback.kind === 'correct'
                 ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
                 : feedback.kind === 'reveal'

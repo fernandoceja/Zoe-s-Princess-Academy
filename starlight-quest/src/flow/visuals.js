@@ -115,7 +115,7 @@ export function storyCardsHtml(v) {
 export function sentenceCardHtml(v) {
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   return `<div role="img" aria-label="${esc('Sign: ' + v.text)}" style="max-width:100%;margin:0 auto;background:#fff;border:3px solid #fca5a5;border-radius:16px;padding:12px 14px;text-align:center;box-sizing:border-box;` +
-    `font-family:Nunito,system-ui,sans-serif;font-weight:800;font-size:30px;line-height:1.25;color:#7f1d1d;overflow-wrap:anywhere;text-transform:none">${esc(v.text)}</div>`;
+    `font-family:Andika,Nunito,system-ui,sans-serif;font-weight:700;font-size:30px;line-height:1.25;color:#7f1d1d;overflow-wrap:anywhere;text-transform:none">${esc(v.text)}</div>`;
 }
 
 // Measuring picture: flowers stand on one ground line (compare heights), or a stem beside a column of petal units.
