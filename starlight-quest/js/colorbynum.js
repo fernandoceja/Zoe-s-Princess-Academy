@@ -31,7 +31,7 @@ export const PICTURES = {
     { svg: (f) => `<circle cx="60" cy="50" r="11" fill="${f}"`, fill: BROWN, cx: 60, cy: 50 },
   ],
   house: [
-    { svg: (f) => `<rect x="24" y="56" width="72" height="50" fill="${f}"`, fill: GOLD, cx: 60, cy: 94 },
+    { svg: (f) => `<rect x="24" y="56" width="72" height="50" fill="${f}"`, fill: GOLD, cx: 60, cy: 64 },
     { svg: (f) => `<polygon points="16,58 60,22 104,58" fill="${f}"`, fill: RED, cx: 60, cy: 48 },
     { svg: (f) => `<rect x="50" y="78" width="20" height="28" rx="3" fill="${f}"`, fill: BROWN, cx: 60, cy: 92 },
     { svg: (f) => `<rect x="30" y="66" width="14" height="14" fill="${f}"`, fill: SKY, cx: 37, cy: 73 },
@@ -57,7 +57,7 @@ const PIC_LABEL = { flower: 'flower', house: 'little house', butterfly: 'butterf
 
 /** The picture: every piece painted except `region`, which is grey with a "?". */
 export function paintHtml(v) {
-  const pic = PICTURES[v && v.pic] ? v.pic : 'flower';
+  const pic = Object.prototype.hasOwnProperty.call(PICTURES, v && v.pic) ? v.pic : 'flower';
   const miss = Number.isInteger(v && v.region) && v.region >= 0 && v.region < PIECES ? v.region : 0;
   let out = '';
   PICTURES[pic].forEach((p, i) => {
@@ -73,7 +73,7 @@ export function paintHtml(v) {
 // ---- Rounds ----
 const HINT = {
   add: 'Good try! Hold up your fingers. Start with the first number and count on.',
-  double: 'Good try! A double is the same number twice. Show the same number of fingers on both hands, then count them all.',
+  double: 'Good try! A double is the same number twice. Count the first group, then keep counting the same amount again.',
   ten: 'Good try! Think of a ten-frame. Count the empty spots to fill it up to the top.',
   sub: 'Good try! Start at the big number and count back, or think of what adds up to it.',
 };

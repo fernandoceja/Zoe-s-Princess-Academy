@@ -2250,7 +2250,7 @@ for (const t of [1, 2, 3]) {
 /** Stable id for a round, used by the review queue. */
 // Measuring rounds share prompts, so their picture is part of the id.
 export function roundKey(r) {
-  const v = r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : '';
+  const v = r.visual && r.visual.kind === 'paint' ? '|paint' : r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : ''; // the same fact on another garden picture is the same round
   const s = r.sort && r.sort.items ? `|sort:${r.sort.items.map((i) => i.name).join(',')}` : '';
   const w = r.show ? `|show:${r.show}` : ''; // spelling rounds share prompts; the partial word tells them apart
   return `${r.prompt}|${r.answer}${v}${s}${w}`;

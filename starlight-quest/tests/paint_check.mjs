@@ -22,6 +22,7 @@ for (const pic of PIC_NAMES) {
     ok(xs.every((x) => x >= 0 && x <= 120), 'inside the picture');
   }
 }
+ok(paintHtml({ pic: 'constructor', region: 1 }).includes('data-missing="1"'), 'built-in names are not pictures');
 ok(paintHtml({ pic: 'nope', region: 99 }).includes('data-missing="1"'), 'junk input still draws a picture');
 ok(!/<script|onerror|javascript:/i.test(paintHtml({ pic: '<script>', region: '<b>' })), 'no markup injected from the visual');
 
@@ -53,6 +54,14 @@ for (const tier of [1, 2, 3]) for (let seed = 1; seed <= 500; seed++) for (const
 }
 ok(n > 300, `paint rounds appear (${n})`);
 ok(kinds.add > 0 && kinds.ten > 0 && kinds.sub > 0, `every fact kind appears ${JSON.stringify(kinds)}`);
+
+// no paint fact repeats inside one quest
+let rep = 0;
+for (const tier of [1, 2, 3]) for (let seed = 1; seed <= 400; seed++) {
+  const ps = buildRounds('rapunzel', rngFrom(seed * 11 + tier), { tier, review: [] }).filter((r) => r.visual && r.visual.kind === 'paint').map((r) => r.prompt);
+  if (new Set(ps).size !== ps.length) rep++;
+}
+ok(rep === 0, `${rep} quests repeat a paint fact`);
 
 // 3. Her plant science is still there.
 let sci = 0;
