@@ -3,6 +3,7 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,tsx}'],
   theme: {
     extend: {
+      borderWidth: { 3: '3px' },   // the choice buttons use border-3
       // Starlight storybook palette (M6): one set of names for the whole shell.
       colors: {
         night: '#2B1E5C', gold: '#F6C945', rose: '#FF8FB8', lilac: '#C9B3F2', mint: '#8FD6C4', cream: '#FFF8EC', ink: '#2A2140',

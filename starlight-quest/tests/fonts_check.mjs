@@ -34,6 +34,9 @@ ok(/read: \['Andika'/.test(tw) && /title: \['Nunito'/.test(tw), 'font families r
 ok(/read: \['1\.5rem'/.test(tw) && /tile: \['2\.25rem'/.test(tw), 'type scale: read 24px, tile 36px');
 ok(/--fs-read:1\.5rem/.test(st) && /--fs-tile:2\.25rem/.test(st), 'css type variables');
 
+ok(/borderWidth: \{ 3: '3px' \}/.test(tw), 'border-3 must exist in the Tailwind config');
+const dlg = rd('src/components/DialogueModal.tsx');
+ok(/zsq-sheet[^"]*overflow-y-auto/.test(dlg) && /relative my-auto/.test(dlg), 'dialogue sheet scrolls in short landscape');
 // 4. The words she reads use them.
 const ch = rd('src/components/ChallengeModal.tsx'), dl = rd('src/components/DialogueModal.tsx');
 const has = (src, needle, why) => ok(src.includes(needle), why);

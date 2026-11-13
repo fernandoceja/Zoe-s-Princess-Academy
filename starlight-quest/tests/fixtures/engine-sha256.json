@@ -39,7 +39,7 @@
     "tests/cove_check.mjs": "6ce9f22a9df12b1daf13842b36a746fe583339522a153e6ad072a0f6b16b5e76",
     "tests/dictation_check.mjs": "34402adf211520d576cf841c0ff49b1ab84f93966a34b8be2c96a3d13af45329",
     "tests/finale_check.mjs": "505f1432295a25111196fe08b1835068a336211d02df1f7e602cf0edbaa91d1b",
-    "tests/fonts_check.mjs": "2afc3e84af11b52094b5e48862713ef1a121978473ccf3c2c980dff1ddcfe774",
+    "tests/fonts_check.mjs": "6ae82722743eb1765a229c2d03375a8fd875543a9173acd686ee3ad783ea3543",
     "tests/garden_check.mjs": "b1922d69b66625f1164bef1381ee5495f996fac356821f5e9c8deab62c86c769",
     "tests/gate_check.mjs": "724ed26cee9f0242b4e068d8c77696d545883889c10c9c073aa5be0824299e19",
     "tests/glen_check.mjs": "632d5da90f13845ebe387e089012db22b8b6b02450cb8f7cda7919e402cf3c34",
