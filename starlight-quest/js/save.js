@@ -120,6 +120,21 @@ export function sanitizeWeekMeta(raw) {
   return out;
 }
 
+/** First-try results per school skill (M5): { skillId: [{ ok, day }] }, the last 10 of each. Unknown skills and bad entries are dropped. Never throws. */
+export const SKILL_IDS = ['doubles', 'neardoubles', 'maketen', 'chart120', 'cvc', 'blends', 'sight', 'dictation'];
+export function sanitizeSkills(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const id of SKILL_IDS) {
+    const list = raw[id];
+    if (!Array.isArray(list)) continue;
+    const keep = list.filter((e) => e && typeof e === 'object' && typeof e.ok === 'boolean' && typeof e.day === 'string' && DAY_RE.test(e.day))
+      .map((e) => ({ ok: e.ok, day: e.day })).slice(-10);
+    if (keep.length) out[id] = keep;
+  }
+  return out;
+}
+
 function defaults() {
   return {
     stars: 0,
@@ -138,6 +153,7 @@ function defaults() {
     lastPlay: {}, // per land: local day of the last finished quest
     week: null,     // this week's school pack (Parent Corner); null = defaults
     weekMeta: { weekOf: '', sentences: {} }, // "week of" date + grown-up's own test sentences (M3)
+    skills: {},     // first-try results per school skill, last 10 each (M5, see sanitizeSkills)
     spellTests: [], // Thursday practice test results, newest first, last 4 weeks (M3, see sanitizeSpellTests)
     schoolWords: [] // teacher's sight words (Parent Corner); [] = built-in list
   };
@@ -208,6 +224,7 @@ export function merge(raw) {
 
   out.weekMeta = sanitizeWeekMeta(raw.weekMeta);
   out.spellTests = sanitizeSpellTests(raw.spellTests);
+  out.skills = sanitizeSkills(raw.skills);
 
   return out;
 }

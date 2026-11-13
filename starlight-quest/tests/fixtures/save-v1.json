@@ -69,6 +69,7 @@
     "dictation": "The cat sat on the mat."
   },
   "weekMeta": { "weekOf": "2026-11-09", "sentences": { "fish": "I like to fish." } },
+  "skills": { "cvc": [ { "ok": true, "day": "2026-11-10" }, { "ok": false, "day": "2026-11-12" } ] },
   "spellTests": [
     { "weekOf": "2026-11-09", "words": { "ship": { "built": "ship", "ok": true, "date": "2026-11-12" }, "chat": { "built": "chet", "ok": false, "date": "2026-11-12" } }, "crown": true }
   ],

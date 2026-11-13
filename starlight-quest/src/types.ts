@@ -101,5 +101,6 @@ export interface SaveData {
   week: any;
   weekMeta: { weekOf: string; sentences: Record<string, string> };
   spellTests: any[];
+  skills: Record<string, { ok: boolean; day: string }[]>;
   schoolWords: string[];
 }

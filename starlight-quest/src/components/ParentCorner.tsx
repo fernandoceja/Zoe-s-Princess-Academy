@@ -7,6 +7,7 @@ import {
 } from '../flow/parent.js';
 import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState, Save, testSentence } from '../engine-core.js';
 import { wordsToPractice } from '../flow/spelltest.js';
+import { skillRows } from '../flow/skills.js';
 
 export interface WeekForm {
   spelling: string;
@@ -266,6 +267,34 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               </button>
             </div>
             {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* School skills (M5): Mastered / Practicing / Not started */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">School skills</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              Mastered means 8 of her last 10 first-try answers were right, on at least 2 different days.
+            </p>
+            <ul className="flex flex-col gap-1">
+              {skillRows(Save.data).map((r: any) => (
+                <li key={r.id} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-slate-800">{r.label}</span>
+                  <span className="text-right">
+                    <span
+                      className={
+                        'px-2 py-0.5 rounded-full font-black ' +
+                        (r.status === 'mastered' ? 'bg-emerald-100 text-emerald-800'
+                          : r.status === 'practicing' ? 'bg-amber-100 text-amber-800'
+                          : 'bg-slate-100 text-slate-600')
+                      }
+                    >
+                      {r.status === 'mastered' ? 'Mastered' : r.status === 'practicing' ? 'Practicing' : 'Not started'}
+                    </span>
+                    <span className="block text-[11px] text-slate-500">{r.detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Thursday practice test history (M3): what she built, and the words to practice */}

@@ -10,6 +10,7 @@ import {
   PRINCESSES, QUESTS, FINALE_LINES, buildRounds, landState, recordQuest, today,
   pickTodayStar, checkMilestones, unseenKingdomSlots, shouldRunFinale, builtSlotIds, BUILT_SLOTS,
 } from '../engine-core.js';
+import { recordSkillResults } from './skills.js';
 
 // Land -> the world's land id used for the celebration (main.js NPC_TO_LAND).
 export const NPC_TO_LAND = { belle: 'library', elsa: 'frostfall', rapunzel: 'meadow', cinderella: 'village', ariel: 'cove', moana: 'isle', jasmine: 'garden', anna: 'harbor', tiana: 'bayou', aurora: 'glen' };
@@ -68,6 +69,7 @@ export function todayStarTarget(saveData, day = today()) {
  */
 export function questComplete(saveData, npcId, results, day = today()) {
   saveData.ladder[npcId] = recordQuest(landState(saveData.ladder[npcId]), results);
+  recordSkillResults(saveData, npcId, results, day); // M5: the parent's skill view
   saveData.lastPlay[npcId] = day;
   const todayStar = todayStarTarget(saveData, day);
   if (saveData.done.includes(npcId)) return { kind: 'practice', todayStar };
