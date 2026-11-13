@@ -13,6 +13,7 @@ function sweep(label, spelling, vowels) {
       const rs = buildRounds('belle', seeded(seed * 7 + tier), { tier, review: [] });
       for (const r of rs) {
         stat[tier][1]++;
+        if (r.kind === 'vowelsort') continue; // vowel jars (M4) are checked in vowelsort_check.mjs
         if (!r.choices.includes(r.answer)) fail(label + ': answer not in choices', r);
         if (new Set(r.choices).size !== 3) fail(label + ': need 3 distinct choices', r);
         if (r.key !== roundKey(r)) fail(label + ': key', r);

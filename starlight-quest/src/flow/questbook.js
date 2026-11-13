@@ -113,7 +113,7 @@ const _itemLine = (i) => `${_an(i.name) === 'an' ? 'An' : 'A'} ${i.name}.`;
 export function sortFirstLine(sort) {
   const items = sort.items || [];
   if (!items.length) return '';
-  return sort.kind === 'words' ? items[0].name : _itemLine(items[0]);
+  return sort.kind === 'words' || sort.kind === 'groups' ? items[0].name : _itemLine(items[0]);
 }
 
 /**
@@ -124,8 +124,14 @@ export function sortBinRight(item, wordSort, yesBin) {
   return yesBin === !!(wordSort ? item.naming : item.living);
 }
 
-/** Hint for a wrong bin (ui.js _sortBins, the hint text shown and spoken). */
-export function sortWrongHint(item, wordSort) {
+/** Group sort (M4: vowel jars, shell sort): any number of bins, and each item says which one it belongs in (item.to is the bin's index). */
+export function groupBinRight(item, binIdx) {
+  return Number.isInteger(item && item.to) && item.to === binIdx;
+}
+
+/** Hint for a wrong bin (ui.js _sortBins, the hint text shown and spoken). A group sort carries its own hint. */
+export function sortWrongHint(item, wordSort, sort) {
+  if (sort && sort.kind === 'groups') return typeof sort.hint === 'string' && sort.hint ? sort.hint : 'Good try! Look at the word again.';
   if (wordSort) return 'Good try! A naming word names a thing. An action word tells what it does.';
   return item.living
     ? `Good try! ${_an(item.name) === 'an' ? 'An' : 'A'} ${item.name} needs water to grow. Is it living?`

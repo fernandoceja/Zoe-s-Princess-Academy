@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PRINCESSES, QUESTS, tileSound } from '../engine-core.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
-import { dictationHint, sortBinRight, sortWrongHint } from '../flow/questbook.js';
+import { dictationHint, sortBinRight, sortWrongHint, groupBinRight } from '../flow/questbook.js';
 import { PrincessId, Round } from '../types';
 
 // What the flow hands the view for one round (roundView + voice text + visual HTML, see App.tsx).
@@ -262,18 +262,19 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   // engine's hint; the last item in a right bin -> '__sortdone'.
   const renderWordSort = () => {
     if (!round.sort) return null;
+    const groupSort = round.sort.kind === 'groups';
     const wordSort = round.sort.kind === 'words';
     const bins: string[] = round.choices || (wordSort ? ['Naming', 'Action'] : ['🌱 Living', '🪨 Not living']);
     const handleSortItem = (itemIdx: number, binIdx: number) => {
       if (locked) return;
       const item = sortedItems[itemIdx];
       SoundFX.pop();
-      if (sortBinRight(item, wordSort, binIdx === 0)) {
+      if (groupSort ? groupBinRight(item, binIdx) : sortBinRight(item, wordSort, binIdx === 0)) {
         const updated = sortedItems.map((it, i) => (i === itemIdx ? { ...it, bin: bins[binIdx] } : it));
         setSortedItems(updated);
         if (updated.every((it) => it.bin != null)) onPick('__sortdone');
       } else {
-        onPick('__sortwrong', sortWrongHint(item, wordSort));
+        onPick('__sortwrong', sortWrongHint(item, wordSort, round.sort));
       }
     };
     return (

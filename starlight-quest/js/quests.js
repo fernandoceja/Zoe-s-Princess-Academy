@@ -2130,6 +2130,33 @@ function _auroraSort(rng) {
     choices: ['Naming', 'Action'], answer: 'Naming', hint: 'A naming word names a thing. An action word tells what it does.', sort: { kind: 'words', items } };
 }
 
+// ---- M4: group sorts that reuse the sorting bins. Each item names the bin it belongs in (item.to). ----
+// Belle's vowel jars: sort short-vowel words by the vowel in the middle.
+const _VOWEL_WORDS = {};
+for (const w of new Set(CVC_SETS.flat())) (_VOWEL_WORDS[w[1]] ||= []).push(w);
+function _vowelSort(tier, rng) {
+  const jars = tier === 1 ? 2 : 3, per = tier === 1 ? 2 : 2;
+  const vowels = _sample(Object.keys(_VOWEL_WORDS).filter((v) => _VOWEL_WORDS[v].length >= per), jars, rng);
+  const items = _shuffle(vowels.flatMap((v, to) => _sample(_VOWEL_WORDS[v], per, rng).map((name) => ({ name, to }))), rng);
+  const choices = vowels.map((v) => `🫙 ${v}`);
+  return { kind: 'vowelsort', prompt: 'Put each word in its vowel jar.', say: 'Listen to the middle sound. Put each word in its vowel jar.',
+    choices, answer: choices[0], hint: 'Good try! Say the word slowly and listen to the middle sound.', sort: { kind: 'groups', items, hint: 'Good try! Say the word slowly and listen to the middle sound.' } };
+}
+// Ariel's shell sort: sort words by their ending.
+export const SHELL_ENDINGS = {
+  nd: ['hand', 'sand', 'band', 'land', 'send', 'bend', 'pond', 'end'],
+  st: ['best', 'nest', 'rest', 'vest', 'fast', 'last', 'list', 'mist', 'fist', 'dust'],
+  nk: ['pink', 'sink', 'wink', 'bank', 'tank', 'drink', 'trunk', 'skunk'],
+};
+function _shellSort(tier, rng) {
+  const shells = tier === 2 ? 2 : 3, per = 2;
+  const ends = _sample(Object.keys(SHELL_ENDINGS), shells, rng);
+  const items = _shuffle(ends.flatMap((e, to) => _sample(SHELL_ENDINGS[e], per, rng).map((name) => ({ name, to }))), rng);
+  const choices = ends.map((e) => `🐚 -${e}`);
+  return { kind: 'shellsort', prompt: 'Put each word in its shell.', say: 'Listen to how each word ends. Put each word in its shell.',
+    choices, answer: choices[0], hint: 'Good try! Say the word and listen to the last two sounds.', sort: { kind: 'groups', items, hint: 'Good try! Say the word and listen to the last two sounds.' } };
+}
+
 // One round generator per tier, per land.
 const TIERS = {
   belle: {
@@ -2185,6 +2212,16 @@ const TIERS = {
     3: _sciOr(3, SCI_T3),
   },
 };
+
+// About 1 round in 6 of Belle's rounds is a vowel jar sort and 1 in 4 of Ariel's (tiers 2 and 3) a shell sort (M4).
+for (const t of [1, 2, 3]) {
+  const base = TIERS.belle[t];
+  TIERS.belle[t] = (rng) => (rng() < 1 / 6 ? _vowelSort(t, rng) : base(rng));
+}
+for (const t of [2, 3]) {
+  const base = TIERS.ariel[t];
+  TIERS.ariel[t] = (rng) => (rng() < 1 / 4 ? _shellSort(t, rng) : base(rng));
+}
 
 // About 1 Tiana round in 3 is a firefly jar; the rest are tally marks as before.
 for (const t of [1, 2, 3]) {
