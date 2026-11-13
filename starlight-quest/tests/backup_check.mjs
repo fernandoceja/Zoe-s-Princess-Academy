@@ -58,6 +58,20 @@ if (hostile.ok) {
   ok(!('nope' in (hostile.data.skills || {})), 'unknown skill kept');
 }
 
+// 3b. Markup hidden in saved review rounds is dropped, normal rounds survive.
+const goodRound = { prompt: 'Count on: 5 + 2?', choices: [6, 7, 8], answer: 7, visual: { kind: 'counton', start: 5, hop: 1 } };
+const evil = { prompt: 'x', choices: [1, 2], answer: 1, visual: { kind: 'counton', start: '"><img src=x onerror=alert(1)>', hop: 1 } };
+const evil2 = { prompt: '<b>x</b>', choices: [1, 2], answer: 1 };
+const evil3 = { prompt: 'x', choices: [1, 2], answer: 1, visual: { kind: 'counton', start: NaN, hop: 1 } };
+const lad = readBackup(wrap({ app: BACKUP_APP, version: 1, data: { ladder: { elsa: { tier: 2, review: [{ round: goodRound, wins: 1 }, { round: evil, wins: 0 }, { round: evil2, wins: 0 }, { round: evil3, wins: 0 }] } } } }));
+ok(lad.ok, 'ladder backup should load');
+if (lad.ok) {
+  const rv = lad.data.ladder.elsa.review;
+  ok(rv.length === 1 && rv[0].round.prompt === goodRound.prompt, 'only the plain round should survive: ' + JSON.stringify(rv).slice(0, 120));
+  ok(!JSON.stringify(lad.data).includes('onerror'), 'markup survived');
+  ok(lad.data.ladder.elsa.tier === 2, 'tier lost');
+}
+
 // 4. apply puts the cleaned data in as the save.
 const fake = { data: { stars: 1 } };
 if (r.ok) {

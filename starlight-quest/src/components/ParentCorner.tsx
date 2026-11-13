@@ -8,7 +8,7 @@ import {
 import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState, Save, testSentence } from '../engine-core.js';
 import { wordsToPractice } from '../flow/spelltest.js';
 import { skillRows } from '../flow/skills.js';
-import { makeBackup, readBackup, applyBackup } from '../flow/backup.js';
+import { makeBackup, readBackup, applyBackup, MAX_BACKUP_BYTES } from '../flow/backup.js';
 import { today } from '../engine-core.js';
 
 export interface WeekForm {
@@ -95,7 +95,7 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      setBackupNote(`Saved ${filename}. Keep it somewhere safe, like Files or iCloud Drive.`);
+      setBackupNote(`Your backup file is ready: ${filename}. On iPhone it goes to Files, then Downloads. Keep a copy somewhere safe, like iCloud Drive.`);
     } catch (e) {
       setBackupNote('The backup could not be saved on this device.');
     }
@@ -106,6 +106,7 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
     e.target.value = '';
     setPendingBackup(null);
     if (!file) return;
+    if (file.size > MAX_BACKUP_BYTES) { setBackupNote('That file is too big to be a Starlight Quest backup.'); return; }
     let text = '';
     try { text = await file.text(); } catch (err) { setBackupNote('That file could not be read.'); return; }
     const res = readBackup(text);
@@ -118,6 +119,11 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
     if (!pendingBackup) return;
     applyBackup(Save, pendingBackup.data);
     Save.save();
+    // Save.save() swallows storage errors, so read it back and only reload onto a write that really landed.
+    const wanted = JSON.stringify(pendingBackup.data);
+    let landed = false;
+    try { landed = JSON.stringify(Save.load()) === wanted; } catch (err) { landed = false; }
+    if (!landed) { setPendingBackup(null); setBackupNote('The backup could not be loaded on this device.'); return; }
     window.location.reload();
   };
 
