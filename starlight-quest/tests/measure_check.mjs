@@ -7,7 +7,8 @@ for (let tier = 1; tier <= 3; tier++) {
     const rng = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
     for (const r of buildRounds('rapunzel', rng, { tier, review: [] })) {
       n++;
-      const v = r.visual; if (!v) continue;
+      const v = r.visual; if (v && v.kind === 'paint') { n--; continue; } // paint-the-garden rounds are checked in paint_check.mjs, and are not counted here, so the share below is of her non-paint rounds
+      if (!v) continue;
       meas++;
       if (new Set(r.choices).size !== r.choices.length || !r.choices.includes(r.answer)) bad.push(['choices', r.prompt, r.choices]);
       if (r.choices.some((c) => !c.replace(/[\p{Extended_Pictographic}️‍]/gu, '').trim())) bad.push(['empty', r.choices]);

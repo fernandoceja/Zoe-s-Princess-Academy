@@ -15,6 +15,7 @@
 // fallback values (pitch, rate) used when no prerecorded MP3 exists.
 // ----------------------------------------------------------------------------
 import { chartT1, chartT2, chartT3 } from './chart120.js?v=20261028r3';
+import { paintT1, paintT2, paintT3 } from './colorbynum.js?v=20261028r3';
 import { PORTRAIT_BELLE } from './portrait-belle.js?v=20261028r3';
 import { PORTRAIT_ELSA } from './portrait-elsa.js?v=20261028r3';
 import { PORTRAIT_RAPUNZEL } from './portrait-rapunzel.js?v=20261028r3';
@@ -2223,6 +2224,12 @@ for (const t of [2, 3]) {
   TIERS.ariel[t] = (rng) => (rng() < 1 / 4 ? _shellSort(t, rng) : base(rng));
 }
 
+// About 1 Rapunzel round in 3 is a paint-the-garden number fact (B3); the rest are her plant science as before.
+for (const t of [1, 2, 3]) {
+  const base = TIERS.rapunzel[t], paint = [null, paintT1, paintT2, paintT3][t];
+  TIERS.rapunzel[t] = (rng) => (rng() < 1 / 3 ? paint(rng) : base(rng));
+}
+
 // About 1 Tiana round in 3 is a firefly jar; the rest are tally marks as before.
 for (const t of [1, 2, 3]) {
   const base = TIERS.tiana[t], jar = [null, _jarT1, _jarT2, _jarT3][t];
@@ -2243,7 +2250,7 @@ for (const t of [1, 2, 3]) {
 /** Stable id for a round, used by the review queue. */
 // Measuring rounds share prompts, so their picture is part of the id.
 export function roundKey(r) {
-  const v = r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : '';
+  const v = r.visual && r.visual.kind === 'paint' ? '|paint' : r.visual && r.visual.kind ? `|${JSON.stringify(r.visual)}` : ''; // the same fact on another garden picture is the same round
   const s = r.sort && r.sort.items ? `|sort:${r.sort.items.map((i) => i.name).join(',')}` : '';
   const w = r.show ? `|show:${r.show}` : ''; // spelling rounds share prompts; the partial word tells them apart
   return `${r.prompt}|${r.answer}${v}${s}${w}`;

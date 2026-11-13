@@ -5,6 +5,7 @@
  */
 import { shapeSVG, tallyCardHtml, jarHtml } from '../engine-core.js';
 import { chartHtml } from '../../js/chart120.js?v=20261028r3';
+import { paintHtml } from '../../js/colorbynum.js?v=20261028r3';
 
 export function visualHtml(npcId, round) {
   // Ten-frames: 5x2 grid of cells, dots fill left-to-right, top row first; n (0-20) uses ceil(n/10) frames.
@@ -93,6 +94,7 @@ export function visualHtml(npcId, round) {
   if (npcId === 'anna' && round.visual && round.visual.kind === 'sentence') return sentenceCardHtml(round.visual);
   if (npcId === 'tiana' && round.visual && (round.visual.kind === 'tally' || round.visual.kind === 'tallychart')) return tallyCardHtml(round.visual);
   if (npcId === 'tiana' && round.visual && round.visual.kind === 'jar') return jarHtml(round.visual);
+  if (npcId === 'rapunzel' && round.visual && round.visual.kind === 'paint') return paintHtml(round.visual);
   if (npcId === 'rapunzel' && round.visual && round.visual.kind) return measureSVG(round.visual);
   if (round.pic && (npcId === 'rapunzel' || npcId === 'belle' || npcId === 'ariel' || npcId === 'moana')) return `<div style="font-size:42px;text-align:center">${round.pic}</div>`;
   return '';
