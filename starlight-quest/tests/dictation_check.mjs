@@ -19,6 +19,7 @@ function sweep(label, sentences) {
         if (keys.has(r.key)) fail(label + ': duplicate key in a quest', r.key);
         keys.add(r.key);
         if (r.key !== roundKey(r)) fail(label + ': key', r);
+        if (r.kind === 'vowelsort') continue; // vowel jars (M4) are checked in vowelsort_check.mjs
         if (!r.choices.includes(r.answer)) fail(label + ': answer not in choices', r);
         if (r.choices.length !== 3 || new Set(r.choices).size !== 3) fail(label + ': need 3 distinct choices', r);
         if (!isDict(r)) continue;

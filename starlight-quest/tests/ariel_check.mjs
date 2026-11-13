@@ -29,6 +29,7 @@ for (let tier = 1; tier <= 3; tier++) {
     const rng = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
     for (const r of buildRounds('ariel', rng, { tier, review: [] })) {
       n++; kinds[`T${T0(r)}:${r.kind}`] = (kinds[`T${T0(r)}:${r.kind}`] || 0) + 1;
+      if (r.kind === 'shellsort') continue; // shell sorts (M4) are checked in vowelsort_check.mjs
       // Shape
       ok(Array.isArray(r.choices) && r.choices.length === 3 && new Set(r.choices).size === 3, 'needs 3 unique choices', r);
       ok(r.choices.includes(r.answer), 'answer in choices', r);
