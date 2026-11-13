@@ -2094,6 +2094,24 @@ function _tianaT3(rng) {
     ..._tallyChoices(d, [-1, 1, 2], rng, [hi.n, lo.n].filter((x) => x !== d)), answer: String(d), answerSay: _NUM_WORDS[d], hint: _TALLY_HINT.diff };
 }
 
+// Make 8, 9 and 10 (M2): a jar that holds `total` fireflies, `lit` of them glowing. How many more fill the jar? Plain data, picture from tally.js.
+const _JAR_HINT = {
+  empty: 'Good try! Count the glowing fireflies. Then count the empty spots left to fill.',
+  hidden: 'Good try! Count the glowing fireflies. Then count up to the number on the jar.',
+};
+function _jarRound(total, lit, hideEmpty, sentence, rng) {
+  const n = total - lit;
+  // Wrong answers stay inside the jar (1 to total-1), so no choice is bigger than the jar itself.
+  const near = [-1, 1, 2, -2, 3, -3].map((o) => n + o).filter((x) => x >= 1 && x <= total - 1 && x !== n);
+  const picks = _sample(near, 2, rng);
+  const c = { choices: _shuffle([n, ...picks].map(String), rng), choiceSay: Object.fromEntries([n, ...picks].map((x) => [String(x), _NUM_WORDS[x]])) };
+  const prompt = sentence ? `${lit} + ? = ${total}` : `Jar holds ${total}. How many more to fill it?`;
+  const say = sentence ? `${_NUM_WORDS[lit]} plus what number makes ${_NUM_WORDS[total]}?` : `Look at the firefly jar. It holds ${_NUM_WORDS[total]}. How many more fireflies fill it up?`;
+  return { kind: 'maketen', skill: 'maketen', prompt, say, visual: { kind: 'jar', total, lit, hideEmpty }, ...c, answer: String(n), answerSay: _NUM_WORDS[n], hint: hideEmpty ? _JAR_HINT.hidden : _JAR_HINT.empty };
+}
+function _jarT1(rng) { return _jarRound(10, 5 + Math.floor(rng() * 5), false, false, rng); }          // make 10, 5-9 glowing, the empty spots are drawn
+function _jarT2(rng) { const t = _pick([8, 9, 10], rng); return _jarRound(t, 1 + Math.floor(rng() * (t - 1)), false, false, rng); }
+function _jarT3(rng) { const t = _pick([8, 9, 10], rng); return _jarRound(t, 1 + Math.floor(rng() * (t - 1)), true, rng() < 0.5, rng); }
 // Aurora: short, unambiguous first-grade naming and action words.
 export const WORD_GARDEN_NAMES = ['kitten', 'rabbit', 'apple', 'baby', 'pencil', 'carrot', 'spider', 'tiger', 'turtle', 'puppy', 'monkey', 'banana'];
 // A short subject makes the action reading clear even when a verb also has a noun meaning.
@@ -2167,6 +2185,12 @@ const TIERS = {
     3: _sciOr(3, SCI_T3),
   },
 };
+
+// About 1 Tiana round in 3 is a firefly jar; the rest are tally marks as before.
+for (const t of [1, 2, 3]) {
+  const base = TIERS.tiana[t], jar = [null, _jarT1, _jarT2, _jarT3][t];
+  TIERS.tiana[t] = (rng) => (rng() < 1 / 3 ? jar(rng) : base(rng));
+}
 
 // About 1 round in 3 of Belle's library is a spelling kind (S2) and 1 in 5 a dictation sentence (S3); the rest are unchanged.
 for (const t of [1, 2, 3]) {

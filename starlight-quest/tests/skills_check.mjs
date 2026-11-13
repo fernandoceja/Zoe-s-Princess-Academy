@@ -62,7 +62,7 @@ ok(skillOf('belle', { test: { n: 1 }, prompt: 'Sound it out' }) === null, 'a tes
   ok(skillStatus(mk([...Array(8).fill(true)], ['2026-11-10', '2026-11-11'])) === 'practicing', 'fewer than 10 answers is not mastered');
   ok(skillStatus(mk([false, false, false, false, ...Array(10).fill(true)], ['2026-11-10', '2026-11-11'])) === 'mastered', 'only the last 10 count');
   const rows = skillRows({ skills: { cvc: mk([...Array(9).fill(true), false], ['2026-11-10', '2026-11-12']) } });
-  ok(rows.find((x) => x.id === 'maketen').detail === 'Not in the game yet', 'make 10 says it is not in the game yet');
+  ok(rows.find((x) => x.id === 'maketen').detail === 'Not started yet', 'make 10 is a real skill now (firefly jars)');
   ok(rows.length === SKILLS.length && rows.find((x) => x.id === 'cvc').status === 'mastered' && rows.find((x) => x.id === 'blends').status === 'notstarted', 'rows');
   ok(rows.find((x) => x.id === 'cvc').detail === '9 of her last 10 first-try answers right', 'row detail');
   ok(skillRows(null).every((x) => x.status === 'notstarted'), 'rows on a missing save');

@@ -79,6 +79,7 @@ for (let tier = 1; tier <= 3; tier++) {
     for (const r of buildRounds('tiana', rng, { tier, review: [] })) {
       count++; kinds[`T${r.tier}:${r.kind}`] = (kinds[`T${r.tier}:${r.kind}`] || 0) + 1;
       (samples[`T${r.tier}`] ||= new Map()).set(r.kind, r);
+      if (r.kind === 'maketen') continue; // firefly jars (M2) are checked in makeTen_check.mjs
       ok(Array.isArray(r.choices) && r.choices.length === 3 && new Set(r.choices).size === 3, 'needs 3 unique choices', r);
       ok(r.choices.includes(r.answer), 'answer in choices', r);
       ok(typeof r.prompt === 'string' && r.prompt && typeof r.hint === 'string' && r.hint, 'prompt and hint', r);

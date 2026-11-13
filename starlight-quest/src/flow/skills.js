@@ -7,7 +7,7 @@ import { SKILL_IDS } from '../engine-core.js';
 export const SKILLS = [
   { id: 'doubles', label: 'Doubles (5 + 5, 8 + 8)' },
   { id: 'neardoubles', label: 'Doubles plus one (5 + 6)' },
-  { id: 'maketen', label: 'Make 10 (firefly jars)', soon: true },
+  { id: 'maketen', label: 'Make 10 (firefly jars)' },
   { id: 'chart120', label: '120 chart' },
   { id: 'cvc', label: 'CVC sounding out' },
   { id: 'blends', label: 'Blends (fr, st, cl)' },
