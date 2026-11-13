@@ -98,7 +98,7 @@ export function buildGarden(env) {
   const TG = 1.25;   // addTappable scales every tappable group by 1.25: own meshes are drawn a little smaller to land at the intended size
 
   const COL = {
-    ground: 0x5d8bc0, groundEdge: 0x4a76ac, paving: 0xb4c2ee, paving2: 0xa0b2e4, stone: 0xc9d0f2, stoneDark: 0x7f8fcf,
+    ground: 0x5d8bc0, groundEdge: 0x4a76ac, paving: 0xa8b8ea, paving2: 0x94a8e0, stone: 0xc9d0f2, stoneDark: 0x7f8fcf,
     water: 0x2c55b8, waterLight: 0x4a78d8, hedgeA: 0x2a9a82, hedgeB: 0x36b08f, pearl: 0xe9eeff, vine: 0x2f9d6a, vine2: 0x45b87c,
     post: 0x5a67b3, moonWhite: 0xf4f2ff, lilac: 0xd3c8ff, soil: 0x4a4088, light: 0x8bb4e0,
   };

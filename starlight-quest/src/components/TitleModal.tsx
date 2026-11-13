@@ -50,7 +50,7 @@ export const TitleModal: React.FC<TitleModalProps> = ({
         </p>
 
         {/* All ten princesses wait in their kingdoms (decorative: the heading already says it all) */}
-        <div className="flex flex-wrap justify-center gap-1.5 mb-5" aria-hidden="true">
+        <div className="zsq-title-row flex flex-wrap justify-center gap-1.5 mb-5" aria-hidden="true">
           {(NPC_ORDER as string[]).map((id) => {
             const P = (PRINCESSES as any)[id];
             return P && P.portrait ? (

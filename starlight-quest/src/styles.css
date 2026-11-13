@@ -20,3 +20,5 @@ body{background:#1a1033;color:#1f2937;margin:0;padding:0;overflow:hidden;-webkit
 
 :root { --zsq-map-size: min(92vw, 62vh, 520px); }
 @media (max-height: 500px) and (orientation: landscape) { :root { --zsq-map-size: min(92vw, calc(100dvh - 100px), 520px); } }
+
+@media (orientation:landscape) and (max-height:520px){.zsq-title-row{display:none;}}   /* short landscape: keep Start on screen */
