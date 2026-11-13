@@ -29,6 +29,7 @@
     "tests/anna_check.mjs": "a1311fb41cb3e1cc01596e89f602a6fbb211df9b9e260cfff654c236d28d8bf2",
     "tests/ariel_check.mjs": "49245867f7c2c264a73a47299cbc488e146ff4db8ae1cafc10a7b87350e82967",
     "tests/aurora_check.mjs": "e5deee1c61d7a57a98dfd2ef8813f705284c4ad9f04c99d2d9d82d8de3d45801",
+    "tests/backup_check.mjs": "5f94040981e6f986fe5b5752d51fe95e8d25bef3c31e2f123634029634f6b5a1",
     "tests/bayou_check.mjs": "21beb40ac936ee111014d188a23c0cfcf9300f1bb669261d0057e83b8a1ef88b",
     "tests/blend_check.mjs": "e11543f5617030121c5599360b1d69c0e9513af014842125b9feccb321702c07",
     "tests/buildprecache_check.mjs": "31779b881994933b048d08f9e4bf5ac576bbe19c6dbef34c8bf130c004d75d22",

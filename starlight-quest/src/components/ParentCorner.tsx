@@ -8,6 +8,8 @@ import {
 import { PARENT_CORNER_HTML, WEEK, WEEK_DEFAULT, landState, Save, testSentence } from '../engine-core.js';
 import { wordsToPractice } from '../flow/spelltest.js';
 import { skillRows } from '../flow/skills.js';
+import { makeBackup, readBackup, applyBackup } from '../flow/backup.js';
+import { today } from '../engine-core.js';
 
 export interface WeekForm {
   spelling: string;
@@ -78,6 +80,46 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   const [weekStat, setWeekStat] = useState('');
   const [wordsInput, setWordsInput] = useState(schoolWords.join(', '));
   const [wordsStat, setWordsStat] = useState(() => wordsStatus(schoolWords));
+  // Backup and restore (M8): a file the grown-up keeps; nothing leaves this device.
+  const [backupNote, setBackupNote] = useState('');
+  const [pendingBackup, setPendingBackup] = useState<any>(null);
+
+  const handleSaveBackup = () => {
+    try {
+      const { text, filename } = makeBackup(Save.data, today());
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setBackupNote(`Saved ${filename}. Keep it somewhere safe, like Files or iCloud Drive.`);
+    } catch (e) {
+      setBackupNote('The backup could not be saved on this device.');
+    }
+  };
+
+  const handleChooseBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    setPendingBackup(null);
+    if (!file) return;
+    let text = '';
+    try { text = await file.text(); } catch (err) { setBackupNote('That file could not be read.'); return; }
+    const res = readBackup(text);
+    if (!res.ok) { setBackupNote(res.error); return; }
+    setBackupNote('');
+    setPendingBackup(res);
+  };
+
+  const handleReplaceProgress = () => {
+    if (!pendingBackup) return;
+    applyBackup(Save, pendingBackup.data);
+    Save.save();
+    window.location.reload();
+  };
 
   const checkAnswer = (n: number) => {
     if (n === gate.sum) {
@@ -267,6 +309,39 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               </button>
             </div>
             {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* Backup and restore (M8) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">Backup</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              Save Zoe's progress as a file so it survives a new iPad or cleared Safari data. It stays on your device; nothing is sent anywhere.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleSaveBackup}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs active:scale-95"
+              >
+                Save a backup
+              </button>
+              <label className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95 cursor-pointer">
+                Load a backup
+                <input type="file" accept=".json,application/json" className="hidden" onChange={handleChooseBackup} />
+              </label>
+            </div>
+            {pendingBackup && (
+              <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <p className="text-xs font-bold text-amber-900">
+                  Found a backup{pendingBackup.summary.savedOn ? ` from ${pendingBackup.summary.savedOn}` : ''}: {pendingBackup.summary.stars} stars, {pendingBackup.summary.lands} lands finished.
+                  Loading it replaces the progress on this device.
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={handleReplaceProgress} className="px-3 py-2 rounded-xl bg-amber-500 text-white font-black text-xs active:scale-95">Replace progress</button>
+                  <button onClick={() => setPendingBackup(null)} className="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs active:scale-95">Cancel</button>
+                </div>
+              </div>
+            )}
+            {backupNote && <p className="text-xs font-bold text-emerald-700 mt-2">{backupNote}</p>}
           </div>
 
           {/* School skills (M5): Mastered / Practicing / Not started */}
