@@ -267,8 +267,8 @@ export function walkGraph(search) {
     if (!l.open || Object.prototype.hasOwnProperty.call(INNER_LAND_ANGLES, l.land)) continue;
     const sg = pathSegments().find((s) => s.kind === 'branch' && s.slot === OUTER_SLOT[l.land]);
     const from = at(sg.from);
-    link(from, at(l.pad));                  // the pad sits on the branch, near the land's entrance
-    link(at(l.pad), at(sg.to));             // the branch runs on to the land's centre
+    link(from, at(l.pad));                  // the pad sits on the branch, near the land's entrance: a spur, so a route never runs through the princess
+    link(from, at(sg.to));                  // the branch runs on to the land's centre (and bends around any princess standing on it)
   }
   return { nodes, edges };
 }
@@ -284,6 +284,7 @@ export function avoidColliders(pts, colliders, margin = 0.8) {
       let worst = null;
       for (const c of colliders || []) {
         const need = c.r + margin;
+        if (_d(a, c) < need || _d(b, c) < need) continue;   // an end of this leg is inside the obstacle (a pad, or where she stands): it cannot be avoided
         const near = closestOnSegment(c, a, b);
         const d = Math.hypot(near.x - c.x, near.z - c.z);
         if (d < need - 1e-6 && (!worst || need - d > worst.gap)) worst = { c, near, gap: need - d, need };

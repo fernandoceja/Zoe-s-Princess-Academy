@@ -1951,7 +1951,7 @@ export function createWorld(container, hooks) {
   function updateTrail(dt, t) {
     if (!flyTo) return;
     const land = npcs[flyTo];
-    const pad = land && land.group ? { x: land.group.position.x, z: land.group.position.z } : null;
+    const pad = land && land.group ? land.group.position : null;   // {x, y, z}: read in place, nothing allocated per frame
     if (flyEnding < 0 && pad && trailArrived(playerPos.x, playerPos.z, pad)) {
       const id = flyTo;
       if (calmMotion) { clearTrail(); } else { flyEnding = 0; }

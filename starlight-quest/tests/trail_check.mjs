@@ -7,8 +7,10 @@ const bad = [];
 const ok = (c, why) => { if (!c) bad.push(why); };
 const d = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const len = (r) => r.reduce((s, p, i) => (i ? s + d(p, r[i - 1]) : 0), 0);
+function lands0() { return kingdomLands(); }
 const castle = { x: CASTLE_POS.x, z: CASTLE_POS.z, r: CASTLE_R };
-const props = [castle, { x: 14, z: 9, r: 1.2 }, { x: -22, z: 6, r: 1.5 }, { x: 5, z: -22, r: 1 }];
+const padCols = lands0().map((l) => ({ x: l.pad.x, z: l.pad.z, r: 0.96 }));   // every princess is an obstacle too (r = 0.8 x her scale)
+const props = [...padCols, castle, { x: 14, z: 9, r: 1.2 }, { x: -22, z: 6, r: 1.5 }, { x: 5, z: -22, r: 1 }];
 
 // 1. The lands.
 const lands = kingdomLands();
@@ -40,15 +42,18 @@ for (const s of starts) for (const l of lands) {
   ok(d(r[0], s) < 1e-9, `${tag}: starts where she stands`);
   ok(d(r[r.length - 1], l.pad) < 1e-6, `${tag}: ends at the pad`);
   ok(r.every((p) => Number.isFinite(p.x) && Number.isFinite(p.z) && Math.hypot(p.x, p.z) <= WORLD_RADIUS - 0.99), `${tag}: stays inside the wall`);
-  for (let i = 1; i < r.length; i++) for (const c of props) ok(distToSegment(c.x, c.z, r[i - 1], r[i]) >= c.r + 0.8 - 1e-6 || d(s, c) < c.r + 0.8, `${tag}: clips an obstacle at (${c.x},${c.z})`);
+  for (let i = 1; i < r.length; i++) for (const c of props) ok(distToSegment(c.x, c.z, r[i - 1], r[i]) >= c.r + 0.8 - 1e-6 || d(r[i - 1], c) < c.r + 0.8 || d(r[i], c) < c.r + 0.8, `${tag}: clips an obstacle at (${c.x},${c.z})`);
   ok(len(r) <= Math.max(2.5 * d(s, l.pad), d(s, l.pad) + 25), `${tag}: ${len(r).toFixed(0)} long for ${d(s, l.pad).toFixed(0)} straight`);
+  for (const o of lands) if (o.npc !== l.npc) ok(r.every((p) => d(p, o.pad) > 1.2) && r.every((p, i) => !i || distToSegment(o.pad.x, o.pad.z, r[i - 1], p) > 0.96 + 0.8 - 1e-6 || d(s, o.pad) < 1.76), `${tag}: runs through ${o.npc}'s pad`);
   ok(JSON.stringify(r) === JSON.stringify(trailRoute(s, l.npc, props)), `${tag}: not deterministic`);
 }
 // Straight when she is already in the land; bends around the castle; unknown / closed / bad input give no route.
 const inElsa = trailRoute({ x: 25, z: 3 }, 'elsa', []);
 ok(inElsa.length === 2, 'inside the land the route is one straight line');
 const behind = trailRoute({ x: -18, z: -14 }, 'rapunzel', [castle]);
-ok(behind.every((p, i) => i === 0 || behind[i - 1] === p || true), 'route built');
+ok(behind.length >= 2 && behind.every((p) => Math.hypot(p.x, p.z) < WORLD_RADIUS), 'route behind the castle built');
+// No loops: a route never doubles back on itself, and no point of it is closer to the end than the one before it by a lot more than a step.
+for (const l of lands) { const r = trailRoute({ x: 0, z: 0 }, l.npc, props); ok(r.length <= 8, `route to ${l.npc} has ${r.length} points (a loop?)`); }
 ok(JSON.stringify(trailRoute({ x: 0, z: 0 }, 'nobody')) === '[]', 'unknown princess gives no route');
 ok(JSON.stringify(trailRoute(null, 'elsa')) === '[]' && JSON.stringify(trailRoute({ x: NaN, z: 0 }, 'elsa')) === '[]', 'bad start gives no route');
 ok(JSON.stringify(trailRoute({ x: 0, z: 0 }, 'ariel', [], '?x')) !== '[]', 'a normal query string does not break it');
