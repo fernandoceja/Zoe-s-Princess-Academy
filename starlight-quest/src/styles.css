@@ -29,3 +29,9 @@ body{background:#1a1033;color:#1f2937;margin:0;padding:0;overflow:hidden;-webkit
 @keyframes zsq-hop-back{0%{transform:translateY(0) scale(1);}35%{transform:translateY(-18px) scale(1.04);}65%{transform:translateY(0) scale(1);}80%{transform:translateX(-5px);}90%{transform:translateX(5px);}100%{transform:translateX(0);}}
 .zsq-bounce-back{animation:zsq-hop-back .7s ease-out;}
 @media (prefers-reduced-motion:reduce){.shake-card,.zsq-bounce-back{animation:none;}}
+
+/* Visual polish: sparkle burst on a correct answer. It sits behind the answer card (the card is z-10). */
+.zsq-burst{position:absolute;left:50%;top:50%;width:0;height:0;z-index:0;pointer-events:none;}
+.zsq-burst span{position:absolute;left:0;top:0;font-size:var(--s);line-height:1;opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.4);animation:zsq-burst 900ms cubic-bezier(.2,.7,.3,1) forwards;filter:drop-shadow(0 0 6px rgba(255,214,102,.9));}
+@keyframes zsq-burst{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.4);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1.1);}}
+@media (prefers-reduced-motion:reduce){.zsq-burst{display:none;}}

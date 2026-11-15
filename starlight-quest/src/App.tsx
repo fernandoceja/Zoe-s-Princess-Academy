@@ -88,6 +88,7 @@ import { PauseMenu } from './components/PauseMenu';
 import { WardrobeModal } from './components/WardrobeModal';
 import { TreasureBookModal } from './components/TreasureBookModal';
 import { ParentCorner, type WeekForm } from './components/ParentCorner';
+import { installWorldFx } from './fx/worldfx.js';
 import { applyWeek, resetWeek, applyWords } from './flow/parent.js';
 import { VirtualJoystick } from './components/VirtualJoystick';
 import { DragWalk } from './components/DragWalk';
@@ -756,6 +757,8 @@ export const App: React.FC = () => {
     };
 
     if (containerRef.current) {
+      // Visual polish layer (lights, shadows, bloom, land moods, idle motion): wraps the renderer before the world draws.
+      installWorldFx();
       const world = createWorld(containerRef.current, {
         onTrailArrived(npcId: string) {
           const sc = scootRef.current;
