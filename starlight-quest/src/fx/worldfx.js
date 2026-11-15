@@ -149,6 +149,8 @@ function makeBloom(renderer) {
       }`,
     blending: THREE.AdditiveBlending, transparent: true, depthTest: false, depthWrite: false, toneMapped: false,
   });
+  // Depth-only stand-in for the occluder pass (pushed back a hair so the glow objects' own depth wins ties).
+  const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
   const quad = new THREE.Mesh(geo, blur);
   quad.frustumCulled = false;
   const quadScene = new THREE.Scene();
@@ -174,11 +176,17 @@ function makeBloom(renderer) {
       for (const m of points) { m.userData.zsqSize = m.size; m.size = m.size / 4; }
       scene.background = null;
       renderer.shadowMap.autoUpdate = false;
-      camera.layers.set(GLOW_LAYER);
       renderer.setRenderTarget(rtA);
       renderer.setClearColor(0x000000, 0);
       renderer.clear(true, true, false);
       renderer.autoClear = false;
+      // Depth first: every normal object writes depth only (no colour), so walls, bodies and towers hide
+      // the glow behind them exactly as they hide it in the real frame. Then the glow layer draws on top.
+      const prevOverride = scene.overrideMaterial;
+      scene.overrideMaterial = depthOnly;
+      render(scene, camera);
+      scene.overrideMaterial = prevOverride;
+      camera.layers.set(GLOW_LAYER);
       render(scene, camera);
       camera.layers.mask = prevMask;
       scene.background = prevBg;
@@ -201,7 +209,7 @@ function makeBloom(renderer) {
       renderer.shadowMap.autoUpdate = prevShadowAuto;
       renderer.setClearColor(clear, prevAlpha);
     },
-    dispose() { rtA.dispose(); rtB.dispose(); geo.dispose(); blur.dispose(); comp.dispose(); },
+    dispose() { rtA.dispose(); rtB.dispose(); geo.dispose(); blur.dispose(); comp.dispose(); depthOnly.dispose(); },
   };
 }
 
