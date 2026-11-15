@@ -144,7 +144,7 @@ try {
       await belle.first().waitFor({ timeout: 15000 }).catch(() => {});
       if (await belle.count()) {
         await belle.first().click({ force: true, timeout: 5000 }).catch(() => {});
-        const startQuest = page.getByRole('button', { name: /Start Quest/ });
+        const startQuest = page.getByRole('button', { name: /Start Quest|Let's Go/ });
         for (let i = 0; i < 12 && !(await startQuest.count()); i++) {
           await page.getByRole('button', { name: /Next/ }).first().click({ timeout: 3000 }).catch(() => {});
           await wait(300);
