@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { PRESETS, readQuality, writeQuality, effectiveLevel, makeFpsGuard, moodAt } from '../flow/quality.js';
 
 const GLOW_LAYER = 5;
+const OCCLUDER_LAYER = 6; // opaque, depth-writing meshes only: they hide glows in the bloom depth pass
 const EXPOSURE = 0.68;   // ACES pre-scales by 1/0.6, so this keeps the pastels close to the old look
 const GLOW_MAX_R = 1.3; // only small things glow (stars, crowns, gems, sparkles), never a whole ring or wall
 
@@ -184,6 +185,7 @@ function makeBloom(renderer) {
       // the glow behind them exactly as they hide it in the real frame. Then the glow layer draws on top.
       const prevOverride = scene.overrideMaterial;
       scene.overrideMaterial = depthOnly;
+      camera.layers.set(OCCLUDER_LAYER);   // sprites, points and see-through effects never block their own glow
       render(scene, camera);
       scene.overrideMaterial = prevOverride;
       camera.layers.set(GLOW_LAYER);
@@ -222,6 +224,17 @@ const box = new THREE.Box3();
 const vSize = new THREE.Vector3();
 const tmpM = new THREE.Matrix4();
 const instM = new THREE.Matrix4();
+
+// Solid things that block what is behind them (sprites, points and see-through or no-depth effects do not).
+function opaque(m) {
+  if (!m || Array.isArray(m)) return false;
+  if (m.isSpriteMaterial || m.isPointsMaterial) return false;
+  if (m.depthWrite === false || m.colorWrite === false) return false;
+  if (m.transparent && m.opacity < 0.99) return false;
+  if (m.blending === THREE.AdditiveBlending) return false;
+  if (m.side === THREE.BackSide) return false; // the sky dome
+  return true;
+}
 
 const sph = new THREE.Sphere();
 function small(o) {
@@ -272,6 +285,7 @@ function makeFx(renderer, scene, camera, render) {
       o.traverse((c) => {
         if (!c.isMesh) return;
         seen.add(c);
+        if (opaque(c.material)) c.layers.enable(OCCLUDER_LAYER);
         c.castShadow = true;
         c.receiveShadow = true;
         const mats = Array.isArray(c.material) ? c.material : [c.material];
@@ -292,6 +306,7 @@ function makeFx(renderer, scene, camera, render) {
     if (!o.isMesh) return;
     const m = o.material;
     if (!m || Array.isArray(m)) return;
+    if (opaque(m)) o.layers.enable(OCCLUDER_LAYER);
     // Sky dome (vertex-coloured back-side sphere).
     if (!sky && m.isMeshBasicMaterial && m.side === THREE.BackSide && m.vertexColors && o.geometry.type === 'SphereGeometry') { sky = o; return; }
     if (m.isMeshBasicMaterial) {

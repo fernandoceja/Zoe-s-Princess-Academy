@@ -115,8 +115,10 @@ ok(/prefers-reduced-motion: reduce/.test(fx), 'reads Reduce Motion');
 }
 ok(/let guard = makeFpsGuard\(\)/.test(fx) && /rearm\(\) \{ guard = makeFpsGuard\(\); \}/.test(fx) && /state\.fx\.rearm\(\)/.test(fx),
   'choosing a level again re-arms the same guard the render loop uses (Auto can drop again)');
-ok(/colorWrite: false/.test(fx) && /scene\.overrideMaterial = depthOnly;\s*render\(scene, camera\);[\s\S]{0,120}camera\.layers\.set\(GLOW_LAYER\);\s*render\(scene, camera\);/.test(fx),
-  'bloom draws a depth-only pass of the whole scene first, so hidden glows stay hidden');
+ok(/colorWrite: false/.test(fx) && /scene\.overrideMaterial = depthOnly;[\s\S]{0,160}render\(scene, camera\);[\s\S]{0,120}camera\.layers\.set\(GLOW_LAYER\);\s*render\(scene, camera\);/.test(fx),
+  'bloom draws a depth-only pass of the solid scene first, so hidden glows stay hidden');
+ok(/scene\.overrideMaterial = depthOnly;\s*camera\.layers\.set\(OCCLUDER_LAYER\)/.test(fx) && /isSpriteMaterial \|\| m\.isPointsMaterial\) return false/.test(fx) && /depthWrite === false/.test(fx),
+  'the bloom depth pass only uses solid, depth-writing meshes (no sprites, points or see-through glows)');
 ok(/fxdebug/.test(fx) && /\[\?&\]fxdebug\\b/.test(fx), 'the test hook only exists with ?fxdebug');
 ok(!/from '\.\.\/\.\.\/js\//.test(fx) && !/js\/world\.js/.test(fx.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')), 'the effects layer does not import the engine directly');
 
