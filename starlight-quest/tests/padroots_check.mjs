@@ -14,7 +14,7 @@ const ROOTS = m ? [...m[1].matchAll(/'(\.[^']+)'/g)].map((x) => x[1]) : [];
 check(ROOTS.length > 0, 'padnav: could not parse the ROOTS list from js/padnav.js');
 
 const compDir = join(root, 'src', 'components');
-const NOT_MODAL = ['HUD.tsx', 'VirtualJoystick.tsx'];
+const NOT_MODAL = ['HUD.tsx', 'VirtualJoystick.tsx', 'DragWalk.tsx'];   // DragWalk: the drag-to-walk ring, not a screen
 const modals = readdirSync(compDir).filter((f) => f.endsWith('.tsx') && !NOT_MODAL.includes(f));
 check(modals.length >= 8, `components: expected the modal components, found ${modals.length}`);
 for (const f of modals) {

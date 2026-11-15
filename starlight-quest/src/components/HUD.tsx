@@ -18,6 +18,8 @@ interface HUDProps {
   onInteract?: () => void;
   onOpenMap?: () => void;
   todayStarNPC?: PrincessId;
+  // False while a princess is talking or a quest card is open: the pause button looks faded (it shows a short note).
+  canPause?: boolean;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -35,6 +37,7 @@ export const HUD: React.FC<HUDProps> = ({
   onInteract,
   onOpenMap,
   todayStarNPC,
+  canPause = true,
 }) => {
   return (
     <>
@@ -122,8 +125,9 @@ export const HUD: React.FC<HUDProps> = ({
           </button>
           <button
             onClick={onPause}
-            className="w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-transform font-black text-purple-900"
+            className={`w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-all font-black text-purple-900 ${canPause ? '' : 'opacity-40 grayscale'}`}
             aria-label="Pause Menu"
+            aria-disabled={!canPause}
           >
             ⏸️
           </button>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PRINCESSES, QUESTS, tileSound } from '../engine-core.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
 import { dictationHint, sortBinRight, sortWrongHint, groupBinRight } from '../flow/questbook.js';
+import { cardPicture, choiceSay, canHearChoices, questionPicture, RETRY_UNLOCK_MS, wordPicture } from '../flow/playfix.js';
 import { PrincessId, Round } from '../types';
 
 // What the flow hands the view for one round (roundView + voice text + visual HTML, see App.tsx).
@@ -17,7 +18,8 @@ export interface RoundViewModel {
   serial: number;
 }
 
-// The last result of a pick. Only the advancing kinds lock the choices and show Next.
+// The last result of a pick. Only the advancing kinds lock the choices and show Next. A wrong pick ('retry') never
+// locks: the card wiggles, the one-line hint is spoken, and the cards take taps again after RETRY_UNLOCK_MS.
 export interface Feedback {
   kind: 'correct' | 'reveal' | 'retry' | 'spellwrong' | 'sortwrong';
   pickedId: string;
@@ -25,7 +27,7 @@ export interface Feedback {
   message: string;
 }
 
-const ADVANCING = ['correct', 'reveal', 'retry'];
+const ADVANCING = ['correct', 'reveal'];
 
 interface ChallengeModalProps {
   npcId: PrincessId;
@@ -36,6 +38,8 @@ interface ChallengeModalProps {
   // correct answer or a gentle retry).
   onPick: (pickedId: string, info?: any) => void;
   onAdvance: () => void;
+  // Called once the wrong-pick wiggle is over (about 1 s), so the flow can narrow the choices without a new screen.
+  onRetryReady?: () => void;
 }
 
 export const ChallengeModal: React.FC<ChallengeModalProps> = ({
@@ -45,6 +49,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   feedback,
   onPick,
   onAdvance,
+  onRetryReady,
 }) => {
   const princess = PRINCESSES[npcId];
   const quest = QUESTS[npcId];
@@ -61,6 +66,25 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
 
   // Sorting state (for Aurora or Rapunzel sorting)
   const [sortedItems, setSortedItems] = useState<{ name: string; naming?: boolean; living?: boolean; bin?: string }[]>([]);
+  // The word that just went to the wrong jar or bin hops back to its place (play-test fix 4).
+  const [bounced, setBounced] = useState<{ i: number; n: number } | null>(null);
+
+  // After a wrong pick: a short wait (the card wiggles, the hint is read), then the cards work again by themselves.
+  const [cooling, setCooling] = useState(false);
+  useEffect(() => {
+    if (!feedback || feedback.kind !== 'retry' || !feedback.pickedId) return;
+    setCooling(true);
+    const t = window.setTimeout(() => { setCooling(false); onRetryReady && onRetryReady(); }, RETRY_UNLOCK_MS);
+    return () => window.clearTimeout(t);
+  }, [feedback]);
+
+  // The hint line is always scrolled into view (on a small phone it could sit below the cards).
+  const hintRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (feedback && feedback.message && hintRef.current && hintRef.current.scrollIntoView) {
+      try { hintRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* old Safari */ }
+    }
+  }, [feedback]);
 
   // Each new view (a new round, or a gentle retry) is read aloud once, as main.js showChallenge does.
   useEffect(() => {
@@ -74,11 +98,12 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
     return () => {
       Narrator.stop();
     };
-  }, [view]);
+  }, [view.serial]);
 
   const replay = () => {
     // The Thursday test word is never on screen, so 🔊 always repeats "Number N. word. sentence. word." (even after a hint).
-    const text = feedback && feedback.message && !round.test
+    // The hint only while it is fresh (locked after an answer, or the ~1 s wiggle); once the cards work again, 🔊 repeats the question.
+    const text = feedback && feedback.message && !round.test && (locked || cooling)
       ? feedback.message
       : view.replayText || view.voiceText || round.prompt;
     Narrator.speakExact(npcId, text);
@@ -274,29 +299,46 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         setSortedItems(updated);
         if (updated.every((it) => it.bin != null)) onPick('__sortdone');
       } else {
+        setBounced({ i: itemIdx, n: Date.now() });
+        window.setTimeout(() => setBounced((b) => (b && b.i === itemIdx ? null : b)), 900);
         onPick('__sortwrong', sortWrongHint(item, wordSort, round.sort));
       }
     };
     return (
       <div className="my-3 flex flex-col items-center gap-3">
         <div className="flex flex-wrap justify-center gap-2">
-          {sortedItems.map((item, i) => (
+          {sortedItems.map((item, i) => {
+            const isBounced = !!bounced && bounced.i === i;
+            const pic = wordPicture(item.name);   // a picture where one fits (it never names the jar or bin)
+            return (
             <div
-              key={i}
+              key={isBounced ? `${i}-${bounced!.n}` : i}
               className={`px-3 py-2 rounded-xl border-2 font-read font-bold text-read flex flex-wrap items-center justify-center gap-2 ${
                 item.bin
                   ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
+                  : isBounced
+                  ? 'bg-rose-50 border-rose-300 text-purple-950 shadow-sm zsq-bounce-back'
                   : 'bg-white border-purple-200 text-purple-950 shadow-sm'
               }`}
             >
+              {pic && <span className="text-3xl" aria-hidden="true">{pic}</span>}
               <span>{item.name}</span>
               {!item.bin && (
-                <div className="flex flex-wrap justify-center gap-1">
+                <button
+                  onClick={() => Narrator.speakExact(npcId, item.name)}
+                  className="w-[60px] min-h-[60px] rounded-full bg-amber-50 border border-amber-300 text-2xl active:scale-95"
+                  aria-label={`Hear ${item.name}`}
+                >
+                  🔊
+                </button>
+              )}
+              {!item.bin && (
+                <div className="flex flex-wrap justify-center gap-1.5">
                   {bins.map((b, bi) => (
                     <button
                       key={b}
                       onClick={() => handleSortItem(i, bi)}
-                      className="min-h-[60px] min-w-[60px] px-3 py-1 rounded-xl bg-purple-100 hover:bg-purple-200 text-xl font-read font-bold text-purple-900 active:scale-95"
+                      className="min-h-[72px] min-w-[72px] px-3 py-1 rounded-xl bg-purple-100 hover:bg-purple-200 border-2 border-purple-200 text-2xl font-read font-bold text-purple-900 active:scale-95"
                     >
                       {b}
                     </button>
@@ -304,7 +346,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -354,7 +397,9 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         </div>
         {/* Question Prompt */}
         <div className="bg-white/95 border-2 border-amber-200/90 rounded-2xl p-3 sm:p-4 mb-2 shadow-xs flex items-center justify-between gap-3">
-          <p className="font-read text-read font-bold text-ink">
+          {/* A picture for every question (non-readers): the round's own, an ear for listening, or the land's. */}
+          <span className="text-4xl shrink-0 select-none" aria-hidden="true">{questionPicture(npcId, round)}</span>
+          <p className="flex-1 min-w-0 font-read text-read font-bold text-ink">
             {round.prompt}
           </p>
           <button
@@ -377,9 +422,12 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         {renderTileBuilder()}
         {renderWordSort()}
         {/* Standard choice cards (not tile builder / sort) */}
-        {!round.spell && !round.build && !round.sort && view.choices.length > 0 && (
+        {!round.spell && !round.build && !round.sort && view.choices.length > 0 && (() => {
+          // Every card has a picture, and a speaker that reads it, unless hearing it gives the answer away (playfix.js).
+          const hear = canHearChoices(npcId, round, view.choices.map((c) => c.label));
+          return (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mt-4">
-            {view.choices.map((choice) => {
+            {view.choices.map((choice, ci) => {
               const isPicked = !!feedback && feedback.pickedId === choice.id;
               let btnStyle =
                 'bg-white text-slate-800 border-amber-200 hover:border-amber-400 hover:shadow-md';
@@ -391,23 +439,46 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 btnStyle = 'bg-rose-100 text-rose-900 border-rose-300 shake-card';
               }
               const dim = locked && !!feedback?.correctId && feedback.correctId !== choice.id;
+              const card = cardPicture(npcId, choice.label, ci);
+              const say = choiceSay(round, choice.label);
               return (
-                <button
-                  key={choice.id}
-                  disabled={locked}
-                  onClick={() => onPick(choice.id)}
-                  style={dim ? { opacity: 0.55 } : undefined}
-                  className={`min-h-[64px] sm:min-h-[80px] p-3 rounded-2xl border-3 font-read font-bold text-read flex items-center justify-center text-center shadow-sm active:scale-95 transition-all select-none ${btnStyle}`}
-                >
-                  <span className="leading-tight break-words max-w-full">{choice.label}</span>
-                </button>
+                <div key={choice.id} className="flex items-stretch gap-1.5" style={dim ? { opacity: 0.55 } : undefined}>
+                  <button
+                    disabled={locked}
+                    onClick={() => { if (!cooling) onPick(choice.id); }}
+                    aria-label={say || undefined}
+                    className={`flex-1 min-w-0 min-h-[64px] sm:min-h-[80px] p-3 rounded-2xl border-3 font-read font-bold text-read flex items-center justify-center gap-2 text-center shadow-sm active:scale-95 transition-all select-none ${btnStyle}`}
+                  >
+                    {card.pic && <span className={`${card.text ? 'text-3xl' : 'text-5xl'} shrink-0`} aria-hidden="true">{card.pic}</span>}
+                    {card.dots > 0 && (
+                      <span className="flex flex-wrap gap-0.5 max-w-[4.5rem] shrink-0" aria-hidden="true">
+                        {Array.from({ length: card.dots }, (_, d) => (
+                          <span key={d} className={`w-2.5 h-2.5 rounded-full ${d < 10 ? 'bg-amber-400' : 'bg-sky-400'}`} />
+                        ))}
+                      </span>
+                    )}
+                    {card.text && <span className="leading-tight break-words min-w-0">{card.text}</span>}
+                  </button>
+                  {hear && say && (
+                    <button
+                      onClick={() => Narrator.speakExact(npcId, say)}
+                      className="w-[60px] min-h-[60px] shrink-0 rounded-2xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 flex items-center justify-center text-2xl active:scale-95"
+                      aria-label={`Hear ${say}`}
+                      title="Listen"
+                    >
+                      🔊
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
-        )}
+          );
+        })()}
         {/* Encouraging Feedback Banner (the picture hint for tile and sort misses too) */}
         {feedback && feedback.message && (
           <div
+            ref={hintRef}
             className={`mt-4 p-3 rounded-2xl border-2 text-center font-read font-bold text-read animate-fade-in ${
               feedback.kind === 'correct'
                 ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
@@ -425,7 +496,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             onClick={onAdvance}
             className="mt-4 w-full min-h-[60px] px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-lg shadow-lg border-2 border-white active:scale-95"
           >
-            {feedback?.kind === 'retry' ? 'Try again 💗' : 'Next ➜'}
+            Next ➜
           </button>
         )}
       </div>

@@ -53,11 +53,14 @@ for (const npc of NPC_ORDER) {
 }
 check(missed > 0, 'no missed question was ever recorded');
 
-// The wiring in the shell: the locked button after a wrong pick says "Try again", and the hint is spoken then.
+// The wiring in the shell (play-test fix 2, Nov 15): a wrong pick never locks the cards. No "Try again" gate: the
+// cards wait about a second (the wiggle) and work again by themselves; the short hint is shown and spoken.
 const modal = readFileSync(new URL('../src/components/ChallengeModal.tsx', import.meta.url), 'utf8');
-check(/feedback\?\.kind === 'retry' \? 'Try again[^']*' : 'Next/.test(modal), 'ChallengeModal: the button after a wrong pick must say "Try again"');
+check(/const ADVANCING = \['correct', 'reveal'\];/.test(modal), 'ChallengeModal: a wrong pick (retry) must not lock the cards');
+check(!/Try again 💗/.test(modal), 'ChallengeModal: the "Try again" gate button must be gone');
+check(/RETRY_UNLOCK_MS/.test(modal) && /onRetryReady/.test(modal), 'ChallengeModal: the cards unlock by themselves after the wiggle');
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
-check(/kind === 'retry'\) \{[^}]*Narrator\.speakExact\(\s*npcId,\s*round\.hintSay \|\| round\.hint/s.test(app), 'App: a wrong pick must speak the hint');
+check(/kind === 'retry'\) \{[^}]*Narrator\.speakExact\(\s*npcId,\s*shortHint\(round\.hintSay \|\| round\.hint\)/s.test(app), 'App: a wrong pick must speak the short hint');
 const qbSrc = readFileSync(new URL('../src/flow/questbook.js', import.meta.url), 'utf8');
 check(!/requeued: true|qb\.rounds\.splice/.test(qbSrc), 'questbook: a missed round must not be added back into the same quest');
 

@@ -96,8 +96,11 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
 
         {/* Footer / Progression */}
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-slate-400">
-            {lines.length > 1 && `${lineIdx + 1} of ${lines.length}`}
+          {/* Dots instead of "1 of 3" (a number a non-reader skips). Short talks are one card anyway (App: mergedLines). */}
+          <div className="flex items-center gap-1.5" aria-label={lines.length > 1 ? `${lineIdx + 1} of ${lines.length}` : undefined}>
+            {lines.length > 1 && lines.map((_, i) => (
+              <span key={i} className={`w-2.5 h-2.5 rounded-full ${i <= lineIdx ? 'bg-amber-400' : 'bg-slate-200'}`} />
+            ))}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
           {secondaryLabel && onSecondary && lineIdx >= lines.length - 1 && (
