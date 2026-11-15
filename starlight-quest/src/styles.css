@@ -22,3 +22,10 @@ body{background:#1a1033;color:#1f2937;margin:0;padding:0;overflow:hidden;-webkit
 @media (max-height: 500px) and (orientation: landscape) { :root { --zsq-map-size: min(92vw, calc(100dvh - 100px), 520px); } }
 
 @media (orientation:landscape) and (max-height:520px){.zsq-title-row{display:none;}}   /* short landscape: keep Start on screen */
+
+/* Play-test fixes 2 and 4: a wrong card gives a gentle wiggle; a word in the wrong jar hops up and back to its place. */
+@keyframes zsq-wiggle{0%,100%{transform:translateX(0) rotate(0);}20%{transform:translateX(-6px) rotate(-2deg);}40%{transform:translateX(6px) rotate(2deg);}60%{transform:translateX(-4px) rotate(-1deg);}80%{transform:translateX(3px) rotate(1deg);}}
+.shake-card{animation:zsq-wiggle .5s ease-in-out;}
+@keyframes zsq-hop-back{0%{transform:translateY(0) scale(1);}35%{transform:translateY(-18px) scale(1.04);}65%{transform:translateY(0) scale(1);}80%{transform:translateX(-5px);}90%{transform:translateX(5px);}100%{transform:translateX(0);}}
+.zsq-bounce-back{animation:zsq-hop-back .7s ease-out;}
+@media (prefers-reduced-motion:reduce){.shake-card,.zsq-bounce-back{animation:none;}}

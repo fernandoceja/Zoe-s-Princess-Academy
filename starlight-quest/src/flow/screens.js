@@ -70,7 +70,7 @@ export function tutorialSteps(touch) {
   return [
     { title: 'How to Move', emoji: '🧭',
       text: touch
-        ? 'Drag your finger on the screen to walk Princess Zoe around the kingdom.'
+        ? 'Drag your finger anywhere on the ground to walk Princess Zoe. The round joystick works too!'
         : 'Use WASD, arrow keys, or drag with your mouse on the screen to walk Princess Zoe around the kingdom.' },
     { title: 'Talk to Friends', emoji: '👑',
       text: touch

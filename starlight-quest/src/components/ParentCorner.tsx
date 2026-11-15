@@ -59,6 +59,8 @@ interface ParentCornerProps {
   onSaveWords: (input: string) => string[];
   onSaveWeek: (form: WeekForm) => WeekPack;
   onResetWeek: () => WeekPack;
+  // Starts Belle's Thursday practice test (only grown-ups can reach it now, play-test fix 5).
+  onStartTest?: () => void;
   onBack: () => void;
 }
 
@@ -70,6 +72,7 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   onSaveWords,
   onSaveWeek,
   onResetWeek,
+  onStartTest,
   onBack,
 }) => {
   // Grown-up gate (ui.js showParentGate): a random sum, three answer buttons, a new question after a miss.
@@ -381,8 +384,16 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
           {/* Thursday practice test history (M3): what she built, and the words to practice */}
           <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
             <h3 className="text-sm font-black text-indigo-950 mb-1">Thursday tests</h3>
+            {onStartTest && (
+              <button
+                onClick={onStartTest}
+                className="mb-2 min-h-[44px] px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-sm active:scale-95"
+              >
+                Start the Thursday test with Zoe 📝
+              </button>
+            )}
             {(!Save.data.spellTests || Save.data.spellTests.length === 0) && (
-              <p className="text-xs text-slate-600">No test yet. Belle's "Thursday test" button starts one.</p>
+              <p className="text-xs text-slate-600">No test yet. The button above starts one (it is not on Zoe's own screens).</p>
             )}
             {(Save.data.spellTests || []).map((t: any) => {
               const practice = wordsToPractice(t);

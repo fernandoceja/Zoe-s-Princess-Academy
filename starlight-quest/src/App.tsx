@@ -58,6 +58,7 @@ import {
   sortFirstLine,
 } from './flow/questbook.js';
 import { voiceText } from './flow/voice.js';
+import { shortHint, mergedLines } from './flow/playfix.js';
 import { visualHtml } from './flow/visuals.js';
 import {
   NPC_TO_LAND,
@@ -89,6 +90,7 @@ import { TreasureBookModal } from './components/TreasureBookModal';
 import { ParentCorner, type WeekForm } from './components/ParentCorner';
 import { applyWeek, resetWeek, applyWords } from './flow/parent.js';
 import { VirtualJoystick } from './components/VirtualJoystick';
+import { DragWalk } from './components/DragWalk';
 import { PrincessId } from './types';
 
 const NPC_IDS = NPC_ORDER as PrincessId[];
@@ -391,19 +393,7 @@ export const App: React.FC = () => {
     }
     setInteractPrompt(null);
     if (d.kind === 'rest') {
-      if (npcId === 'belle') {
-        // M3: the Thursday test works any day, so Belle offers it even when she has rested today.
-        openDialogue({
-          npcId,
-          kind: 'greeting',
-          lines: ['Want to try your Thursday practice test?'],
-          actionLabel: 'Thursday test 📝',
-          secondaryLabel: 'Rest 💤',
-          onSecondary: () => showRest(npcId),
-          onDone: () => beginSpellTest(),
-        });
-        return;
-      }
+      // The Thursday test is for grown-ups to start (Parent Corner), so Belle no longer offers it here (play-test fix 5).
       showRest(npcId);
       return;
     }
@@ -413,10 +403,25 @@ export const App: React.FC = () => {
       kind: d.dialogue.kind,
       lines: d.dialogue.lines,
       actionLabel: d.practice ? undefined : 'Start Quest! ⭐',
-      secondaryLabel: npcId === 'belle' ? 'Thursday test 📝' : undefined,
-      onSecondary: npcId === 'belle' ? () => beginSpellTest() : undefined,
       onDone: () => { if (npcId === 'jasmine' && beginScoot()) return; showRound(npcId); },
     });
+  };
+
+  // Parent Corner > Thursday tests > Start: close the pause menu and go straight to Belle's test (grown-ups only, fix 5).
+  const startTestFromParent = () => {
+    if (phaseRef.current !== 'roam' && phaseRef.current !== 'scoot') return;
+    if (scootRef.current) endScoot();
+    pausedRef.current = false;
+    setPaused(false);
+    setPauseTab('menu');
+    setMapOpen(false);
+    setInteractPrompt(null);
+    if (worldRef.current) {
+      worldRef.current.clearTrail?.();
+      worldRef.current.setInputEnabled(false);
+      worldRef.current.focus('belle');
+    }
+    beginSpellTest();
   };
 
   // ---- Thursday practice test (M3): the questbook runs it with qb.test set; no ladder, review queue or rest rule is touched. ----
@@ -495,24 +500,40 @@ export const App: React.FC = () => {
       Narrator.speakExact(npcId, say);
       setFeedback({ kind, pickedId, correctId: view.correctId, message: shown });
     } else if (kind === 'retry') {
-      // Gentle retry: never reveal the answer, never penalize.
+      // Gentle retry: never reveal the answer, never penalize. One short hint line, shown and spoken; the cards
+      // wiggle and work again by themselves after about a second (onRetryReady), no "Try again" button.
       SoundFX.pop();
       Narrator.speakExact(
         npcId,
-        round.hintSay || round.hint,
+        shortHint(round.hintSay || round.hint),
         round.sound ? () => Narrator.playClip(BELLE_CLIP_DIR + round.sound) : undefined
       );
-      setFeedback({ kind, pickedId, correctId: null, message: round.hint });
+      setFeedback({ kind, pickedId, correctId: null, message: shortHint(round.hint) });
     } else if (kind === 'spellwrong') {
       SoundFX.pop();
-      const say = (info && info.say) || round.hintSay || round.hint;
+      const say = shortHint((info && info.say) || round.hintSay || round.hint);
       Narrator.speakExact(npcId, say);
-      setFeedback({ kind, pickedId, correctId: null, message: (info && info.say) || round.hint });
+      setFeedback({ kind, pickedId, correctId: null, message: shortHint((info && info.say) || round.hint) });
     } else if (kind === 'sortwrong') {
-      const say = info || round.hint;
+      // The word hops back to its place (ChallengeModal) and the hint is spoken.
+      const say = shortHint(info || round.hint);
       Narrator.speakExact(npcId, say);
       setFeedback({ kind, pickedId, correctId: null, message: say });
     }
+  };
+
+  // The wrong-pick wiggle is over: the cards take taps again. After a second miss the choices narrow to two (F7) in
+  // place, without a new screen, so the hint she is hearing is not cut off and the question is not read again.
+  const handleRetryReady = () => {
+    const q = qb.current;
+    if (!q) return;
+    setFeedback((f) => (f && f.kind === 'retry' ? { ...f, pickedId: '' } : f));
+    if (q.misses < 2) return;
+    setView((prev: any) => {
+      if (!prev || prev.round !== q.rounds[q.roundIdx] || prev.round.sort || prev.tileRound) return prev;
+      const v = roundView(q);
+      return { ...prev, choices: v.choices, correctId: v.correctId, voiceText: voiceText(q.npcId, v.round, v.choices) };
+    });
   };
 
   // Next after a locked round (main.js: revealAnswer's onNext = startRound or nextRound).
@@ -869,7 +890,9 @@ export const App: React.FC = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden select-none bg-[#1a1033] font-['Nunito',sans-serif]">
       {/* 3D Three.js Canvas Container */}
-      <div ref={containerRef} className="absolute inset-0 z-0" />
+      <div ref={containerRef} className="absolute inset-0 z-0 touch-none" />
+      {/* Drag anywhere on the world to walk (play-test fix 1); the joystick below still works too. */}
+      <DragWalk targetRef={containerRef} enabled={(gameState === 'roam' || gameState === 'scoot') && !paused && !mapOpen} />
 
       {/* Floating HUD: the top bar stays up through dialogue and challenges (main.js keeps it; only the joystick is roam-only) */}
       {gameState !== 'title' && gameState !== 'tutorial' && !paused && (
@@ -881,7 +904,8 @@ export const App: React.FC = () => {
             treasuresToday={treasuresToday}
             treasuresTotal={treasuresTotal}
             activeNPC={activeNPC}
-            questStep={activeNPC ? questStep : undefined}
+            questStep={activeNPC && (gameState === 'challenge' || gameState === 'scoot') ? questStep : undefined}
+            canPause={gameState === 'roam' || gameState === 'scoot'}
             interactPrompt={interactPrompt}
             muted={muted}
             onToggleMute={handleToggleMute}
@@ -940,7 +964,7 @@ export const App: React.FC = () => {
         <DialogueModal
           key={dialogue.id}
           npcId={dialogue.npcId}
-          lines={dialogue.lines}
+          lines={mergedLines(dialogue.lines)}
           kind={dialogue.kind}
           onDone={dialogue.onDone}
           actionLabel={dialogue.actionLabel}
@@ -959,6 +983,7 @@ export const App: React.FC = () => {
           feedback={feedback}
           onPick={handlePick}
           onAdvance={handleAdvance}
+          onRetryReady={handleRetryReady}
         />
       )}
 
@@ -1023,6 +1048,7 @@ export const App: React.FC = () => {
               onSaveWords={handleSaveCustomWords}
               onSaveWeek={handleSaveWeek}
               onResetWeek={handleResetWeek}
+              onStartTest={startTestFromParent}
               onBack={() => setPauseTab('menu')}
             />
           )}
