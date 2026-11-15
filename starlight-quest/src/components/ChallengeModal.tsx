@@ -102,7 +102,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
 
   const replay = () => {
     // The Thursday test word is never on screen, so 🔊 always repeats "Number N. word. sentence. word." (even after a hint).
-    const text = feedback && feedback.message && !round.test
+    // The hint only while it is fresh (locked after an answer, or the ~1 s wiggle); once the cards work again, 🔊 repeats the question.
+    const text = feedback && feedback.message && !round.test && (locked || cooling)
       ? feedback.message
       : view.replayText || view.voiceText || round.prompt;
     Narrator.speakExact(npcId, text);

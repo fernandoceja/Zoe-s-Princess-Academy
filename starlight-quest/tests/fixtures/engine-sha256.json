@@ -60,7 +60,7 @@
     "tests/padroots_check.mjs": "ef149f85f3f0bf6de091fef61e47bff695ebd26d307fd2227ea62258616cbed9",
     "tests/paint_check.mjs": "7529b03070e397fb5412590dab27f93c25eeb73de0f028fd00ffafb01b63679f",
     "tests/pic_check.mjs": "fda4c47f7b0940644c3656d5dbd9781cde94d8deb29305623d0413e714a0cd84",
-    "tests/playtest_check.mjs": "a26c846f617e23e9302b1c8d65fa7c84769722c640bb38826b68229d64563e0b",
+    "tests/playtest_check.mjs": "dbfca7e04ea7950e39c7f2bf4405de6a2aa6e5bf0344226f1b5e5c8ba1ea3e6b",
     "tests/precache_check.mjs": "eea7d0449104ddc29c4f5fcf04c0d14c17630108d15f4cf7588f3cb3a4c67ee3",
     "tests/retry_check.mjs": "95366461ac9d85831403877ffafb4dbe5bed0292c78287e2b60f04008b9f778b",
     "tests/reveal_check.mjs": "4f0d3afe6f599794a67ad6446156fe8421402bb1858ed9afb4e1522e5a7b3a83",

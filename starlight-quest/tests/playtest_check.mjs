@@ -52,6 +52,9 @@ for (const npc of NPC_ORDER) {
 ok(rounds > 500, `only ${rounds} rounds built`);
 ok(F.shortHint('Good try! Look at the tops. Which one reaches higher?') === 'Good try! Look at the tops. Which one reaches higher?', 'short hint keeps two short sentences');
 ok(F.shortHint('A naming word names a person, animal, place, or thing.') === 'Good try! A naming word names a person, animal, place, or thing.', 'short hint without "Good try"');
+ok(F.shortHint("Good try! Let's look again. 'again' starts with the letter a.") === "Good try! 'again' starts with the letter a.", 'short hint keeps the clue after a generic opener');
+ok(F.shortHint('Good try! Listen again. Which words did you hear?') === 'Good try! Which words did you hear?', 'short hint skips "Listen again."');
+ok(/!round\.test && \(locked \|\| cooling\)/.test(read('components/ChallengeModal.tsx')), 'question 🔊 repeats the question once the cards work again');
 ok(F.RETRY_UNLOCK_MS >= 700 && F.RETRY_UNLOCK_MS <= 1500, 'cards unlock in about a second');
 const css = read('styles.css');
 ok(/\.shake-card\{animation:zsq-wiggle/.test(css) && /@keyframes zsq-wiggle/.test(css), 'styles: the wrong-card wiggle exists');

@@ -27,19 +27,22 @@ export function dragVector(dx, dy, radius = DRAG_RADIUS_PX, start = DRAG_START_P
 /** After a wrong pick the cards wait this long (ms), then take taps again by themselves. */
 export const RETRY_UNLOCK_MS = 1000;
 /** A second sentence is only added while the hint stays this short (letters after "Good try!"): one idea, not a paragraph. */
-export const HINT_MAX = 48;
+export const HINT_MAX = 64;
 
 /**
  * One short line from a long hint: "Good try!" plus the first sentence (and the next one too while it still fits).
  * The same function makes the spoken line from round.hintSay, so she hears what is meant by the shown line.
  */
+const GENERIC_OPENER = /^(let'?s|let us)?\s*(look|listen|try|read it)( again| with me)?[.!]$|^(look|listen) again[.!]$/i;
 export function shortHint(text, max = HINT_MAX) {
   const s = String(text || '').replace(/\s+/g, ' ').trim();
   if (!s) return 'Good try! Try again.';
   const body = s.replace(/^(good try|nice try|almost|oops)[!.,]?\s*/i, '');
   // Split after . ! ? that end a sentence (not the dots in "d - o - g." which end it anyway).
-  const parts = body.match(/[^.!?]+[.!?]+(?:['"’”)]+)?|[^.!?]+$/g) || [body];
-  let out = parts[0].trim();
+  let parts = (body.match(/[^.!?]+[.!?]+(?:['"’”)]+)?|[^.!?]+$/g) || [body]).map((p) => p.trim()).filter(Boolean);
+  // "Let's look again." alone says nothing: skip such openers so the real clue ("'again' starts with the letter a.") stays.
+  while (parts.length > 1 && GENERIC_OPENER.test(parts[0])) parts = parts.slice(1);
+  let out = parts[0];
   for (let i = 1; i < parts.length; i++) {
     const next = (out + ' ' + parts[i].trim()).trim();
     if (next.length > max) break;
