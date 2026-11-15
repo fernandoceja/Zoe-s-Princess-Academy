@@ -203,6 +203,13 @@ try {
       if (SHOTS) { await page.getByRole('radiogroup').scrollIntoViewIfNeeded(); await page.screenshot({ path: join(SHOTS, 'parent-corner-quality.png') }); }
       await page.getByRole('radio', { name: 'High' }).click();
       check((await page.evaluate(() => window.__zsqFx.status())).level === 'high', 'Picking High in Parent Corner did not apply');
+      // Picking Auto again re-arms the guard: on this slow GPU it must drop to Low a second time.
+      await page.getByRole('radio', { name: 'Auto' }).click();
+      await page.getByRole('button', { name: /Return to Game/ }).click().catch(() => {});
+      let again = false;
+      for (let i = 0; i < 40 && !again; i++) { await wait(500); again = (await page.evaluate(() => window.__zsqFx.status())).level === 'low'; }
+      check(again, 'Auto chosen again never dropped to Low a second time');
+      if (again) notes.push('Auto re-armed and dropped again');
       check(errors.length === 0, `Auto: page errors: ${errors.slice(0, 3).join(' | ')}`);
       await context.close();
     }

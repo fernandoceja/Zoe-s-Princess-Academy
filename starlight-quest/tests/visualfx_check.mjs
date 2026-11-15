@@ -113,6 +113,8 @@ ok(/prefers-reduced-motion: reduce/.test(fx), 'reads Reduce Motion');
   ok(/U\.water\.value = still \? 0/.test(before) && /U\.time\.value = still \? 0/.test(before), 'Reduce Motion: water shimmer off');
   ok(/if \(still \|\| !smReady/.test(before), 'Reduce Motion: no camera ease');
 }
+ok(/let guard = makeFpsGuard\(\)/.test(fx) && /rearm\(\) \{ guard = makeFpsGuard\(\); \}/.test(fx) && /state\.fx\.rearm\(\)/.test(fx),
+  'choosing a level again re-arms the same guard the render loop uses (Auto can drop again)');
 ok(/fxdebug/.test(fx) && /\[\?&\]fxdebug\\b/.test(fx), 'the test hook only exists with ?fxdebug');
 ok(!/from '\.\.\/\.\.\/js\//.test(fx) && !/js\/world\.js/.test(fx.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')), 'the effects layer does not import the engine directly');
 

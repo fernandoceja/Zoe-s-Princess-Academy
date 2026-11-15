@@ -47,7 +47,7 @@ export function onFxStatus(fn) { state.listeners.add(fn); return () => state.lis
 export function setFxQuality(choice) {
   state.choice = writeQuality(store(), choice);
   state.autoDropped = false;
-  if (state.fx) state.fx.guard = makeFpsGuard();
+  if (state.fx) state.fx.rearm();
   setLevel(effectiveLevel(state.choice, state.autoDropped));
   notify();
 }
@@ -245,7 +245,7 @@ function makeFx(renderer, scene, camera, render) {
   let lastChildCount = -1, nextScan = 0;
   let level = null;
   let bloom = null;
-  const guard = makeFpsGuard();
+  let guard = makeFpsGuard();
 
   const original = {
     toneMapping: renderer.toneMapping, exposure: renderer.toneMappingExposure,
@@ -453,10 +453,12 @@ function makeFx(renderer, scene, camera, render) {
   apply(effectiveLevel(state.choice, state.autoDropped));
 
   return {
-    renderer, scene, camera, guard, apply, before, after,
+    renderer, scene, camera, apply, before, after,
+    get guard() { return guard; },
+    // Parent Corner picked a level again: a fresh guard, so Auto can drop to Low again later.
+    rearm() { guard = makeFpsGuard(); },
     get player() { return player; },
     get counts() { return { characters: characters.length, glowPoints: points.size }; },
-    reset() { guard.reset(); },
     restore() {
       renderer.toneMapping = original.toneMapping; renderer.toneMappingExposure = original.exposure;
       if (bloom) bloom.dispose();
