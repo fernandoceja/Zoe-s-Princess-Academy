@@ -182,6 +182,23 @@ async function offline(browser, base) {
   // The prompt bounces (animate-bounce), so Playwright's stability wait never settles: force the click.
   if (reached) await belle.click({ force: true });
 
+  // Pause anytime (Nov 16): pause mid-talk, resume, and the same line is still up.
+  const pauseBtn = page.getByRole('button', { name: 'Pause Menu' });
+  const resumeBtn = page.getByRole('button', { name: /Resume Adventure/ });
+  const pauseAndResume = async (where) => {
+    await pauseBtn.click({ force: true });
+    const up = await resumeBtn.waitFor({ timeout: 10000 }).then(() => true, () => false);
+    check(up, `pause: the pause menu did not open ${where}`);
+    if (!up) return;
+    await shot(page, 'pause-' + where.replace(/\W+/g, '-'));
+    await resumeBtn.click();   // the first tap says its name, then it goes by itself (SPEAK_TAP_MS)
+    await resumeBtn.waitFor({ state: 'detached', timeout: 10000 }).catch(() => check(false, `pause: Resume did not close the menu ${where}`));
+  };
+  const talk = page.locator('.zsq-sheet').first();
+  const talkBefore = await talk.innerText().catch(() => '');
+  await pauseAndResume('during a talk');
+  check(talkBefore && (await talk.innerText().catch(() => '')) === talkBefore, 'pause: the talk changed across a pause');
+
   // Her greeting: step through the lines, then start the quest.
   const startQuest = page.getByRole('button', { name: /Start Quest/ });
   for (let i = 0; i < 12 && !(await startQuest.count()); i++) {
@@ -197,6 +214,18 @@ async function offline(browser, base) {
   check(choices >= 2, `offline: first round shows ${choices} answer buttons, expected at least 2`);
   await shot(page, 'offline-belle-round1');
 
+  // Pause mid-question, resume: still round 1 of 5, same question, same stars, answers still work.
+  const modal = page.locator('.zsq-modal-wrap').first();
+  const qBefore = await modal.innerText();
+  const starsBefore = (await pill.innerText()).match(/⭐\s*(\d+)/)?.[1];
+  await pauseAndResume('mid-question');
+  const qAfter = await modal.innerText();
+  check(/Belle\s*·\s*1\/5/.test(await pill.innerText()), 'pause: the quest moved off round 1 across a pause');
+  check(qAfter === qBefore, 'pause: the question changed across a pause');
+  check((await pill.innerText()).match(/⭐\s*(\d+)/)?.[1] === starsBefore, 'pause: stars changed across a pause');
+  check(!(await modal.evaluate((el) => !!el.closest('[inert]'))), 'pause: the question is still inert after Resume');
+  notes.push('paused mid-talk and mid-question, nothing moved');
+
   check(errors.length === 0, `offline: page errors: ${errors.slice(0, 3).join(' | ')}`);
   notes.push(`offline reload shows title; Belle round 1 with ${choices} choices`);
   await context.close();
@@ -209,6 +238,7 @@ try {
   await saveContinuity(browser, base);
   await offline(browser, base);
 } catch (e) {
+  if (process.env.SMOKE_DEBUG) console.log(e.stack);
   const lines = e.message.split('\n').map((l) => l.trim()).filter(Boolean);
   problems.push(`exception: ${lines[0]} ${lines.find((l) => l.startsWith('- ') || l.startsWith('waiting for')) || ''}`.trim());
 } finally {

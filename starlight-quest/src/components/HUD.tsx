@@ -20,6 +20,8 @@ interface HUDProps {
   todayStarNPC?: PrincessId;
   // False while a princess is talking or a quest card is open: the pause button looks faded (it shows a short note).
   canPause?: boolean;
+  // Pause anytime: during a talk, a question or a card the sheet covers the bar, so the Pause button floats above it.
+  pauseOnTop?: boolean;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -38,7 +40,18 @@ export const HUD: React.FC<HUDProps> = ({
   onOpenMap,
   todayStarNPC,
   canPause = true,
+  pauseOnTop = false,
 }) => {
+  const pauseButton = (
+    <button
+      onClick={onPause}
+      className={`w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-all font-black text-purple-900 ${canPause ? '' : 'opacity-40 grayscale'}`}
+      aria-label="Pause Menu"
+      aria-disabled={!canPause}
+    >
+      ⏸️
+    </button>
+  );
   return (
     <>
       {/* Top Bar HUD */}
@@ -123,16 +136,10 @@ export const HUD: React.FC<HUDProps> = ({
           >
             {muted ? '🔇' : '🔊'}
           </button>
-          <button
-            onClick={onPause}
-            className={`w-[60px] h-[60px] rounded-full bg-white/95 border-2 border-[#ebd373] shadow-md flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-all font-black text-purple-900 ${canPause ? '' : 'opacity-40 grayscale'}`}
-            aria-label="Pause Menu"
-            aria-disabled={!canPause}
-          >
-            ⏸️
-          </button>
+          {pauseOnTop ? <span className="w-[60px] h-[60px]" aria-hidden="true" /> : pauseButton}
         </div>
       </header>
+      {pauseOnTop && <div className="zsq-pause-float fixed top-2 right-2 sm:top-3 sm:right-3 z-[45] pointer-events-auto">{pauseButton}</div>}
 
       {/* Proximity Interaction Banner (Bottom Center) */}
       {interactPrompt && (

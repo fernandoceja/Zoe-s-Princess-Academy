@@ -95,7 +95,7 @@ ok(/aria-label=\{`Hear \$\{say\}`\}/.test(modal), 'ChallengeModal: the card spea
 
 // 5. The Thursday test is off Zoe's screens and reachable in Parent Corner (behind the grown-up gate).
 ok(!/Thursday test 📝/.test(app), "App: Belle's dialogue must not offer the Thursday test");
-ok(/onStartTest=\{startTestFromParent\}/.test(app) && /const startTestFromParent = \(\) => \{[\s\S]{0,700}beginSpellTest\(\)/.test(app), 'App: Parent Corner starts the test');
+ok(/onStartTest=\{(?:gameState === 'roam' \|\| gameState === 'scoot' \? )?startTestFromParent(?: : undefined)?\}/.test(app) && /const startTestFromParent = \(\) => \{[\s\S]{0,700}beginSpellTest\(\)/.test(app), 'App: Parent Corner starts the test');
 const pc = read('components/ParentCorner.tsx');
 ok(/onClick=\{onStartTest\}/.test(pc) && !/Narrator/.test(pc), 'Parent Corner: start button, still silent');
 

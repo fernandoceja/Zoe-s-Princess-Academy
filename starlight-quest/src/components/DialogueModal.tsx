@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PRINCESSES } from '../engine-core.js';
 import { Narrator } from '../engine-dom.js';
 import { say as herSay } from '../flow/say.js';
@@ -13,6 +13,8 @@ interface DialogueModalProps {
   // An optional second button on the last line (Belle's "Thursday test").
   secondaryLabel?: string;
   onSecondary?: () => void;
+  // Pause anytime: while paused she is quiet; on Resume she reads the same line again.
+  paused?: boolean;
 }
 
 export const DialogueModal: React.FC<DialogueModalProps> = ({
@@ -23,6 +25,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
   actionLabel = "Let's Go! ✨",
   secondaryLabel,
   onSecondary,
+  paused = false,
 }) => {
   const [lineIdx, setLineIdx] = useState(0);
   const princess = PRINCESSES[npcId];
@@ -36,6 +39,12 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
       Narrator.stop();
     };
   }, [lineIdx, currentLine, npcId]);
+
+  const wasPaused = useRef(paused);
+  useEffect(() => {
+    if (wasPaused.current && !paused && currentLine) herSay(npcId, currentLine);
+    wasPaused.current = paused;
+  }, [paused]);
 
   const handleNext = () => {
     if (lineIdx < lines.length - 1) {

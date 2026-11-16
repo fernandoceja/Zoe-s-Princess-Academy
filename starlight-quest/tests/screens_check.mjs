@@ -71,7 +71,8 @@ has(app, /Narrator\.speakText\(say \|\| spoken\(msg\)/, 'every pop-up message is
 // Speech conflicts found in review: the welcome line must not be cut by a screen's cleanup; a mid-sentence pause toast stays quiet.
 has(title, /^(?![\s\S]*Narrator\.stop\(\))/, 'TitleModal must not stop speech on unmount (it would cut the welcome line)');
 has(app, /setTimeout\(\(\) => \{\s*Narrator\.speakText\(\s*`Welcome to Starlight Quest!/, 'the welcome line is spoken after the screen change');
-has(app, /Finish talking first[^\n]*2200, false\)/, 'the pause toast must not cut a princess off');
+// Nov 16: Pause works anytime now, so the "Finish talking first" toast is gone (pause_check.mjs covers the rest).
+has(app, /^(?![\s\S]*Finish talking first)/, 'the old no-pause toast is gone (pause works during a talk)');
 has(read('components/WardrobeModal.tsx'), /^(?![\s\S]*role="button")/, 'Wardrobe rows are real buttons (gamepad and keyboard reach them)');
 // Grown-ups and mute: nothing speaks in Parent Corner; nothing bypasses Narrator.
 for (const f of ['components/ParentCorner.tsx']) check(!/Narrator|speechSynthesis/.test(read(f)), `${f} must stay silent`);
