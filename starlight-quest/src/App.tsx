@@ -3,7 +3,6 @@ import {
   createWorld,
   SoundFX,
   Narrator,
-  setLang,
   Input,
   installAudioCare,
   isIOS,
@@ -60,6 +59,7 @@ import {
 import { voiceText } from './flow/voice.js';
 import { canPauseIn, walksAfterResume } from './flow/pause.js';
 import { say as herSay, herLine, herGreeting } from './flow/say.js';
+import { applyLang } from './i18n/lang.js';
 import { shortHint, mergedLines } from './flow/playfix.js';
 import { visualHtml } from './flow/visuals.js';
 import {
@@ -736,7 +736,7 @@ export const App: React.FC = () => {
     rolloverTreasures(Save.data, day);
     setSchoolWords(Save.data.schoolWords);
     setWeek(Save.data.week);
-    setLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
+    applyLang(Save.data.lang === 'ES' ? 'ES' : 'EN');
     Narrator.setMuted(!!Save.data.muted);
 
     // Sync state from Save

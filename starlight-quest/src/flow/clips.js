@@ -53,7 +53,28 @@ export const CLIP_LINES = {
       encourage: 'Almost. Softly, try again.',
     },
   },
-  ES: {},
+  // What the Spanish clips say (transcribed Nov 16). Only these kinds have Spanish files.
+  ES: {
+    belle: {
+      greeting: '¡Hola! Soy Bella. Me encantan los cuentos. ¿Leemos juntas?',
+      praise: 'Sí, ¡qué lectora tan maravillosa!',
+      encourage: '¡Casi! ¡Miremos una vez más!',
+    },
+    elsa: {
+      greeting: 'Hola, soy Elsa. Los números brillan cuando lo intentamos. Empecemos.',
+      praise: 'Sí, ¡tu magia de números brilló!',
+      encourage: '¡Casi! ¡Cuenta conmigo una vez más!',
+    },
+    rapunzel: {
+      greeting: 'Hola, soy Rapunzel. Cada pregunta es una linterna nueva. ¡Vamos a explorar!',
+      praise: '¡Sí! ¡Iluminaste esa respuesta!',
+      encourage: 'Mira más de cerca. ¿Qué notas?',
+    },
+    ariel: { greeting: '¡Oh, hola! Soy Ariel. Me encantaría aprender contigo.' },
+    anna: { greeting: 'Hola, soy Ana. ¿Lista? Vamos a una aventura de lectura.' },
+    tiana: { greeting: 'Hola, soy Tiana. Trabajamos duro y brillamos. Empecemos.' },
+    aurora: { greeting: 'Hola, soy Aurora. Hagamos este día un poco más mágico.' },
+  },
 };
 
 // Greetings that fit the game (Cinderella's talks about choosing a grade).

@@ -3,6 +3,7 @@ import { getFxStatus, onFxStatus, setFxQuality } from '../fx/worldfx.js';
 import { QUALITY_CHOICES, QUALITY_LABELS, qualityNote } from '../flow/quality.js';
 import { AMBIENCE_CHOICES, AMBIENCE_LABELS } from '../flow/ambience.js';
 import { getAmbience, setAmbience } from '../fx/ambience.js';
+import { applyLang, langMode } from '../i18n/lang.js';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
 import {
   gateQuestion,
@@ -96,6 +97,13 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   useEffect(() => onFxStatus(setFx), []);
   // Background sound (Nov 16): Off / Soft / Medium, kept on this device.
   const [amb, setAmb] = useState(() => getAmbience());
+  // Language (Nov 16): English / Español for the game. Parent Corner itself stays in English.
+  const [lang, setLangChoice] = useState(() => langMode());
+  const chooseLang = (l: 'EN' | 'ES') => {
+    Save.data.lang = l;
+    Save.save();
+    setLangChoice(applyLang(l));
+  };
 
   const handleSaveBackup = () => {
     try {
@@ -174,7 +182,7 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
 
   if (locked) {
     return (
-      <div className="zsq-parent-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto">
+      <div data-zsq-en className="zsq-parent-wrap fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto">
         <div className="w-full max-w-sm bg-white rounded-3xl border-4 border-amber-300 p-6 text-center shadow-2xl">
           <div className="text-4xl mb-2">🔒</div>
           <h2 className="text-xl font-black text-slate-800 mb-1">Grown-ups Corner</h2>
@@ -213,7 +221,7 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   }
 
   return (
-    <div className="zsq-parent-wrap fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto">
+    <div data-zsq-en className="zsq-parent-wrap fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in pointer-events-auto overflow-y-auto">
       <div className="w-full max-w-2xl bg-gradient-to-b from-[#fefdf9] to-[#f5f8fd] rounded-[32px] border-4 border-[#ebd373] p-5 sm:p-7 shadow-2xl my-auto max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
@@ -352,6 +360,30 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               ))}
             </div>
             <p className="text-xs font-bold text-slate-600 mt-2" data-testid="quality-note">{qualityNote(fx.choice, fx.level)}</p>
+          </div>
+
+          {/* Language (Nov 16) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">Language / Idioma</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              The princesses, questions and screens in English or Spanish. Math, shapes, time and tallies are in Spanish; reading rounds (and Rapunzel's plant rounds) stay in English, because they teach English words. This corner stays in English.
+            </p>
+            <div className="flex gap-2" role="radiogroup" aria-label="Language">
+              {(['EN', 'ES'] as const).map((l) => (
+                <button
+                  key={l}
+                  role="radio"
+                  aria-checked={lang === l}
+                  lang={l === 'ES' ? 'es' : 'en'}
+                  onClick={() => chooseLang(l)}
+                  className={`flex-1 min-h-[48px] px-3 py-2 rounded-xl font-black text-sm shadow-xs active:scale-95 border-2 ${
+                    lang === l ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {l === 'ES' ? 'Español' : 'English'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Background sound (Nov 16) */}
