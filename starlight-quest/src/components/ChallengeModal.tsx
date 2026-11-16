@@ -67,10 +67,11 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   const princess = PRINCESSES[npcId];
   // Spanish mode: reading (and plant) rounds teach English words, so this sheet and her voice stay English.
   const englishRound = ENGLISH_ROUND_NPCS.includes(npcId);
+  // (Not while paused: the pause menu and tutorial over it speak Spanish.)
   useLayoutEffect(() => {
-    setEnglishRound(englishRound);
+    setEnglishRound(englishRound && !paused);
     return () => setEnglishRound(false);
-  }, [englishRound]);
+  }, [englishRound, paused]);
   const quest = QUESTS[npcId];
   const round = view.round;
   const locked = !!feedback && ADVANCING.includes(feedback.kind);

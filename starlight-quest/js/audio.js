@@ -248,10 +248,14 @@ function _speakPrincess(princessId, kind, text, onDone) {
     const a = new Audio();
     _currentAudio = a;
     let fellBack = false;
+    // A newer line (or stop()) cancels this one: its late load or fallback timer must stay quiet.
+    const mySeq = _seq;
+    const live = () => mySeq === _seq && _currentAudio === a;
 
     const fallback = () => {
       if (fellBack) return;
       fellBack = true;
+      if (!live()) return;
       _stopMP3();
       const vp = _voiceParams(princessId);
       _speakTTS(textStr, vp, done);
@@ -261,6 +265,7 @@ function _speakPrincess(princessId, kind, text, onDone) {
     a.onstalled = () => setTimeout(() => { if (!mp3Ok) fallback(); }, 2500);
     a.onended = () => { if (!fellBack) { _speaking = false; _currentAudio = null; done(); } };
     a.oncanplaythrough = () => {
+      if (!live()) { try { a.pause(); } catch (e) {} return; }
       mp3Ok = true;
       _speaking = true;
       a.play().catch(fallback);

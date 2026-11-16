@@ -17,6 +17,8 @@ const REPEAT_MS = 260;
 
 function visible(node) {
   if (!node || node.classList.contains('zsq-hidden') || node.classList.contains('zsq-leaving')) return false;
+  // A paused quest sits under an inert wrapper: the controller must not reach it (click() ignores inert).
+  if (node.closest && node.closest('[inert]')) return false;
   const cs = getComputedStyle(node);
   if (cs.display === 'none' || cs.visibility === 'hidden') return false;
   return node.getClientRects().length > 0;
@@ -24,8 +26,8 @@ function visible(node) {
 
 function activeRoot() {
   for (const sel of ROOTS) {
-    const n = document.querySelector(sel);
-    if (visible(n) && n.querySelector('button')) return n;
+    // Every match: a paused talk (inert) can sit before the Wardrobe or Treasure Book sheet.
+    for (const n of document.querySelectorAll(sel)) if (visible(n) && n.querySelector('button')) return n;
   }
   return null;
 }

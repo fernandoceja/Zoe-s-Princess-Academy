@@ -92,6 +92,7 @@ for (const f of ['src/components/DialogueModal.tsx', 'src/components/ChallengeMo
   ok(/from '\.\.\/flow\/say\.js'/.test(s) && /herSay\(npcId, /.test(s), `${f}: speaks through say.js`);
 }
 ok(/stop\(\) \{\s*_seq\+\+;/.test(read('js/audio.js')), 'audio.js: stop() cancels the follow-up of a stopped line');
+ok(/const mySeq = _seq;/.test(read('js/audio.js')) && /if \(!live\(\)\) return;/.test(read('js/audio.js')) && /oncanplaythrough = \(\) => \{\n\s*if \(!live\(\)\)/.test(read('js/audio.js')), 'audio.js: a stopped clip never plays late and its fallback never speaks');
 
 console.log(`clipvoice: ${checks} checks, ${problems.length} problems`);
 for (const m of problems) console.log('  -', m);

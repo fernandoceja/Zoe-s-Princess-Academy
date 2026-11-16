@@ -483,7 +483,7 @@ export const App: React.FC = () => {
   // A pick from the challenge view goes to the flow, which decides what the view shows next.
   const handlePick = (pickedId: string, info?: any) => {
     const q = qb.current;
-    if (!q || !view) return;
+    if (!q || !view || pausedRef.current) return;   // a paused question never answers (controller, stray tap)
     const npcId = q.npcId as PrincessId;
     const round = view.round;
     // A test never gives per-word stars or shards: pick() works on a scratch save.
@@ -551,7 +551,7 @@ export const App: React.FC = () => {
   // Next after a locked round (main.js: revealAnswer's onNext = startRound or nextRound).
   const handleAdvance = () => {
     const q = qb.current;
-    if (!q || !feedback) return;
+    if (!q || !feedback || pausedRef.current) return;
     const f = feedback;
     setFeedback(null);
     SoundFX.pop();
@@ -687,6 +687,7 @@ export const App: React.FC = () => {
 
   // Title -> world (main.js enterWorld).
   const enterWorld = () => {
+    startAmbience();   // also after How to Play (the tutorial's last tap is a gesture too); safe to call again
     setPhase('roam');
     if (worldRef.current) worldRef.current.setInputEnabled(true);
     showToast('Walk to a princess and say hello! 👑', 3000, false);   // the welcome line below says it
@@ -923,7 +924,8 @@ export const App: React.FC = () => {
             activeNPC={activeNPC}
             questStep={activeNPC && (gameState === 'challenge' || gameState === 'scoot') ? questStep : undefined}
             canPause={canPauseIn(gameState)}
-            pauseOnTop={gameState === 'dialogue' || gameState === 'challenge'}
+            pauseOnTop={(gameState === 'dialogue' || gameState === 'challenge') && !card}
+            pauseAboveCard={!!card && !paused && canPauseIn(gameState)}
             interactPrompt={interactPrompt}
             muted={muted}
             onToggleMute={handleToggleMute}

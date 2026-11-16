@@ -32,9 +32,14 @@ for (const banned of ['pick(', 'nextRound(', 'showRound(', 'completeQuest(', 'se
 ok(/setInputEnabled\(!nextPaused && walksAfterResume\(phaseRef\.current\)\)/.test(body), 'App: resume gives walking back only where she walks');
 ok(/Narrator\.stop\(\)/.test(body), 'App: pausing stops her voice');
 ok(/canPause=\{canPauseIn\(gameState\)\}/.test(app), 'HUD: Pause button is live in talks and quests');
-ok(/pauseOnTop=\{gameState === 'dialogue' \|\| gameState === 'challenge'\}/.test(app), 'HUD: Pause floats above the talk and question sheets');
+ok(/pauseOnTop=\{\(gameState === 'dialogue' \|\| gameState === 'challenge'\) && !card\}/.test(app), 'HUD: Pause floats above the talk and question sheets');
+ok(/pauseAboveCard=\{!!card && !paused && canPauseIn\(gameState\)\}/.test(app), 'HUD: Pause floats above celebration and rest cards');
+ok(/if \(!q \|\| !view \|\| pausedRef\.current\) return;/.test(app) && /if \(!q \|\| !feedback \|\| pausedRef\.current\) return;/.test(app), 'App: a paused question never answers or advances');
+ok(/node\.closest\('\[inert\]'\)/.test(readFileSync(new URL('../js/padnav.js', import.meta.url), 'utf8')), 'padnav: the controller skips the inert paused quest');
+ok(/for \(const n of document\.querySelectorAll\(sel\)\) if \(visible\(n\)/.test(readFileSync(new URL('../js/padnav.js', import.meta.url), 'utf8')), 'padnav: a sheet over a paused talk still gets the controller');
 const hud = read('components/HUD.tsx');
 ok(/pauseOnTop && <div className="zsq-pause-float fixed [^"]*z-\[45\][^"]*pointer-events-auto">\{pauseButton\}/.test(hud), 'HUD: the floating Pause sits above the z-40 sheets');
+ok(/pauseAboveCard && <div className="zsq-pause-float fixed [^"]*z-\[55\][^"]*pointer-events-auto">\{pauseButton\}/.test(hud), 'HUD: the card Pause sits above the z-50 cards');
 ok(/const handleResume = \(\) => \{ if \(pausedRef\.current\) handleTogglePause\(\); \};/.test(app) && /onResume=\{handleResume\}/.test(app), 'PauseMenu: Resume only un-pauses (a double tap cannot pause again)');
 
 // 3. The talk, question and cards stay mounted (never unmounted by pausing), inert under the menu, and read again on Resume.

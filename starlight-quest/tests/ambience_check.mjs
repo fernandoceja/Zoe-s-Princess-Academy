@@ -71,6 +71,8 @@ ok(/get speaking\(\) \{ return _speaking; \}/.test(read('js/audio.js')), 'audio.
 // 7. Wiring: starts inside the Start tap; Parent Corner has Off / Soft / Medium.
 const app = read('src/App.tsx');
 ok(/const handleStartTitle = \(\) => \{\s*SoundFX\.ensure\(\);\s*startAmbience\(\);/.test(app), 'App: starts in the Start tap (iOS)');
+ok(/const enterWorld = \(\) => \{\s*startAmbience\(\);/.test(app), 'App: also starts after How to Play (enterWorld)');
+ok(/if \(!ctx && choice !== 'off'\) startAmbience\(\);/.test(fx), 'Parent Corner: choosing Soft or Medium starts it if it never started');
 ok(/installAmbience\(\{ getXZ:/.test(app) && /getPhase: \(\) => phaseRef\.current/.test(app), 'App: knows where Zoe is and what is on screen');
 const pc = read('src/components/ParentCorner.tsx');
 ok(/Background sound/.test(pc) && /AMBIENCE_CHOICES\.map/.test(pc) && /setAmb\(setAmbience\(c\)\)/.test(pc), 'Parent Corner: Off / Soft / Medium');
