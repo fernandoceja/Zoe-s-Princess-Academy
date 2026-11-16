@@ -66,10 +66,11 @@ ok(/ENGLISH_ROUND_NPCS = \['belle', 'ariel', 'anna', 'jasmine', 'aurora', 'rapun
 ok(/Narrator\.speakExact = /.test(lang) && /Narrator\.speakText = /.test(lang), 'lang: every spoken line goes through the Spanish');
 ok(/MutationObserver/.test(lang) && /stopScreen/.test(lang) && /\[data-zsq-en\]/.test(lang), 'lang: screen words swap, come back, and skip English areas');
 ok(!/fetch\(|XMLHttpRequest|https?:\/\//.test(lang + read('src/i18n/es.js')), 'lang: no network');
+ok(/if \(!\/\[A-Za-z\]\/\.test\(String\(text \|\| ''\)\)\) \{ setLang\('ES'\); return text; \}/.test(lang), 'lang: numbers and sums are read by the Spanish voice');
 const say = read('src/flow/say.js');
 ok(/spanishNow\(\) \? toEs\(text\)/.test(say) && /sayLine\(voiceIn\('ES'\), 'ES'/.test(say), 'say.js: Spanish first, then her Spanish clip');
 const ch = read('src/components/ChallengeModal.tsx');
-ok(/data-zsq-en=\{englishRound \|\| undefined\}/.test(ch) && /setEnglishRound\(englishRound\)/.test(ch), 'ChallengeModal: reading rounds stay English');
+ok(/data-zsq-en=\{englishRound \|\| undefined\}/.test(ch) && /setEnglishRound\(englishRound && !paused\)/.test(ch), 'ChallengeModal: reading rounds stay English');
 const pc = read('src/components/ParentCorner.tsx');
 ok(/Language \/ Idioma/.test(pc) && /Save\.data\.lang = l;/.test(pc) && /applyLang\(l\)/.test(pc) && /Español/.test(pc), 'Parent Corner: English / Español switch saves Save.data.lang');
 ok((pc.match(/data-zsq-en className="zsq-parent-wrap/g) || []).length === 2, 'Parent Corner: stays English for grown-ups');

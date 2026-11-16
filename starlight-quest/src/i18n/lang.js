@@ -44,6 +44,8 @@ export function spokenFor(text) {
   if (spanishNow()) {
     const es = toEs(text);
     if (es) { setLang('ES'); return es; }
+    // Numbers and sums ("7", "3 + 4") have no words to translate: the Spanish voice reads them in Spanish.
+    if (!/[A-Za-z]/.test(String(text || ''))) { setLang('ES'); return text; }
   }
   setLang('EN');
   return text;

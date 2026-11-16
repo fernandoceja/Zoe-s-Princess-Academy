@@ -47,7 +47,7 @@
     "tests/gate_check.mjs": "724ed26cee9f0242b4e068d8c77696d545883889c10c9c073aa5be0824299e19",
     "tests/glen_check.mjs": "632d5da90f13845ebe387e089012db22b8b6b02450cb8f7cda7919e402cf3c34",
     "tests/harbor_check.mjs": "2007cea8698ea570d5cc0d4995ef2509529736fa959c841769d392feec2d6bfb",
-    "tests/i18n_check.mjs": "ee910d137f24453da0cf31a559671eb33870ef4f7ad99586473da20476395354",
+    "tests/i18n_check.mjs": "5207099e14a23e251e4bd6d4c30db518948699cbee2c4d93a3289fde67369de7",
     "tests/isle_check.mjs": "d0755b7a6f828b736f9bec133170b86c646cde619b264a8640b078e74215db52",
     "tests/jasmine_check.mjs": "abb7d9cd800502aa55783ac026828e7c729cc638d685ed2b851d279270bd2cac",
     "tests/kingdommap_check.mjs": "1b979bf89e10591e63ec203956ee0409f11c1898d8f8f37d397c20dbc683788b",
