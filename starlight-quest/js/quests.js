@@ -123,7 +123,8 @@ export const PRINCESSES = {
 // land, so she stays out of this list.
 // NO_CLIP_IDS — princesses with no recorded MP3 clips: the narrator skips the clip lookup and
 // speaks right away with the speech voice. Remove an id once her clips are recorded.
-export const NO_CLIP_IDS = ['ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
+// Ariel, Anna, Tiana and Aurora have EN clips (Nov 16); Moana and Jasmine still have none.
+export const NO_CLIP_IDS = ['moana', 'jasmine'];
 
 export const NPC_ORDER = ['belle', 'elsa', 'rapunzel', 'cinderella', 'ariel', 'moana', 'jasmine', 'anna', 'tiana', 'aurora'];
 

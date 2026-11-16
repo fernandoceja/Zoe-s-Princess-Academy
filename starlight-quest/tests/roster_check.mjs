@@ -1,5 +1,5 @@
 // New princess roster (K3): six princesses defined with original portraits and voices, but not spawned or in NPC_ORDER yet.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PRINCESSES, NPC_ORDER, NO_CLIP_IDS } from '../js/quests.js?v=20261028r3';
@@ -59,9 +59,12 @@ expect('world.js does not iterate all NPC_DEFS', !/Object\.(entries|keys|values)
 expect('world.js has curls hair style', /hairStyle === 'curls'/.test(world));
 // audio.js: no clip lookup for the new ids.
 const audio = read('js/audio.js');
-expect('NO_CLIP_IDS has the six', ids.every((id) => NO_CLIP_IDS.includes(id)));
+// Nov 16: a princess is in NO_CLIP_IDS exactly when her EN clips are missing (Moana and Jasmine).
+const hasClips = (id) => ['greeting', 'praise', 'encourage'].every((k) => existsSync(new URL(`../../assets/audio/EN/princess_${id}_${k}_01.mp3`, import.meta.url)));
+expect('NO_CLIP_IDS is exactly the princesses without EN clips', ids.every((id) => NO_CLIP_IDS.includes(id) === !hasClips(id)));
+expect('NO_CLIP_IDS is Moana and Jasmine', NO_CLIP_IDS.length === 2 && NO_CLIP_IDS.includes('moana') && NO_CLIP_IDS.includes('jasmine'));
 expect('NO_CLIP_IDS has no original four', ['belle', 'elsa', 'rapunzel', 'cinderella'].every((id) => !NO_CLIP_IDS.includes(id)));
-expect('Ariel and Moana have no recorded clips (they use the speech voice)', NO_CLIP_IDS.includes('ariel') && NO_CLIP_IDS.includes('moana'));
+expect('Ariel has recorded clips; Moana uses the speech voice', !NO_CLIP_IDS.includes('ariel') && NO_CLIP_IDS.includes('moana'));
 const iSkip = audio.indexOf('NO_CLIP_IDS.includes(princessId)');
 const iClip = audio.indexOf("new Audio()");
 expect('audio.js skips clips before creating Audio', iSkip > 0 && iClip > iSkip);
