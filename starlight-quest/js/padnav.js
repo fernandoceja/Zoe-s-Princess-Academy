@@ -26,8 +26,8 @@ function visible(node) {
 
 function activeRoot() {
   for (const sel of ROOTS) {
-    const n = document.querySelector(sel);
-    if (visible(n) && n.querySelector('button')) return n;
+    // Every match: a paused talk (inert) can sit before the Wardrobe or Treasure Book sheet.
+    for (const n of document.querySelectorAll(sel)) if (visible(n) && n.querySelector('button')) return n;
   }
   return null;
 }

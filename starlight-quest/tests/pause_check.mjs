@@ -36,6 +36,7 @@ ok(/pauseOnTop=\{\(gameState === 'dialogue' \|\| gameState === 'challenge'\) && 
 ok(/pauseAboveCard=\{!!card && !paused && canPauseIn\(gameState\)\}/.test(app), 'HUD: Pause floats above celebration and rest cards');
 ok(/if \(!q \|\| !view \|\| pausedRef\.current\) return;/.test(app) && /if \(!q \|\| !feedback \|\| pausedRef\.current\) return;/.test(app), 'App: a paused question never answers or advances');
 ok(/node\.closest\('\[inert\]'\)/.test(readFileSync(new URL('../js/padnav.js', import.meta.url), 'utf8')), 'padnav: the controller skips the inert paused quest');
+ok(/for \(const n of document\.querySelectorAll\(sel\)\) if \(visible\(n\)/.test(readFileSync(new URL('../js/padnav.js', import.meta.url), 'utf8')), 'padnav: a sheet over a paused talk still gets the controller');
 const hud = read('components/HUD.tsx');
 ok(/pauseOnTop && <div className="zsq-pause-float fixed [^"]*z-\[45\][^"]*pointer-events-auto">\{pauseButton\}/.test(hud), 'HUD: the floating Pause sits above the z-40 sheets');
 ok(/pauseAboveCard && <div className="zsq-pause-float fixed [^"]*z-\[55\][^"]*pointer-events-auto">\{pauseButton\}/.test(hud), 'HUD: the card Pause sits above the z-50 cards');
