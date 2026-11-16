@@ -49,6 +49,8 @@ interface ChallengeModalProps {
   onAdvance: () => void;
   // Called once the wrong-pick wiggle is over (about 1 s), so the flow can narrow the choices without a new screen.
   onRetryReady?: () => void;
+  // Pause anytime: the round stays as it is under the menu; on Resume the question (or the fresh hint) is read again.
+  paused?: boolean;
 }
 
 export const ChallengeModal: React.FC<ChallengeModalProps> = ({
@@ -59,6 +61,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   onPick,
   onAdvance,
   onRetryReady,
+  paused = false,
 }) => {
   const princess = PRINCESSES[npcId];
   const quest = QUESTS[npcId];
@@ -117,6 +120,12 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
       : view.replayText || view.voiceText || round.prompt;
     herSay(npcId, text);
   };
+
+  const wasPaused = useRef(paused);
+  useEffect(() => {
+    if (wasPaused.current && !paused) replay();
+    wasPaused.current = paused;
+  }, [paused]);
 
   // Tap-to-blend letters (for Belle CVC phonics)
   const renderBlendLetters = () => {

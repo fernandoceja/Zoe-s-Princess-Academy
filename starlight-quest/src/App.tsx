@@ -58,6 +58,7 @@ import {
   sortFirstLine,
 } from './flow/questbook.js';
 import { voiceText } from './flow/voice.js';
+import { canPauseIn, walksAfterResume } from './flow/pause.js';
 import { say as herSay, herLine, herGreeting } from './flow/say.js';
 import { shortHint, mergedLines } from './flow/playfix.js';
 import { visualHtml } from './flow/visuals.js';
@@ -239,23 +240,25 @@ export const App: React.FC = () => {
   };
 
   // Toggle Pause
+  // Pause anytime (Nov 16): also during a talk, a question or a card. The quest is not touched: the talk or question
+  // stays mounted under the menu (inert, so nothing can be tapped through), and it is read again on Resume.
   const handleTogglePause = () => {
-    if (phaseRef.current !== 'roam' && phaseRef.current !== 'scoot') {
-      // main.js togglePause: no pause during a quest or a talk (toast lasts 2200 ms there).
-      showToast('Finish talking first, then you can pause! ⏸️', 2200, false);   // she is mid-sentence: do not cut her off
-      return;
-    }
+    if (!canPauseIn(phaseRef.current)) return;
     const nextPaused = !pausedRef.current;
     pausedRef.current = nextPaused;
     setPaused(nextPaused);
     if (!nextPaused && scootRef.current && scootRef.current.pending && phaseRef.current === 'scoot') window.setTimeout(() => arriveLeg(), 0);
     setPauseTab('menu');
     // The world keeps running under the pause menu (it delivers the gamepad resume key); see the cover rule at boot.
-    if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused);
+    // Walking input comes back only where she walks, never under a talk or a question.
+    if (worldRef.current) worldRef.current.setInputEnabled(!nextPaused && walksAfterResume(phaseRef.current));
     if (nextPaused) {
       Narrator.stop();
     }
   };
+
+  // Resume only ever un-pauses (a double tap on Resume must not pause again).
+  const handleResume = () => { if (pausedRef.current) handleTogglePause(); };
 
   // ---------- quest flow ----------
 
@@ -915,7 +918,8 @@ export const App: React.FC = () => {
             treasuresTotal={treasuresTotal}
             activeNPC={activeNPC}
             questStep={activeNPC && (gameState === 'challenge' || gameState === 'scoot') ? questStep : undefined}
-            canPause={gameState === 'roam' || gameState === 'scoot'}
+            canPause={canPauseIn(gameState)}
+            pauseOnTop={gameState === 'dialogue' || gameState === 'challenge'}
             interactPrompt={interactPrompt}
             muted={muted}
             onToggleMute={handleToggleMute}
@@ -969,6 +973,8 @@ export const App: React.FC = () => {
         />
       )}
 
+      {/* Talk, question and cards stay mounted while paused: inert, so taps and keys cannot reach them under the menu. */}
+      <div inert={paused || undefined} aria-hidden={paused || undefined}>
       {/* Dialogue Modal */}
       {dialogue && (
         <DialogueModal
@@ -980,6 +986,7 @@ export const App: React.FC = () => {
           actionLabel={dialogue.actionLabel}
           secondaryLabel={dialogue.secondaryLabel}
           onSecondary={dialogue.onSecondary}
+          paused={paused}
         />
       )}
 
@@ -994,6 +1001,7 @@ export const App: React.FC = () => {
           onPick={handlePick}
           onAdvance={handleAdvance}
           onRetryReady={handleRetryReady}
+          paused={paused}
         />
       )}
 
@@ -1012,13 +1020,14 @@ export const App: React.FC = () => {
           onSecondary={card.onSecondary}
         />
       )}
+      </div>
 
       {/* Pause Menu & Secondary Modals */}
       {paused && (
         <>
           {pauseTab === 'menu' && (
             <PauseMenu
-              onResume={handleTogglePause}
+              onResume={handleResume}
               onOpenWardrobe={() => setPauseTab('wardrobe')}
               onOpenTreasureBook={() => setPauseTab('treasurebook')}
               onOpenTutorial={() => setPauseTab('tutorial')}
@@ -1058,7 +1067,7 @@ export const App: React.FC = () => {
               onSaveWords={handleSaveCustomWords}
               onSaveWeek={handleSaveWeek}
               onResetWeek={handleResetWeek}
-              onStartTest={startTestFromParent}
+              onStartTest={gameState === 'roam' || gameState === 'scoot' ? startTestFromParent : undefined}
               onBack={() => setPauseTab('menu')}
             />
           )}
