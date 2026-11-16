@@ -1,6 +1,6 @@
 {
   "files": {
-    "js/audio.js": "99a04e9e549d1a23c689fdcc5785d342d5345e4aab3c419168f016b2cda4e746",
+    "js/audio.js": "287c84444b1f290ea1394651eb10413e68e5e19e9703b5a63b8a65ddce4896e8",
     "js/bayou.js": "ec3e9447a6a21d55ba85be246b7f9f187e5b3f72e658acd7ffa21d7559cc3f8f",
     "js/chart120.js": "05aa2e9659f4fe76dbcf3adb34a146150f6067ab4f279d92c6149353633a555f",
     "js/colorbynum.js": "5549e94a9d94e80cec7d82ec47754449de642b877180f99a532c6c7cdf596ec7",
@@ -36,6 +36,7 @@
     "tests/buildprecache_check.mjs": "31779b881994933b048d08f9e4bf5ac576bbe19c6dbef34c8bf130c004d75d22",
     "tests/bundle_check.mjs": "399584f80114171803b5c62d74f343cbf2b08737a5c30167fbeec601f91be82a",
     "tests/chart120_check.mjs": "1e28802e07eea9fbf88853866b09f3a5048a8d4d1f061abe7862e109c494254b",
+    "tests/clipvoice_check.mjs": "30bd59381ad60f1515dcab2b427a31d04bd1e6adfa66ba7a90887118c40e422a",
     "tests/counton_check.mjs": "c2a10c904ef23dcc5b1ba1f13b13d7d83f754d8bab69cb18984edb01a79b6a85",
     "tests/cove_check.mjs": "6ce9f22a9df12b1daf13842b36a746fe583339522a153e6ad072a0f6b16b5e76",
     "tests/dictation_check.mjs": "34402adf211520d576cf841c0ff49b1ab84f93966a34b8be2c96a3d13af45329",
@@ -62,7 +63,7 @@
     "tests/pic_check.mjs": "fda4c47f7b0940644c3656d5dbd9781cde94d8deb29305623d0413e714a0cd84",
     "tests/playtest_check.mjs": "dbfca7e04ea7950e39c7f2bf4405de6a2aa6e5bf0344226f1b5e5c8ba1ea3e6b",
     "tests/precache_check.mjs": "eea7d0449104ddc29c4f5fcf04c0d14c17630108d15f4cf7588f3cb3a4c67ee3",
-    "tests/retry_check.mjs": "95366461ac9d85831403877ffafb4dbe5bed0292c78287e2b60f04008b9f778b",
+    "tests/retry_check.mjs": "76bedf83d876ac5968d1058d1cff3c5f6463b1b48ec677224721084fb771f36b",
     "tests/reveal_check.mjs": "4f0d3afe6f599794a67ad6446156fe8421402bb1858ed9afb4e1522e5a7b3a83",
     "tests/reviewqueue_check.mjs": "b43a1fc872b248175b92904fe4567dedd5915108feec4afd00b9c0c992ff544b",
     "tests/roster_check.mjs": "840a480ae396475b3978ac580dd80078126f9af1b56c242c2e099dbd7c62fae8",
@@ -80,6 +81,7 @@
     "tests/trail_check.mjs": "e4ebe52d1a682b1fa5c1c96d2512f16a06a3a099cb1a31b07519dda95af32809",
     "tests/treasure_check.mjs": "d4178c4c9f39fca87d1590d1bc43664729a07b5a5640cc566a907948c398de5d",
     "tests/treasurebook_check.mjs": "e623051b43679db35635fba3296e57910a2e902b2fcea6f7a36b4c6a824fad17",
+    "tests/visualfx_check.mjs": "ba1adbcef0cc9c1ae03cdf9cf00e2a3beb983a6de6137700c29792b9e7328dc4",
     "tests/voice_check.mjs": "837c0ea35aa263d04db9fea0f621343df3ebbe5d71e0d017c9aa4c827a1e2cb4",
     "tests/vowelsort_check.mjs": "29fd005e87d7c702e9108231c90814f2954ac64dc213b512a4f202e465089e1e",
     "tests/week_check.mjs": "e7dd4bcdee582ddaac760baa49e1de38cb986764f56cdafd77f7bd8233d3f821",

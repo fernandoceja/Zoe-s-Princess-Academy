@@ -58,6 +58,7 @@ import {
   sortFirstLine,
 } from './flow/questbook.js';
 import { voiceText } from './flow/voice.js';
+import { say as herSay, herLine, herGreeting } from './flow/say.js';
 import { shortHint, mergedLines } from './flow/playfix.js';
 import { visualHtml } from './flow/visuals.js';
 import {
@@ -399,10 +400,12 @@ export const App: React.FC = () => {
       return;
     }
     qb.current = createQuestbook(npcId, roundsFor(Save.data, npcId));
+    // Back in a glowing land: she greets Zoe with her recorded hello (when she has one that fits).
+    const hello = d.practice && !d.again ? herGreeting(npcId) : undefined;
     openDialogue({
       npcId,
       kind: d.dialogue.kind,
-      lines: d.dialogue.lines,
+      lines: hello ? [hello, 'Welcome back, Zoe! My land is glowing because of you! 💖'] : d.dialogue.lines,
       actionLabel: d.practice ? undefined : 'Start Quest! ⭐',
       onDone: () => { if (npcId === 'jasmine' && beginScoot()) return; showRound(npcId); },
     });
@@ -491,8 +494,9 @@ export const App: React.FC = () => {
         setStars(Save.data.stars);
       }
       SoundFX.chime();
-      const praise = praiseLine();
-      Narrator.speakExact(npcId, praise);
+      // Her recorded praise on rounds 1, 3 and 5 (when she has one in this language); the usual lines otherwise.
+      const praise = (!q.test && q.roundIdx % 2 === 0 && herLine(npcId, 'praise')) || praiseLine();
+      herSay(npcId, praise);
       setFeedback({ kind, pickedId, correctId: view.correctId, message: q.test ? `Lovely! ${praise}` : `⭐ +1 star! ${praise}` });
     } else if (kind === 'reveal') {
       // Third miss: show the answer gently and count it as done (no star).
@@ -504,12 +508,15 @@ export const App: React.FC = () => {
       // Gentle retry: never reveal the answer, never penalize. One short hint line, shown and spoken; the cards
       // wiggle and work again by themselves after about a second (onRetryReady), no "Try again" button.
       SoundFX.pop();
-      Narrator.speakExact(
+      // First miss: her recorded "almost" line in front of the hint (only when she has one), then the hint.
+      const enc = !q.test && q.misses === 1 ? herLine(npcId, 'encourage') : undefined;
+      const lead = enc ? enc + ' ' : '';
+      herSay(
         npcId,
-        shortHint(round.hintSay || round.hint),
+        lead + shortHint(round.hintSay || round.hint),
         round.sound ? () => Narrator.playClip(BELLE_CLIP_DIR + round.sound) : undefined
       );
-      setFeedback({ kind, pickedId, correctId: null, message: shortHint(round.hint) });
+      setFeedback({ kind, pickedId, correctId: null, message: lead + shortHint(round.hint) });
     } else if (kind === 'spellwrong') {
       SoundFX.pop();
       const say = shortHint((info && info.say) || round.hintSay || round.hint);
