@@ -60,7 +60,7 @@ check(/const ADVANCING = \['correct', 'reveal'\];/.test(modal), 'ChallengeModal:
 check(!/Try again 💗/.test(modal), 'ChallengeModal: the "Try again" gate button must be gone');
 check(/RETRY_UNLOCK_MS/.test(modal) && /onRetryReady/.test(modal), 'ChallengeModal: the cards unlock by themselves after the wiggle');
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
-check(/kind === 'retry'\) \{[^}]*Narrator\.speakExact\(\s*npcId,\s*shortHint\(round\.hintSay \|\| round\.hint\)/s.test(app), 'App: a wrong pick must speak the short hint');
+check(/kind === 'retry'\) \{[^}]*(?:Narrator\.speakExact|herSay)\(\s*npcId,\s*(?:lead \+ )?shortHint\(round\.hintSay \|\| round\.hint\)/s.test(app), 'App: a wrong pick must speak the short hint (her recorded \"almost\" line may lead it)');
 const qbSrc = readFileSync(new URL('../src/flow/questbook.js', import.meta.url), 'utf8');
 check(!/requeued: true|qb\.rounds\.splice/.test(qbSrc), 'questbook: a missed round must not be added back into the same quest');
 

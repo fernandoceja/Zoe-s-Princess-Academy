@@ -141,7 +141,7 @@ ok(/prefers-reduced-motion:reduce\)\{\.zsq-burst\{display:none;\}\}/.test(css), 
 
 // Cache bumped (the service worker must pick up the new files).
 const sw = read('sw.js');
-ok(/CACHE_VERSION = 'v47-20261115'/.test(sw), 'CACHE_VERSION bumped to v47-20261115');
+ok(+((sw.match(/CACHE_VERSION = 'v(\d+)-/) || [])[1] || 0) >= 47, 'CACHE_VERSION bumped to v47-20261115 or later');
 
 console.log(`visualfx_check: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

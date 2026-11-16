@@ -285,8 +285,9 @@ export const Narrator = {
     if (_muted) this.stop();
   },
 
-  /** Stop any in-flight MP3 or TTS. */
+  /** Stop any in-flight MP3 or TTS. A stopped line's follow-up (onDone) never fires. */
   stop() {
+    _seq++;
     _stopTTS();
     _stopMP3();
     _speaking = false;

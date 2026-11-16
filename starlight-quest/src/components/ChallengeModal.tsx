@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PRINCESSES, QUESTS, tileSound } from '../engine-core.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
+import { say as herSay } from '../flow/say.js';
 import { dictationHint, sortBinRight, sortWrongHint, groupBinRight } from '../flow/questbook.js';
 import { cardPicture, choiceSay, canHearChoices, questionPicture, RETRY_UNLOCK_MS, wordPicture } from '../flow/playfix.js';
 import { PrincessId, Round } from '../types';
@@ -102,7 +103,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
     if (round.sort?.items) {
       setSortedItems(round.sort.items.map((it: any) => ({ ...it, bin: undefined })));
     }
-    Narrator.speakExact(npcId, view.voiceText);
+    herSay(npcId, view.voiceText);
     return () => {
       Narrator.stop();
     };
@@ -114,7 +115,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
     const text = feedback && feedback.message && !round.test && (locked || cooling)
       ? feedback.message
       : view.replayText || view.voiceText || round.prompt;
-    Narrator.speakExact(npcId, text);
+    herSay(npcId, text);
   };
 
   // Tap-to-blend letters (for Belle CVC phonics)

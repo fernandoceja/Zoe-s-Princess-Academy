@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PRINCESSES } from '../engine-core.js';
 import { Narrator } from '../engine-dom.js';
+import { say as herSay } from '../flow/say.js';
 import { PrincessId } from '../types';
 
 interface DialogueModalProps {
@@ -29,7 +30,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
 
   useEffect(() => {
     if (currentLine) {
-      Narrator.speakExact(npcId, currentLine);
+      herSay(npcId, currentLine);
     }
     return () => {
       Narrator.stop();
@@ -47,7 +48,7 @@ export const DialogueModal: React.FC<DialogueModalProps> = ({
 
   const handleReplay = () => {
     if (currentLine) {
-      Narrator.speakExact(npcId, currentLine);
+      herSay(npcId, currentLine);
     }
   };
 
