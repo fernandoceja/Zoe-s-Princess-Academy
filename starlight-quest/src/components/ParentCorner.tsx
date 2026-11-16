@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getFxStatus, onFxStatus, setFxQuality } from '../fx/worldfx.js';
 import { QUALITY_CHOICES, QUALITY_LABELS, qualityNote } from '../flow/quality.js';
+import { AMBIENCE_CHOICES, AMBIENCE_LABELS } from '../flow/ambience.js';
+import { getAmbience, setAmbience } from '../fx/ambience.js';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
 import {
   gateQuestion,
@@ -92,6 +94,8 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   // Picture quality (visual polish): Auto / High / Low, kept on this device.
   const [fx, setFx] = useState(() => getFxStatus());
   useEffect(() => onFxStatus(setFx), []);
+  // Background sound (Nov 16): Off / Soft / Medium, kept on this device.
+  const [amb, setAmb] = useState(() => getAmbience());
 
   const handleSaveBackup = () => {
     try {
@@ -348,6 +352,29 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               ))}
             </div>
             <p className="text-xs font-bold text-slate-600 mt-2" data-testid="quality-note">{qualityNote(fx.choice, fx.level)}</p>
+          </div>
+
+          {/* Background sound (Nov 16) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">Background sound</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              A soft, quiet tune for each land, made inside the game (no downloads). It goes quieter while a princess talks and during questions. The 🔊 button turns it off too.
+            </p>
+            <div className="flex gap-2" role="radiogroup" aria-label="Background sound">
+              {AMBIENCE_CHOICES.map((c) => (
+                <button
+                  key={c}
+                  role="radio"
+                  aria-checked={amb === c}
+                  onClick={() => setAmb(setAmbience(c))}
+                  className={`flex-1 min-h-[48px] px-3 py-2 rounded-xl font-black text-sm shadow-xs active:scale-95 border-2 ${
+                    amb === c ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {AMBIENCE_LABELS[c]}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Backup and restore (M8) */}

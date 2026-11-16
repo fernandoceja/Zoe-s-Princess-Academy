@@ -278,6 +278,8 @@ function _speakPrincess(princessId, kind, text, onDone) {
 
 export const Narrator = {
   get muted() { return _muted; },
+  /** True while a clip or speech line is playing (the background sound ducks under it). */
+  get speaking() { return _speaking; },
 
   /** Mute or unmute narration. Muting also stops anything playing. */
   setMuted(m) {

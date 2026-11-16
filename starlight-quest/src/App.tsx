@@ -91,6 +91,7 @@ import { WardrobeModal } from './components/WardrobeModal';
 import { TreasureBookModal } from './components/TreasureBookModal';
 import { ParentCorner, type WeekForm } from './components/ParentCorner';
 import { installWorldFx } from './fx/worldfx.js';
+import { installAmbience, startAmbience } from './fx/ambience.js';
 import { applyWeek, resetWeek, applyWords } from './flow/parent.js';
 import { VirtualJoystick } from './components/VirtualJoystick';
 import { DragWalk } from './components/DragWalk';
@@ -710,6 +711,7 @@ export const App: React.FC = () => {
   // Start Adventure from Title
   const handleStartTitle = () => {
     SoundFX.ensure();
+    startAmbience();   // inside the Start tap, so iOS lets the background sound play
     SoundFX.chime();
     Save.data.started = true;
     Save.save();
@@ -769,6 +771,8 @@ export const App: React.FC = () => {
     if (containerRef.current) {
       // Visual polish layer (lights, shadows, bloom, land moods, idle motion): wraps the renderer before the world draws.
       installWorldFx();
+      // Gentle background sound per land (made in code; Parent Corner has Off / Soft / Medium).
+      installAmbience({ getXZ: () => { try { return worldRef.current?.getPlayerXZ() || null; } catch (e) { return null; } }, getPhase: () => phaseRef.current });
       const world = createWorld(containerRef.current, {
         onTrailArrived(npcId: string) {
           const sc = scootRef.current;

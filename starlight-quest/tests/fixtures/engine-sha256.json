@@ -1,6 +1,6 @@
 {
   "files": {
-    "js/audio.js": "287c84444b1f290ea1394651eb10413e68e5e19e9703b5a63b8a65ddce4896e8",
+    "js/audio.js": "61a5c7aac6b5c6bc9deb537d688c6c3733d0a20deb4555429962c9fc82af3a45",
     "js/bayou.js": "ec3e9447a6a21d55ba85be246b7f9f187e5b3f72e658acd7ffa21d7559cc3f8f",
     "js/chart120.js": "05aa2e9659f4fe76dbcf3adb34a146150f6067ab4f279d92c6149353633a555f",
     "js/colorbynum.js": "5549e94a9d94e80cec7d82ec47754449de642b877180f99a532c6c7cdf596ec7",
@@ -27,6 +27,7 @@
     "js/ui.js": "c90dd984d0c4a5811e3baf5f2ea5cab1ee3ca8babd9233ff25c57b4a624de86c",
     "js/world.js": "4322482b5099e2af3ab65f891ea203bf98f1e2becc41785c890f2b2ebd84e0b1",
     "js/worldmap.js": "cb5efbd869c75a13955ef1156b515fe6fa544985a2bf8725727aa1438b2729b6",
+    "tests/ambience_check.mjs": "a928eba0488c4beab1160a560a262dd032aee2d2ca4ab34eb19b054bf044cebf",
     "tests/anna_check.mjs": "60c52a58d4b8f81ea7670217947843f0da59d5a802f98165a1c73d2375cc06c5",
     "tests/ariel_check.mjs": "c3ddd1f2c5e1f898692f93c9b3079ab7cfb6894a85ef8ede6bf636cc28c197ca",
     "tests/aurora_check.mjs": "e5deee1c61d7a57a98dfd2ef8813f705284c4ad9f04c99d2d9d82d8de3d45801",
