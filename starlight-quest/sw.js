@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v48-20261116';
+const CACHE_VERSION = 'v49-20261116';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -62,6 +62,18 @@ const PRECACHE_URLS = [
   '../assets/audio/EN/princess_zoe_greeting_01.mp3',
   '../assets/audio/EN/princess_zoe_praise_01.mp3',
   '../assets/audio/EN/princess_zoe_encourage_01.mp3',
+  '../assets/audio/EN/princess_ariel_greeting_01.mp3',
+  '../assets/audio/EN/princess_ariel_praise_01.mp3',
+  '../assets/audio/EN/princess_ariel_encourage_01.mp3',
+  '../assets/audio/EN/princess_anna_greeting_01.mp3',
+  '../assets/audio/EN/princess_anna_praise_01.mp3',
+  '../assets/audio/EN/princess_anna_encourage_01.mp3',
+  '../assets/audio/EN/princess_tiana_greeting_01.mp3',
+  '../assets/audio/EN/princess_tiana_praise_01.mp3',
+  '../assets/audio/EN/princess_tiana_encourage_01.mp3',
+  '../assets/audio/EN/princess_aurora_greeting_01.mp3',
+  '../assets/audio/EN/princess_aurora_praise_01.mp3',
+  '../assets/audio/EN/princess_aurora_encourage_01.mp3',
   '../assets/audio/ES/princess_belle_greeting_01.mp3',
   '../assets/audio/ES/princess_belle_praise_01.mp3',
   '../assets/audio/ES/princess_belle_encourage_01.mp3',

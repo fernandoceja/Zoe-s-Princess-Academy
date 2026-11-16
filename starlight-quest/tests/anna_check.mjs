@@ -187,7 +187,7 @@ for (const k of ['T1:mark', 'T2:word', 'T3:sentence']) ok(kinds[k] > 1000, 'kind
 
 // Wiring and story lines
 ok(NPC_ORDER.indexOf('anna') === NPC_ORDER.indexOf('jasmine') + 1, 'anna follows jasmine in NPC_ORDER');
-ok(NO_CLIP_IDS.includes('anna'), 'anna uses the speech voice (no clips)');
+ok(!NO_CLIP_IDS.includes('anna'), 'anna has recorded clips (Nov 16), so she is out of NO_CLIP_IDS');
 ok(PRINCESSES.anna.landName === 'Sunny Fjord Harbor' && QUESTS.anna.title === 'The Harbor Signs' && QUESTS.anna.questName === 'The Harbor Signs', 'land name and title');
 ok(/Anna/.test(PARENT_CORNER_HTML) && /L\.1\.2/.test(PARENT_CORNER_HTML) && /Harbor Signs/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');
 ok(BUILT_SLOTS.ese === 'anna' && builtSlotIds().includes('ese') && isHarborOpen() && isHarborOpen('?preview=harbor'), 'ese is built for Anna; ?preview=harbor is harmless');

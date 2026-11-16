@@ -186,7 +186,7 @@ ok(seenChart.diff.size === 9 && seenChart.howmany.size === 10, 'differences 1 to
 
 // Wiring and story lines
 ok(NPC_ORDER[NPC_ORDER.length - 1] === 'aurora' && NPC_ORDER.indexOf('tiana') === NPC_ORDER.indexOf('anna') + 1, 'tiana follows anna in NPC_ORDER');
-ok(NO_CLIP_IDS.includes('tiana'), 'tiana uses the speech voice (no clips)');
+ok(!NO_CLIP_IDS.includes('tiana'), 'tiana has recorded clips (Nov 16), so she is out of NO_CLIP_IDS');
 ok(PRINCESSES.tiana.landName === 'Firefly Bayou' && QUESTS.tiana.title === 'The Tally Stand' && QUESTS.tiana.questName === 'The Tally Stand', 'land name and title');
 ok(/Tiana/.test(PARENT_CORNER_HTML) && /1\.MD\.C\.4/.test(PARENT_CORNER_HTML) && /Tally Stand/.test(PARENT_CORNER_HTML), 'Parent Corner row with the standard');
 ok(BUILT_SLOTS.wsw === 'tiana' && builtSlotIds().includes('wsw') && isBayouOpen() && isBayouOpen('?preview=bayou') && isBayouOpen('?preview=all'), 'wsw is built for Tiana; ?preview=bayou is harmless');
