@@ -1,6 +1,6 @@
 /* Zoe's Starlight Quest — offline service worker. No analytics, no network calls
  * beyond this site. Bump CACHE_VERSION whenever game files change. */
-const CACHE_VERSION = 'v51-20261116';
+const CACHE_VERSION = 'v52-20261116';
 const CACHE_NAME = 'starlight-quest-' + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -84,6 +84,10 @@ const PRECACHE_URLS = [
   '../assets/audio/ES/princess_rapunzel_praise_01.mp3',
   '../assets/audio/ES/princess_rapunzel_encourage_01.mp3',
   '../assets/audio/ES/princess_cinderella_greeting_01.mp3',
+  '../assets/audio/ES/princess_ariel_greeting_01.mp3',
+  '../assets/audio/ES/princess_anna_greeting_01.mp3',
+  '../assets/audio/ES/princess_tiana_greeting_01.mp3',
+  '../assets/audio/ES/princess_aurora_greeting_01.mp3',
   '../assets/audio/ES/princess_zoe_greeting_01.mp3',
   '../assets/audio/ES/princess_zoe_praise_01.mp3',
   '../assets/audio/ES/princess_zoe_encourage_01.mp3',

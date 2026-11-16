@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { PRINCESSES, QUESTS, tileSound } from '../engine-core.js';
 import { Narrator, SoundFX } from '../engine-dom.js';
 import { say as herSay } from '../flow/say.js';
+import { ENGLISH_ROUND_NPCS, setEnglishRound } from '../i18n/lang.js';
 import { dictationHint, sortBinRight, sortWrongHint, groupBinRight } from '../flow/questbook.js';
 import { cardPicture, choiceSay, canHearChoices, questionPicture, RETRY_UNLOCK_MS, wordPicture } from '../flow/playfix.js';
 import { PrincessId, Round } from '../types';
@@ -64,6 +65,12 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   paused = false,
 }) => {
   const princess = PRINCESSES[npcId];
+  // Spanish mode: reading (and plant) rounds teach English words, so this sheet and her voice stay English.
+  const englishRound = ENGLISH_ROUND_NPCS.includes(npcId);
+  useLayoutEffect(() => {
+    setEnglishRound(englishRound);
+    return () => setEnglishRound(false);
+  }, [englishRound]);
   const quest = QUESTS[npcId];
   const round = view.round;
   const locked = !!feedback && ADVANCING.includes(feedback.kind);
@@ -372,7 +379,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   };
 
   return (
-    <div className="zsq-modal-wrap fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in pointer-events-auto overflow-y-auto">
+    <div data-zsq-en={englishRound || undefined} className="zsq-modal-wrap fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in pointer-events-auto overflow-y-auto">
       {/* Sparkle burst on a correct answer: drawn BEHIND the card, so it only shows around its edges
           and never covers the answers. Off under Reduce Motion (styles.css). */}
       {feedback && feedback.kind === 'correct' && (
