@@ -196,6 +196,7 @@ export function startAmbience() {
 export function getAmbience() { return choice; }
 export function setAmbience(c) {
   choice = writeAmbience(store(), c);
+  if (!ctx && choice !== 'off') startAmbience();   // the Parent Corner tap is a gesture, so iOS allows it
   if (ctx) tick();
   return choice;
 }

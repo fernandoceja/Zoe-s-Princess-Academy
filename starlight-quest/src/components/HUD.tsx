@@ -22,6 +22,8 @@ interface HUDProps {
   canPause?: boolean;
   // Pause anytime: during a talk, a question or a card the sheet covers the bar, so the Pause button floats above it.
   pauseOnTop?: boolean;
+  // A card (land glowing, milestone, rest, finale) is a z-50 overlay: Pause floats above it too (not while paused).
+  pauseAboveCard?: boolean;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -41,6 +43,7 @@ export const HUD: React.FC<HUDProps> = ({
   todayStarNPC,
   canPause = true,
   pauseOnTop = false,
+  pauseAboveCard = false,
 }) => {
   const pauseButton = (
     <button
@@ -136,10 +139,11 @@ export const HUD: React.FC<HUDProps> = ({
           >
             {muted ? '🔇' : '🔊'}
           </button>
-          {pauseOnTop ? <span className="w-[60px] h-[60px]" aria-hidden="true" /> : pauseButton}
+          {pauseOnTop || pauseAboveCard ? <span className="w-[60px] h-[60px]" aria-hidden="true" /> : pauseButton}
         </div>
       </header>
       {pauseOnTop && <div className="zsq-pause-float fixed top-2 right-2 sm:top-3 sm:right-3 z-[45] pointer-events-auto">{pauseButton}</div>}
+      {pauseAboveCard && <div className="zsq-pause-float fixed top-2 right-2 sm:top-3 sm:right-3 z-[55] pointer-events-auto">{pauseButton}</div>}
 
       {/* Proximity Interaction Banner (Bottom Center) */}
       {interactPrompt && (
