@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getFxStatus, onFxStatus, setFxQuality } from '../fx/worldfx.js';
+import { QUALITY_CHOICES, QUALITY_LABELS, qualityNote } from '../flow/quality.js';
 import { PRINCESSES, NPC_ORDER } from '../engine-core.js';
 import {
   gateQuestion,
@@ -86,6 +88,10 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
   // Backup and restore (M8): a file the grown-up keeps; nothing leaves this device.
   const [backupNote, setBackupNote] = useState('');
   const [pendingBackup, setPendingBackup] = useState<any>(null);
+
+  // Picture quality (visual polish): Auto / High / Low, kept on this device.
+  const [fx, setFx] = useState(() => getFxStatus());
+  useEffect(() => onFxStatus(setFx), []);
 
   const handleSaveBackup = () => {
     try {
@@ -318,6 +324,30 @@ export const ParentCorner: React.FC<ParentCornerProps> = ({
               </button>
             </div>
             {weekStat && <p className="text-xs font-bold text-emerald-600 mt-1">{weekStat}</p>}
+          </div>
+
+          {/* Picture quality (visual polish) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-xs">
+            <h3 className="text-sm font-black text-indigo-950 mb-1">Picture quality</h3>
+            <p className="text-xs text-slate-600 mb-2">
+              Soft shadows, glow and land colours for the 3D world. Auto starts on High and switches to Low if the game slows down.
+            </p>
+            <div className="flex gap-2" role="radiogroup" aria-label="Picture quality">
+              {QUALITY_CHOICES.map((c) => (
+                <button
+                  key={c}
+                  role="radio"
+                  aria-checked={fx.choice === c}
+                  onClick={() => setFxQuality(c)}
+                  className={`flex-1 min-h-[48px] px-3 py-2 rounded-xl font-black text-sm shadow-xs active:scale-95 border-2 ${
+                    fx.choice === c ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {QUALITY_LABELS[c]}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-slate-600 mt-2" data-testid="quality-note">{qualityNote(fx.choice, fx.level)}</p>
           </div>
 
           {/* Backup and restore (M8) */}

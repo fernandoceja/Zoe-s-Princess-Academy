@@ -28,6 +28,14 @@ export interface Feedback {
 }
 
 const ADVANCING = ['correct', 'reveal'];
+// Sparkle burst pieces (visual polish): 14 stars and sparkles on a ring, fixed so every burst looks the same.
+const BURST = Array.from({ length: 14 }, (_, i) => ({
+  a: Math.round(i * (360 / 14) + (i % 2 ? 9 : -6)),
+  d: 34 + (i % 3) * 7,
+  s: 16 + (i % 4) * 5,
+  w: (i % 5) * 35,
+  c: i % 3 === 0 ? '⭐' : '✨',
+}));
 
 interface ChallengeModalProps {
   npcId: PrincessId;
@@ -355,7 +363,16 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
 
   return (
     <div className="zsq-modal-wrap fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in pointer-events-auto overflow-y-auto">
-      <div className="w-full max-w-xl bg-gradient-to-b from-white via-[#fefbf2] to-[#f8f5ea] rounded-[28px] border-4 border-[#ebd373] p-4 sm:p-6 shadow-2xl relative my-auto">
+      {/* Sparkle burst on a correct answer: drawn BEHIND the card, so it only shows around its edges
+          and never covers the answers. Off under Reduce Motion (styles.css). */}
+      {feedback && feedback.kind === 'correct' && (
+        <div className="zsq-burst" aria-hidden="true" key={`burst-${progress.current}`}>
+          {BURST.map((b, i) => (
+            <span key={i} style={{ '--a': `${b.a}deg`, '--d': `${b.d}vmax`, '--s': `${b.s}px`, animationDelay: `${b.w}ms` } as React.CSSProperties}>{b.c}</span>
+          ))}
+        </div>
+      )}
+      <div className="w-full max-w-xl bg-gradient-to-b from-white via-[#fefbf2] to-[#f8f5ea] rounded-[28px] border-4 border-[#ebd373] p-4 sm:p-6 shadow-2xl relative z-10 my-auto">
         {/* Top Header: Progress Dots & Princess Kicker */}
         <div className="flex items-center justify-between gap-2 mb-3">
           {/* Princess Portrait + Land Kicker */}
