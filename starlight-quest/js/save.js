@@ -135,6 +135,20 @@ export function sanitizeSkills(raw) {
   return out;
 }
 
+/** Gems picked up on the paths between lands today (Nov 17, src/flow/pathgems.js): { day, got: ids like "p12-0" }. Never throws. */
+export function sanitizePathGems(raw) {
+  const out = { day: '', got: [] };
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  if (typeof raw.day === 'string' && DAY_RE.test(raw.day)) out.day = raw.day;
+  if (Array.isArray(raw.got)) {
+    for (const id of raw.got) {
+      if (typeof id === 'string' && /^p\d{1,2}-\d$/.test(id) && !out.got.includes(id)) out.got.push(id);
+      if (out.got.length >= 80) break;
+    }
+  }
+  return out;
+}
+
 function defaults() {
   return {
     stars: 0,
@@ -142,6 +156,7 @@ function defaults() {
     done: [],
     milestones: [], // unlocked milestone ids (see MILESTONES)
     outfit: {},     // worn rewards: { trail, gem, skirt, buddy } (see OUTFIT)
+    pathGems: { day: '', got: [] }, // gems picked up on the paths today (see sanitizePathGems)
     treasures: { day: '', got: [], total: {}, stars: [] }, // daily finds (see treasures.js): got = ids found on `day`, total = lifetime by kind
     seenNewKingdoms: false, // the one-time "new kingdoms appeared" card has been shown (see worldmap.js)
     seenKingdoms: [],       // slot ids of the kingdoms that card has told her about; a newly opened kingdom shows a short card again
@@ -187,6 +202,7 @@ export function merge(raw) {
 
   out.outfit = sanitizeOutfit(raw.outfit, out.milestones);
   out.treasures = sanitizeTreasures(raw.treasures);
+  out.pathGems = sanitizePathGems(raw.pathGems);
   out.secrets = sanitizeSecrets(raw.secrets);
   out.seenNewKingdoms = raw.seenNewKingdoms === true;
   // Older saves only have the flag: they were told about the first kingdom (Seashell Cove, slot sse), nothing else.

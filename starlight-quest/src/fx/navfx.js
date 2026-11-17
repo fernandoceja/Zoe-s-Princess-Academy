@@ -1,6 +1,7 @@
 /* Zoe's Starlight Quest — navigation layer (Nov 17): makes the world easier to get around.
  *   Item 1: a soft glowing sparkle trail on the ground from Zoe to today's princess (src/flow/guide.js).
  *   Item 2: fly to a land from the Kingdom Map: a 1.5 s sparkle flight (src/flow/flight.js).
+ *   Item 3: gems on the paths between lands, picked up by walking over them (src/flow/pathgems.js).
  * The 3D world (js/world.js) is hash-locked, so this file never edits it: it runs on each drawn world frame
  * through worldfx.js onWorldFrame, which hands it the scene and Zoe.
  * Pause: while the pause menu is up nothing here moves (the world keeps drawing under the translucent menu,
@@ -9,6 +10,7 @@
  */
 import * as THREE from 'three';
 import { onWorldFrame } from './worldfx.js';
+import { GEM_PICKUP_R } from '../flow/pathgems.js';
 import { FLIGHT, flightFrame, landingSpot } from '../flow/flight.js';
 import { GUIDE, guidePad, guidePlan, firstAhead, isLost, guideArrived, guideState, stepGuide, sparkleGlow } from '../flow/guide.js';
 
@@ -120,11 +122,31 @@ function setVeil(k) {
   v.style.opacity = String(Math.min(1, k).toFixed(3));
 }
 
+// Path gems: one InstancedMesh (one draw call) of small faceted gems that spin and bob; walking over one picks it up
+// (a short rise-spin-shrink, a sparkle burst, and the App's chime and counter).
+const GEM_MAX = 64, GEM_LIFT = 0.55, GEM_PICK = 0.5;
+const GEM_COLORS = [0x7fe3ff, 0xff8fd0, 0xc9a2ff, 0x8ff0c8];
+function makeGems(scene) {
+  const geo = new THREE.OctahedronGeometry(0.42, 0);
+  geo.scale(1, 1.35, 1);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x9a6cc0, emissiveIntensity: 0.75, roughness: 0.25, metalness: 0.15, flatShading: true });
+  const mesh = new THREE.InstancedMesh(geo, mat, GEM_MAX);
+  mesh.count = 0; mesh.frustumCulled = false; mesh.raycast = () => {};
+  mesh.name = 'zsq-path-gems';
+  const c = new THREE.Color();
+  for (let i = 0; i < GEM_MAX; i++) mesh.setColorAt(i, c.setHex(GEM_COLORS[i % GEM_COLORS.length]));
+  scene.add(mesh);
+  return { mesh, list: [], m4: new THREE.Matrix4(), q: new THREE.Quaternion(), e: new THREE.Euler(), v: new THREE.Vector3(), sc: new THREE.Vector3() };
+}
+
 const nav = {
   installed: false,
   scene: null,
   g: null,
   bursts: null,
+  gems: null,
+  gemSpots: [],      // [{ id, x, z }] not yet picked up today (from the App)
+  gemsDirty: false,
   flight: null,      // { npc, spot, t, moved, onLand } while she flies
   state: guideState(),
   today: null,
@@ -136,7 +158,7 @@ const nav = {
 
 function frame({ scene, player, now }) {
   if (!player) return;
-  if (nav.scene !== scene) { nav.scene = scene; nav.g = makeGuide(scene); nav.state = guideState(); nav.bursts = makeBursts(scene); }
+  if (nav.scene !== scene) { nav.scene = scene; nav.g = makeGuide(scene); nav.state = guideState(); nav.bursts = makeBursts(scene); nav.gems = makeGems(scene); nav.gemsDirty = true; }
   const paused = !!nav.opts.isPaused();
   const raw = nav.lastNow ? Math.min(0.05, Math.max(0, (now - nav.lastNow) / 1000)) : 0;
   nav.lastNow = now;
@@ -145,7 +167,42 @@ function frame({ scene, player, now }) {
   nav.t += dt;
   updateFlight(player, dt);
   updateGuide(player.position, dt);
+  updateGems(player.position, dt);
   nav.bursts.update(dt);
+}
+
+function updateGems(p, dt) {
+  const G = nav.gems;
+  if (nav.gemsDirty) {
+    nav.gemsDirty = false;
+    G.list = nav.gemSpots.slice(0, GEM_MAX).map((s, i) => ({ id: s.id, x: s.x, z: s.z, phase: i * 1.7, pick: -1 }));
+    G.mesh.count = G.list.length;
+    if (G.mesh.instanceColor) G.mesh.instanceColor.needsUpdate = true;
+  }
+  if (!G.list.length) return;
+  const still = calm();
+  const canPick = nav.opts.getPhase() === 'roam' && !nav.flight;
+  for (let i = 0; i < G.list.length; i++) {
+    const g = G.list[i];
+    let y = GEM_LIFT + (still ? 0 : Math.sin(nav.t * 2.2 + g.phase) * 0.12), s = 1, spin = still ? g.phase : nav.t * 1.6 + g.phase;
+    if (g.pick < 0 && canPick && Math.hypot(p.x - g.x, p.z - g.z) < GEM_PICKUP_R) {
+      g.pick = 0;
+      nav.bursts.fire(g.x, GEM_LIFT, g.z, GEM_COLORS[i % GEM_COLORS.length], 0.6);
+      try { if (nav.opts.onGem) nav.opts.onGem(g.id); } catch (e) { /* the chime and counter are the App's */ }
+    }
+    if (g.pick >= 0) {
+      if (g.pick < GEM_PICK) g.pick += dt;
+      const k = Math.min(1, g.pick / GEM_PICK);
+      y += k * 1.3;
+      s = k < 0.35 ? 1 + k * 1.6 : Math.max(0, 1.56 * (1 - (k - 0.35) / 0.65));
+      if (!still) spin += k * 9;
+    }
+    G.e.set(0, spin, 0); G.q.setFromEuler(G.e);
+    G.v.set(g.x, y, g.z); G.sc.setScalar(s);
+    G.m4.compose(G.v, G.q, G.sc);
+    G.mesh.setMatrixAt(i, G.m4);
+  }
+  G.mesh.instanceMatrix.needsUpdate = true;
 }
 
 function updateFlight(player, dt) {
@@ -196,7 +253,7 @@ function updateGuide(p, dt) {
   g.geo.attributes.color.needsUpdate = true;
 }
 
-/** Install once (after installWorldFx, before or after createWorld). opts: { getPhase(), isPaused() }. */
+/** Install once (after installWorldFx, before or after createWorld). opts: { getPhase(), isPaused(), onGem(id) }. */
 export function installNav(opts = {}) {
   nav.opts = { ...nav.opts, ...opts };
   if (nav.installed) return navApi;
@@ -214,6 +271,7 @@ export function navStatus() {
   let lit = 0;
   if (g && g.points.visible) for (let i = 0; i < GUIDE.max; i++) if (g.pos[i * 3 + 1] > -1) lit++;
   return { today: nav.today, target: nav.state.target, reached: nav.state.reached, alpha: nav.state.alpha, lit, t: nav.t,
+    gems: nav.gems ? nav.gems.list.filter((g) => g.pick < 0).map((g) => ({ id: g.id, x: g.x, z: g.z })) : [],
     flying: nav.flight ? { npc: nav.flight.npc, t: nav.flight.t, moved: nav.flight.moved } : null };
 }
 
@@ -230,5 +288,7 @@ export const navApi = {
     return true;
   },
   isFlying() { return !!nav.flight; },
+  /** Today's path gems still to find: [{ id, x, z }] (src/flow/pathgems.js pathGemSpots minus the ones picked up). */
+  setGems(spots) { nav.gemSpots = Array.isArray(spots) ? spots : []; nav.gemsDirty = true; },
 };
 export { FLIGHT };
