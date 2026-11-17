@@ -91,6 +91,7 @@ import { WardrobeModal } from './components/WardrobeModal';
 import { TreasureBookModal } from './components/TreasureBookModal';
 import { ParentCorner, type WeekForm } from './components/ParentCorner';
 import { installWorldFx } from './fx/worldfx.js';
+import { installNav, navApi } from './fx/navfx.js';
 import { installAmbience, startAmbience } from './fx/ambience.js';
 import { applyWeek, resetWeek, applyWords } from './flow/parent.js';
 import { VirtualJoystick } from './components/VirtualJoystick';
@@ -319,7 +320,7 @@ export const App: React.FC = () => {
     let lit = false;
     try { lit = !!worldRef.current?.showTrail(npcId); } catch (e) { /* decoration only */ }
     const name = PRINCESSES[npcId].landName;
-    if (lit) showToast(followLine(name), 3500, followSay(name));
+    if (lit) { navApi.setFirefliesActive(true); showToast(followLine(name), 3500, followSay(name)); }
     else showToast(`${name} is right here!`, 3000, spoken(`${name} is right here!`));
   };
 
@@ -369,7 +370,7 @@ export const App: React.FC = () => {
     if (!scootRef.current || phaseRef.current !== 'scoot') return;
     if (pausedRef.current) { scootRef.current.pending = true; return; }   // she slid up to the lantern as she paused: ask when she resumes
     scootRef.current.pending = false;
-    worldRef.current?.clearTrail();
+    worldRef.current?.clearTrail(); navApi.setFirefliesActive(false);
     worldRef.current?.setInputEnabled(false);
     setScootChip(null);
     setToastMsg(null);
@@ -380,7 +381,7 @@ export const App: React.FC = () => {
     setScootChip(null);
     setStopArmed(false);
     if (!keepLights) resetLanterns();   // after a finished quest the last lantern stays lit until she is back to roaming (endToRoam)
-    worldRef.current?.clearTrail();
+    worldRef.current?.clearTrail(); navApi.setFirefliesActive(false);
   };
   const stopScoot = () => {
     if (!stopArmed) { setStopArmed(true); window.setTimeout(() => setStopArmed(false), 3000); return; }
@@ -393,7 +394,7 @@ export const App: React.FC = () => {
     setActiveNPC(npcId);
     setPhase('dialogue');
     if (worldRef.current) {
-      worldRef.current.clearTrail?.();
+      worldRef.current.clearTrail?.(); navApi.setFirefliesActive(false);
       worldRef.current.setInputEnabled(false);
       worldRef.current.focus(npcId);
     }
@@ -425,7 +426,7 @@ export const App: React.FC = () => {
     setMapOpen(false);
     setInteractPrompt(null);
     if (worldRef.current) {
-      worldRef.current.clearTrail?.();
+      worldRef.current.clearTrail?.(); navApi.setFirefliesActive(false);
       worldRef.current.setInputEnabled(false);
       worldRef.current.focus('belle');
     }
@@ -584,6 +585,9 @@ export const App: React.FC = () => {
     setLadderState({ ...Save.data.ladder });
     if (out.todayStar !== undefined) {
       try { worldRef.current?.setTodayStar(out.todayStar); } catch (e) { /* decoration only */ }
+      // The "Today" chip, the map's star and the guiding sparkle trail move to the next princess too.
+      setTodayStar((out.todayStar || undefined) as PrincessId | undefined);
+      navApi.setToday(out.todayStar || null);
     }
 
     if (out.kind === 'practice') {
@@ -756,7 +760,8 @@ export const App: React.FC = () => {
 
     try {
       const t = todayStarTarget(Save.data, today());
-      if (t !== undefined) setTodayStar(t as PrincessId | undefined);
+      if (t !== undefined) setTodayStar((t || undefined) as PrincessId | undefined);
+      navApi.setToday(t || null);
     } catch (e) {}
 
     // Init Input, audio care and the 3D Canvas
@@ -772,12 +777,15 @@ export const App: React.FC = () => {
     if (containerRef.current) {
       // Visual polish layer (lights, shadows, bloom, land moods, idle motion): wraps the renderer before the world draws.
       installWorldFx();
+      // Getting around (Nov 17): the guiding sparkle trail to today's princess. Stands still while paused.
+      installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current });
       // Gentle background sound per land (made in code; Parent Corner has Off / Soft / Medium).
       installAmbience({ getXZ: () => { try { return worldRef.current?.getPlayerXZ() || null; } catch (e) { return null; } }, getPhase: () => phaseRef.current });
       const world = createWorld(containerRef.current, {
         onTrailArrived(npcId: string) {
           const sc = scootRef.current;
           if (sc && phaseRef.current === 'scoot') { if (npcId === expectedArrival(sc.plan.steps[sc.i])) arriveLeg(); return; }
+          navApi.setFirefliesActive(false);
           if (phaseRef.current !== 'roam' || !PRINCESSES[npcId]) return;
           const nm = PRINCESSES[npcId].landName;
           showToast(arrivedLine(nm), 3000, spoken(arrivedLine(nm)));
