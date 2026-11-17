@@ -218,6 +218,13 @@ export const App: React.FC = () => {
     showToast(`💎 ${gemLine(n, findsTotal(openLandIds()))} ✨`, 2200);
   };
 
+  // Grass friends (Nov 17): each has its own little sound. Sound effects only (no words), so they never talk over a princess.
+  const critterSound = (kind: string) => {
+    if (kind === 'butterfly') SoundFX.sparkle();
+    else if (kind === 'bunny') { SoundFX.pop(); window.setTimeout(() => { if (!pausedRef.current) SoundFX.pop(); }, 260); window.setTimeout(() => { if (!pausedRef.current) SoundFX.pop(); }, 520); }
+    else SoundFX.chime();
+  };
+
   // Reveal secrets & sticker rewards (main.js revealSecret)
   const revealSecret = (id: string) => {
     const def = ALL_SECRETS.find((x: any) => x.id === id);
@@ -816,7 +823,8 @@ export const App: React.FC = () => {
       // Visual polish layer (lights, shadows, bloom, land moods, idle motion): wraps the renderer before the world draws.
       installWorldFx();
       // Getting around (Nov 17): the guiding sparkle trail to today's princess. Stands still while paused.
-      installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current, onGem: (id: string) => onPathGem(id) });
+      installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current, onGem: (id: string) => onPathGem(id),
+        onCritter: (kind: string) => critterSound(kind) });
       navApi.setGems(gemsLeft(day));
       // Gentle background sound per land (made in code; Parent Corner has Off / Soft / Medium).
       installAmbience({ getXZ: () => { try { return worldRef.current?.getPlayerXZ() || null; } catch (e) { return null; } }, getPhase: () => phaseRef.current });

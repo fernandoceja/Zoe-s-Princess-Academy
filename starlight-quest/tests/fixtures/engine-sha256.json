@@ -40,6 +40,7 @@
     "tests/clipvoice_check.mjs": "57d5722c50a750e913e7c43ab9d25411c0149d123e27a60f421e854c322973e0",
     "tests/counton_check.mjs": "c2a10c904ef23dcc5b1ba1f13b13d7d83f754d8bab69cb18984edb01a79b6a85",
     "tests/cove_check.mjs": "6ce9f22a9df12b1daf13842b36a746fe583339522a153e6ad072a0f6b16b5e76",
+    "tests/critters_check.mjs": "19106f2319ce2969cce41df48ab37e12e74edc758e7d9b06944889fd9e1bb1d3",
     "tests/dictation_check.mjs": "34402adf211520d576cf841c0ff49b1ab84f93966a34b8be2c96a3d13af45329",
     "tests/finale_check.mjs": "505f1432295a25111196fe08b1835068a336211d02df1f7e602cf0edbaa91d1b",
     "tests/flight_check.mjs": "7b9c839c07d01ab0029e2a59a9b94f93aaceaa2f9c168e260d18c2d8fc0e5ccb",

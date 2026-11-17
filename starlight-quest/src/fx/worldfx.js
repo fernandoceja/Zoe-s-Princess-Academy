@@ -45,7 +45,7 @@ export function getFxStatus() {
 export function onFxStatus(fn) { state.listeners.add(fn); return () => state.listeners.delete(fn); }
 
 // Frame hooks (navigation layer, src/fx/navfx.js): called once per drawn world frame, before it is drawn, with
-// { scene, camera, player, now }. player is Zoe's group (or null until found). Nothing runs while the world is not drawing.
+// { scene, camera, renderer, player, now }. player is Zoe's group (or null until found). Nothing runs while the world is not drawing.
 const frameHooks = new Set();
 export function onWorldFrame(fn) { frameHooks.add(fn); return () => frameHooks.delete(fn); }
 
@@ -527,7 +527,7 @@ export function installWorldFx() {
         }
         const now = performance.now();
         if (frameHooks.size) {
-          const arg = { scene, camera, player: fx.player ? fx.player.group : null, now };
+          const arg = { scene, camera, renderer, player: fx.player ? fx.player.group : null, now };
           frameHooks.forEach((h) => { try { h(arg); } catch (e) { /* a hook must not break the frame */ } });
         }
         fx.before(now);
