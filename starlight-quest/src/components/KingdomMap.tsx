@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Narrator } from '../engine-dom.js';
 import { PRINCESSES, pathSegments, kingdomLands, CASTLE_POS, INNER_LAND_ANGLES, LAND_DIST, WORLD_RADIUS } from '../engine-core.js';
-import { SPEAK_TAP_MS } from '../flow/screens.js';
+import { FLY_TEXT, flyAskSay } from '../flow/flight.js';
 import { KINGDOM_MAP, LAND_ICON, MAP_HALF, MIN_TARGET_PX, mapPercent, mapSay, landSay, landLook, landLabel } from '../flow/kingdommap.js';
 
 interface KingdomMapProps {
   doneIds: string[];
   todayStar?: string;
   player: { x: number; z: number };
-  onPick: (npc: string) => void;
+  onPick: (npc: string, mode: 'fly' | 'walk') => void;
   onClose: () => void;
 }
 
@@ -18,9 +18,8 @@ type Land = { npc: string; land: string; center: { x: number; z: number }; pad: 
 export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, player, onPick, onClose }) => {
   const lands: Land[] = kingdomLands();
   const name = (npc: string) => (PRINCESSES as any)[npc]?.landName || npc;
-  // Like the pause menu: a tap says the name; a second tap goes at once, or it goes by itself after a moment. With sound off it just goes.
+  // A tap picks a land and says its name ("Fly or walk?"); then Fly or Walk. Tapping the same land again flies.
   const [armed, setArmed] = useState<string | null>(null);
-  const timer = useRef<number | undefined>(undefined);
   const pickedRef = useRef(false);   // after a pick the next line ("Follow the fireflies") is already speaking: do not cut it off
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -28,17 +27,17 @@ export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, play
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
-    return () => { window.clearTimeout(timer.current); window.removeEventListener('keydown', onKey); if (!pickedRef.current) Narrator.stop(); };
+    return () => { window.removeEventListener('keydown', onKey); if (!pickedRef.current) Narrator.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const go = (npc: string, mode: 'fly' | 'walk') => { setArmed(null); pickedRef.current = true; onPick(npc, mode); };
   const pick = (l: Land) => {
-    window.clearTimeout(timer.current);
     if (!l.open) { Narrator.speakText(landSay(name(l.npc), false) + ' ' + KINGDOM_MAP.closed + '.', { pitch: 1.15, rate: 0.95 }); return; }
-    if (armed === l.npc || Narrator.muted) { setArmed(null); pickedRef.current = true; onPick(l.npc); return; }
+    if (armed === l.npc) { go(l.npc, 'fly'); return; }
     setArmed(l.npc);
-    Narrator.speakText(landSay(name(l.npc), doneIds.includes(l.npc)), { pitch: 1.15, rate: 0.95 });
-    timer.current = window.setTimeout(() => { setArmed(null); pickedRef.current = true; onPick(l.npc); }, SPEAK_TAP_MS);
+    Narrator.speakText(flyAskSay(name(l.npc)), { pitch: 1.15, rate: 0.95 });
   };
+  const armedLand = armed ? lands.find((l) => l.npc === armed) : undefined;
   const todayLand = lands.find((l) => l.npc === todayStar);
   const zoe = mapPercent(player.x, player.z);
   const innerCenters = Object.values(INNER_LAND_ANGLES as Record<string, number>).map((a) => ({ x: Math.cos(a) * LAND_DIST, z: Math.sin(a) * LAND_DIST }));
@@ -82,8 +81,20 @@ export const KingdomMap: React.FC<KingdomMapProps> = ({ doneIds, todayStar, play
               );
             })}
           </div>
+          {armedLand && (
+            <div className="zsq-map-go flex items-center justify-center gap-3 flex-wrap" aria-live="polite">
+              <button onClick={() => go(armedLand.npc, 'fly')} className="min-h-[60px] px-5 rounded-full bg-gold text-ink font-read font-bold text-xl border-2 border-white shadow-md active:scale-95"
+                aria-label={`${FLY_TEXT.fly}: ${name(armedLand.npc)}`}>
+                ✨ {FLY_TEXT.fly}
+              </button>
+              <button onClick={() => go(armedLand.npc, 'walk')} className="min-h-[60px] px-5 rounded-full bg-lilac text-ink font-read font-bold text-xl border-2 border-night shadow-md active:scale-95"
+                aria-label={`${FLY_TEXT.walk}: ${name(armedLand.npc)}`}>
+                👣 {FLY_TEXT.walk}
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {todayLand && (
+            {todayLand && armed !== todayLand.npc && (
               <button onClick={() => pick(todayLand)} className="min-h-[60px] px-5 rounded-full bg-gold text-ink font-read font-bold text-xl border-2 border-white shadow-md active:scale-95">
                 ⭐ {KINGDOM_MAP.today}
               </button>
