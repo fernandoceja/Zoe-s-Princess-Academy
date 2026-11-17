@@ -64,6 +64,8 @@ const nav = readFileSync(new URL('../src/fx/navfx.js', import.meta.url), 'utf8')
 ok(/collectPathGem\(Save\.data, id, day\)/.test(app) && /Save\.save\(\);\s*SoundFX\.chime\(\);/.test(app), 'pickup saves and chimes');
 ok(!/findsToday\(Save\.data, day, openLands\)\)/.test(app) && /setTreasuresToday\(finds\(/.test(app), 'every counter update includes path gems');
 ok(/InstancedMesh\(geo, mat, GEM_MAX\)/.test(nav), 'gems are one draw call');
+ok(/gemLine\(n, findsTotal\(openLandIds\(\)\)\)\} ✨`, 2200, false\)/.test(app), 'a gem chimes but does not speak (no cut-off voices on a row of gems)');
+ok(/day !== gemDayRef\.current\) \{ refreshGems\(day\)/.test(app), 'past midnight the gems change to the new day');
 ok(/bursts\.fire\(g\.x/.test(nav), 'sparkle on pickup');
 ok(/if \(paused\) return;/.test(nav), 'pause holds gems and pickups still');
 

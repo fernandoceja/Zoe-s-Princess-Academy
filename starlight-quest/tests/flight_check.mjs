@@ -52,6 +52,7 @@ ok(/navApi\.isFlying\(\)/.test(app), 'no map or talk while flying');
 ok(/freezeTrail\?\.\(paused\)/.test(app) && /if \(!trailFrozen\) updateTrail\(dt, t\);/.test(world), 'pause holds the firefly trail still');
 ok(/if \(paused\) return;/.test(nav) && /updateFlight\(player, dt\)/.test(nav), 'pause holds the flight still');
 ok(!/className="[^"]*zsq-modal-wrap/.test(nav), 'the flight veil is not a world cover');
+ok(/if \(!paused && navApi\.isFlying\(\)\) worldRef\.current\?\.setInputEnabled\(false\);/.test(app), 'resuming mid-flight keeps walking off until she lands');
 
 if (bad.length) { for (const x of [...new Set(bad)].slice(0, 25)) console.log('  ' + x); console.log(`flight_check: ${new Set(bad).size} problem(s)`); process.exit(1); }
 console.log('flight_check ok');
