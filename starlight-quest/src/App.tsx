@@ -79,6 +79,7 @@ import {
 import { HUD } from './components/HUD';
 import { KingdomMap } from './components/KingdomMap';
 import { followLine, followSay, arrivedLine } from './flow/kingdommap.js';
+import { flewLine, flewSay } from './flow/flight.js';
 import { scootPlan, withBonus, expectedArrival, legLine, legSay, chipText, SCOOT_TEXT, LANTERN_TOTAL } from './flow/lanterns.js';
 import { TitleModal } from './components/TitleModal';
 import { spoken } from './flow/screens.js';
@@ -259,6 +260,9 @@ export const App: React.FC = () => {
     }
   };
 
+  // Pause holds the map's firefly trail still too (the world keeps drawing under the menu). The new layer reads pausedRef itself.
+  useEffect(() => { try { worldRef.current?.freezeTrail?.(paused); } catch (e) { /* decoration only */ } }, [paused]);
+
   // Resume only ever un-pauses (a double tap on Resume must not pause again).
   const handleResume = () => { if (pausedRef.current) handleTogglePause(); };
 
@@ -305,7 +309,7 @@ export const App: React.FC = () => {
 
   // B2: the Kingdom Map. Opens only while roaming; the world pauses behind it (cover observer).
   const openMap = () => {
-    if (phaseRef.current !== 'roam' || pausedRef.current || !worldRef.current) return;
+    if (phaseRef.current !== 'roam' || pausedRef.current || !worldRef.current || navApi.isFlying()) return;
     try { const p = worldRef.current.getPlayerXZ(); if (p) setMapPlayer({ x: p.x, z: p.z }); } catch (e) { /* keep the last spot */ }
     worldRef.current.setInputEnabled(false);
     setMapOpen(true);
@@ -314,9 +318,22 @@ export const App: React.FC = () => {
     setMapOpen(false);
     worldRef.current?.setInputEnabled(true);
   };
-  const pickKingdom = (npcId: string) => {
+  const pickKingdom = (npcId: string, mode: 'fly' | 'walk' = 'walk') => {
     closeMap();
     if (!PRINCESSES[npcId]) return;
+    const landName = PRINCESSES[npcId].landName;
+    if (mode === 'fly') {
+      // A short sparkle flight (under 2 s, src/fx/navfx.js). No walking while she is in the air.
+      worldRef.current?.clearTrail(); navApi.setFirefliesActive(false);
+      worldRef.current?.setInputEnabled(false);
+      const flying = navApi.flyTo(npcId, () => {
+        if (phaseRef.current === 'roam' && !pausedRef.current) worldRef.current?.setInputEnabled(true);
+        SoundFX.chime();
+        showToast(flewLine(landName), 3000, flewSay(landName));
+      });
+      if (flying) { SoundFX.sparkle(); return; }
+      worldRef.current?.setInputEnabled(true);   // could not fly (world not drawn yet): walk with the fireflies instead
+    }
     let lit = false;
     try { lit = !!worldRef.current?.showTrail(npcId); } catch (e) { /* decoration only */ }
     const name = PRINCESSES[npcId].landName;
@@ -326,7 +343,7 @@ export const App: React.FC = () => {
 
   // Talk to a princess: the same guard as js/main.js onInteractRequest. Used by E, tapping her and the HUD button.
   const requestInteract = (npcId: string | null) => {
-    if (phaseRef.current !== 'roam' || pausedRef.current) return;
+    if (phaseRef.current !== 'roam' || pausedRef.current || navApi.isFlying()) return;
     if (!npcId || !QUESTS[npcId]) return;
     startQuest(npcId as PrincessId);
   };

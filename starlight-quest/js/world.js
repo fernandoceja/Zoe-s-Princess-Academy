@@ -1952,6 +1952,7 @@ export function createWorld(container, hooks) {
     flyPoints.visible = flyDots.length > 0;
     return flyDots.length > 0;
   }
+  let trailFrozen = false;   // Nov 17: the pause menu holds the fireflies still (the world keeps drawing under it)
   function clearTrail() {
     flyPoint = null; flyTo = null; flyRoute = []; flyDots = []; flyEnding = -1; flyPoints.visible = false;
   }
@@ -2354,8 +2355,8 @@ export function createWorld(container, hooks) {
     // ---- Butterflies ----
     butterflyFlutter(t);
 
-    // ---- Firefly trail to the chosen land ----
-    updateTrail(dt, t);
+    // ---- Firefly trail to the chosen land (held still while the pause menu is up: freezeTrail) ----
+    if (!trailFrozen) updateTrail(dt, t);
 
     // ---- Celebration bursts ----
     for (let i = bursts.length - 1; i >= 0; i--) {
@@ -2469,6 +2470,7 @@ export function createWorld(container, hooks) {
     gardenLantern(i, mode) { if (garden) garden.setQuestLantern(i, mode); },
     gardenLanternXZ(i) { return garden ? garden.questLanternXZ(i) : null; },
     clearTrail,
+    freezeTrail(on) { trailFrozen = !!on; },
     getPlayerXZ,
     setClockTime,
     pause: pauseRendering,
