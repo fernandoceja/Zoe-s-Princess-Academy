@@ -46,6 +46,7 @@
     "tests/garden_check.mjs": "b1922d69b66625f1164bef1381ee5495f996fac356821f5e9c8deab62c86c769",
     "tests/gate_check.mjs": "724ed26cee9f0242b4e068d8c77696d545883889c10c9c073aa5be0824299e19",
     "tests/glen_check.mjs": "632d5da90f13845ebe387e089012db22b8b6b02450cb8f7cda7919e402cf3c34",
+    "tests/guide_check.mjs": "0f70b25aa21584f8e979c3c0a74e1bf480936c092d640e70c4894bc6ed4af3bd",
     "tests/harbor_check.mjs": "2007cea8698ea570d5cc0d4995ef2509529736fa959c841769d392feec2d6bfb",
     "tests/i18n_check.mjs": "5207099e14a23e251e4bd6d4c30db518948699cbee2c4d93a3289fde67369de7",
     "tests/isle_check.mjs": "d0755b7a6f828b736f9bec133170b86c646cde619b264a8640b078e74215db52",
