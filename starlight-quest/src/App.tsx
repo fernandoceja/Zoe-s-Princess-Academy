@@ -80,6 +80,7 @@ import { HUD } from './components/HUD';
 import { KingdomMap } from './components/KingdomMap';
 import { followLine, followSay, arrivedLine } from './flow/kingdommap.js';
 import { flewLine, flewSay } from './flow/flight.js';
+import { pathGemSpots, pathGemsGot, collectPathGem, counterFinds, gemLine } from './flow/pathgems.js';
 import { scootPlan, withBonus, expectedArrival, legLine, legSay, chipText, SCOOT_TEXT, LANTERN_TOTAL } from './flow/lanterns.js';
 import { TitleModal } from './components/TitleModal';
 import { spoken } from './flow/screens.js';
@@ -195,6 +196,26 @@ export const App: React.FC = () => {
     setTimeout(() => {
       setToastMsg((prev) => (prev === msg ? null : prev));
     }, duration);
+  };
+
+  // The 💎 counter: land treasures plus path gems found today, never past its total (no new currency).
+  const finds = (day: string) => {
+    const open = openLandIds();
+    return counterFinds(findsToday(Save.data, day, open), pathGemsGot(Save.data, day).length, findsTotal(open));
+  };
+  // Today's path gems not yet picked up (new spots every day).
+  const gemsLeft = (day: string) => {
+    const got = pathGemsGot(Save.data, day);
+    return pathGemSpots(day).filter((g: any) => !got.includes(g.id));
+  };
+  const onPathGem = (id: string) => {
+    const day = todayKey();
+    if (!collectPathGem(Save.data, id, day)) return;
+    Save.save();
+    SoundFX.chime();
+    const n = finds(day);
+    setTreasuresToday(n);
+    showToast(`💎 ${gemLine(n, findsTotal(openLandIds()))} ✨`, 2200);
   };
 
   // Reveal secrets & sticker rewards (main.js revealSecret)
@@ -772,7 +793,7 @@ export const App: React.FC = () => {
     setSchoolWordsState(Save.data.schoolWords || []);
 
     const openLands = openLandIds();
-    setTreasuresToday(findsToday(Save.data, day, openLands));
+    setTreasuresToday(finds(day));
     setTreasuresTotal(findsTotal(openLands));
 
     try {
@@ -795,7 +816,8 @@ export const App: React.FC = () => {
       // Visual polish layer (lights, shadows, bloom, land moods, idle motion): wraps the renderer before the world draws.
       installWorldFx();
       // Getting around (Nov 17): the guiding sparkle trail to today's princess. Stands still while paused.
-      installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current });
+      installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current, onGem: (id: string) => onPathGem(id) });
+      navApi.setGems(gemsLeft(day));
       // Gentle background sound per land (made in code; Parent Corner has Off / Soft / Medium).
       installAmbience({ getXZ: () => { try { return worldRef.current?.getPlayerXZ() || null; } catch (e) { return null; } }, getPhase: () => phaseRef.current });
       const world = createWorld(containerRef.current, {
@@ -861,7 +883,7 @@ export const App: React.FC = () => {
             setStars(Save.data.stars);
             setTimeout(() => showToast(rowMsg, 3000, false), 1600);
           }
-          setTreasuresToday(findsToday(Save.data, dayKey, openLandIds()));
+          setTreasuresToday(finds(dayKey));
         },
       });
 

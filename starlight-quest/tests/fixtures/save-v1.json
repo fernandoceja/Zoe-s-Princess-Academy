@@ -20,6 +20,7 @@
     "skirt": "mint",
     "buddy": true
   },
+  "pathGems": { "day": "", "got": [] },
   "treasures": {
     "day": "2026-10-27",
     "got": ["library-0", "library-1", "meadow-3", "village-0"],
