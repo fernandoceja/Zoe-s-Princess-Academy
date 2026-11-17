@@ -375,7 +375,8 @@ function updateFlight(player, dt) {
 
 function updateGuide(p, dt) {
   const g = nav.g, s = nav.state;
-  const pad = guidePad(nav.today);
+  if (g.padFor !== nav.today) { g.padFor = nav.today; g.pad = guidePad(nav.today); }   // looked up once per princess, not every frame
+  const pad = g.pad;
   const show = nav.opts.getPhase() === 'roam' && !nav.hideGuide && !nav.flight && !!pad;
   stepGuide(s, { target: pad ? nav.today : null, arrived: !!pad && guideArrived(p.x, p.z, pad), show, dt });
   if (s.alpha <= 0.001 || !s.target) { g.points.visible = false; if (!s.target || s.reached) g.plan = null; return; }

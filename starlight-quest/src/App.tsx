@@ -208,14 +208,18 @@ export const App: React.FC = () => {
     const got = pathGemsGot(Save.data, day);
     return pathGemSpots(day).filter((g: any) => !got.includes(g.id));
   };
+  const gemDayRef = useRef('');
+  const refreshGems = (day: string) => { gemDayRef.current = day; navApi.setGems(gemsLeft(day)); };
   const onPathGem = (id: string) => {
     const day = todayKey();
+    if (day !== gemDayRef.current) { refreshGems(day); setTreasuresToday(finds(day)); return; }   // past midnight: today's gems, not yesterday's
     if (!collectPathGem(Save.data, id, day)) return;
     Save.save();
     SoundFX.chime();
     const n = finds(day);
     setTreasuresToday(n);
-    showToast(`💎 ${gemLine(n, findsTotal(openLandIds()))} ✨`, 2200);
+    // Chime and sparkle only: no voice per gem, so a row of gems never cuts itself (or a princess) off.
+    showToast(`💎 ${gemLine(n, findsTotal(openLandIds()))} ✨`, 2200, false);
   };
 
   // Grass friends (Nov 17): each has its own little sound. Sound effects only (no words), so they never talk over a princess.
@@ -289,7 +293,11 @@ export const App: React.FC = () => {
   };
 
   // Pause holds the map's firefly trail still too (the world keeps drawing under the menu). The new layer reads pausedRef itself.
-  useEffect(() => { try { worldRef.current?.freezeTrail?.(paused); } catch (e) { /* decoration only */ } }, [paused]);
+  // Resuming in the middle of a flight keeps walking off until she lands (the landing gives it back).
+  useEffect(() => {
+    try { worldRef.current?.freezeTrail?.(paused); } catch (e) { /* decoration only */ }
+    if (!paused && navApi.isFlying()) worldRef.current?.setInputEnabled(false);
+  }, [paused]);
 
   // Resume only ever un-pauses (a double tap on Resume must not pause again).
   const handleResume = () => { if (pausedRef.current) handleTogglePause(); };
@@ -825,7 +833,7 @@ export const App: React.FC = () => {
       // Getting around (Nov 17): the guiding sparkle trail to today's princess. Stands still while paused.
       installNav({ getPhase: () => phaseRef.current, isPaused: () => pausedRef.current, onGem: (id: string) => onPathGem(id),
         onCritter: (kind: string) => critterSound(kind) });
-      navApi.setGems(gemsLeft(day));
+      refreshGems(day);
       // Gentle background sound per land (made in code; Parent Corner has Off / Soft / Medium).
       installAmbience({ getXZ: () => { try { return worldRef.current?.getPlayerXZ() || null; } catch (e) { return null; } }, getPhase: () => phaseRef.current });
       const world = createWorld(containerRef.current, {
