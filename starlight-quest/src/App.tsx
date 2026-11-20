@@ -995,6 +995,8 @@ export const App: React.FC = () => {
             onPause={handleTogglePause}
             onInteract={() => requestInteract(nearNPCRef.current)}
             todayStarNPC={todayStar}
+            nextNPC={todayStar}
+            showNext={gameState === 'roam' && !mapOpen}
             onOpenMap={gameState === 'roam' ? openMap : undefined}
           />
           {(gameState === 'roam' || gameState === 'scoot') && <VirtualJoystick />}

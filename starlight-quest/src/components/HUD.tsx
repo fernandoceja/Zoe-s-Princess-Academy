@@ -24,6 +24,9 @@ interface HUDProps {
   pauseOnTop?: boolean;
   // A card (land glowing, milestone, rest, finale) is a z-50 overlay: Pause floats above it too (not while paused).
   pauseAboveCard?: boolean;
+  // Where the sparkle trail leads (today's princess) while she walks around; shown as a gentle chip at the bottom.
+  nextNPC?: PrincessId | null;
+  showNext?: boolean;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -40,11 +43,14 @@ export const HUD: React.FC<HUDProps> = ({
   onPause,
   onInteract,
   onOpenMap,
-  todayStarNPC,
   canPause = true,
   pauseOnTop = false,
   pauseAboveCard = false,
+  nextNPC,
+  showNext = false,
 }) => {
+  const nextPrincess = nextNPC ? PRINCESSES[nextNPC] : null;
+  const allGlowing = totalLands > 0 && doneCount >= totalLands;
   const pauseButton = (
     <button
       onClick={onPause}
@@ -66,8 +72,8 @@ export const HUD: React.FC<HUDProps> = ({
             alt="Princess Zoe"
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-[#ebd373]"
           />
-          <div className="flex items-center gap-1 font-black text-amber-600 text-base sm:text-lg">
-            <span>⭐</span>
+          <div className="flex items-center gap-1 font-black text-amber-800 text-base sm:text-lg tabular-nums" aria-label={`${stars} stars`}>
+            <span aria-hidden="true">⭐</span>
             <span>{stars}</span>
           </div>
         </div>
@@ -85,40 +91,35 @@ export const HUD: React.FC<HUDProps> = ({
                 </span>
               </span>
             ) : (
-              <div className="flex items-center gap-1" title={`${doneCount} of ${totalLands} lands glowing`}>
-                <span className="text-xs text-amber-700 font-bold mr-1 hidden sm:inline">Kingdoms:</span>
-                {NPC_ORDER.map((id, i) => (
-                  <span
-                    key={id}
-                    className={`text-xs transition-colors ${
-                      i < doneCount ? 'text-amber-500 font-black' : 'text-slate-300'
-                    }`}
-                  >
-                    {i < doneCount ? '◆' : '◇'}
-                  </span>
-                ))}
+              <div className="flex items-center gap-1.5" title={`${doneCount} of ${totalLands} lands glowing`}>
+                <span className="text-xs sm:text-sm text-purple-950 font-black mr-0.5 hidden lg:inline">Kingdoms:</span>
+                {/* Clear diamonds (from the AI Studio version): filled gold with a dark edge, empty ones still outlined. */}
+                <span className="flex items-center gap-0.5" aria-hidden="true">
+                  {NPC_ORDER.map((id, i) => {
+                    const filled = i < doneCount;
+                    return (
+                      <svg key={id} viewBox="0 0 20 20" className="zsq-kingdom-diamond w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0">
+                        <polygon points="10,1.5 18.5,10 10,18.5 1.5,10" fill={filled ? '#f59e0b' : '#f1f5f9'} stroke={filled ? '#92400e' : '#64748b'} strokeWidth="2" />
+                      </svg>
+                    );
+                  })}
+                </span>
+                <span className="text-xs sm:text-sm font-black text-amber-900 tabular-nums">{doneCount}/{totalLands}</span>
               </div>
             )}
           </div>
 
           {/* Daily Treasures Badge */}
           <div
-            className="hidden md:flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border-2 border-[#ebd373] shadow-md text-xs sm:text-sm font-bold text-teal-800"
+            className="hidden md:flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border-2 border-[#ebd373] shadow-md text-xs sm:text-sm font-extrabold text-teal-900 tabular-nums"
             title="Daily treasures found across the kingdom"
+            aria-label={`${treasuresToday} of ${treasuresTotal} gems today`}
           >
-            <span>💎</span>
+            <span aria-hidden="true">💎</span>
+            <span className="hidden lg:inline">Gems</span>
             <span>{treasuresToday}/{treasuresTotal}</span>
           </div>
 
-          {todayStarNPC && !activeNPC && (
-            <div
-              className="hidden lg:flex items-center gap-1 bg-amber-100/90 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-amber-300 text-xs font-bold text-amber-800 shadow-sm"
-              title="Today's featured princess"
-            >
-              <span>👑</span>
-              <span>Today: {PRINCESSES[todayStarNPC]?.name}</span>
-            </div>
-          )}
         </div>
 
         {/* Right: Sound & Pause Controls */}
@@ -144,6 +145,15 @@ export const HUD: React.FC<HUDProps> = ({
       </header>
       {pauseOnTop && <div className="zsq-pause-float fixed top-2 right-2 sm:top-3 sm:right-3 z-[45] pointer-events-auto">{pauseButton}</div>}
       {pauseAboveCard && <div className="zsq-pause-float fixed top-2 right-2 sm:top-3 sm:right-3 z-[55] pointer-events-auto">{pauseButton}</div>}
+
+      {/* Where to go next (from the AI Studio version): a calm chip at the bottom while she walks, never a button.
+          Hidden near a princess (the talk button takes this spot) and on narrow phones (the trail shows the way). */}
+      {showNext && !activeNPC && !interactPrompt && (nextPrincess || allGlowing) && (
+        <div className="zsq-next-chip hidden sm:flex fixed bottom-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none max-w-[calc(100vw-20rem)] items-center gap-2 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full border-2 border-amber-300 shadow-md font-extrabold text-purple-950 text-sm sm:text-base">
+          <span aria-hidden="true">{nextPrincess ? '🧭' : '👑'}</span>
+          <span className="truncate">{nextPrincess ? `Next: ${nextPrincess.name} at ${nextPrincess.landName}` : `All ${totalLands} kingdoms are glowing!`}</span>
+        </div>
+      )}
 
       {/* Proximity Interaction Banner (Bottom Center) */}
       {interactPrompt && (
