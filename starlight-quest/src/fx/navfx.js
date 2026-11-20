@@ -49,7 +49,29 @@ function makeGuide(scene) {
   points.name = 'zsq-guide-trail';
   scene.add(points);
   const gold = new THREE.Color(0xffd36b), pink = new THREE.Color(0xff9fd0);
-  return { points, geo, pos, col, gold, pink, plan: null, planFor: null, check: 0 };
+  return { points, geo, pos, col, gold, pink, plan: null, planFor: null, check: 0, colorFor: undefined };
+}
+
+// Each princess's own trail colors (from the AI Studio version, Nov 20): a core color and a soft glow, so the
+// sparkles match the friend she is walking to. Unknown or no princess keeps the gold and pink trail.
+export const TRAIL_COLORS = {
+  belle:      { core: 0xffd75e, glow: 0xfff2b2 },
+  elsa:       { core: 0x82dcff, glow: 0xd9f5ff },
+  rapunzel:   { core: 0xffa8db, glow: 0xffe4f5 },
+  cinderella: { core: 0x9cd3ff, glow: 0xe3f4ff },
+  ariel:      { core: 0xffa285, glow: 0xffe2d4 },
+  moana:      { core: 0x62d9eb, glow: 0xcdf8ff },
+  jasmine:    { core: 0x6de3d6, glow: 0xd0fbf5 },
+  anna:       { core: 0xffa37c, glow: 0xffe5b0 },
+  tiana:      { core: 0xc99bff, glow: 0xffeaa6 },
+  aurora:     { core: 0xff99c8, glow: 0xffdced },
+};
+const TRAIL_DEFAULT = { core: 0xffd36b, glow: 0xff9fd0 };
+export function trailColorsFor(npcId) { return (npcId && TRAIL_COLORS[npcId]) || TRAIL_DEFAULT; }
+function setTrailColors(g, npcId) {
+  if (g.colorFor === npcId) return;
+  const t = trailColorsFor(npcId);
+  g.gold.setHex(t.core); g.pink.setHex(t.glow); g.colorFor = npcId;
 }
 
 // Sparkle bursts (lift-off, landing; later the gem pickups): one pooled Points, a few bursts at a time.
@@ -376,6 +398,7 @@ function updateFlight(player, dt) {
 function updateGuide(p, dt) {
   const g = nav.g, s = nav.state;
   if (g.padFor !== nav.today) { g.padFor = nav.today; g.pad = guidePad(nav.today); }   // looked up once per princess, not every frame
+  setTrailColors(g, nav.today);   // her friend's colors (only changes when the princess does)
   const pad = g.pad;
   const show = nav.opts.getPhase() === 'roam' && !nav.hideGuide && !nav.flight && !!pad;
   stepGuide(s, { target: pad ? nav.today : null, arrived: !!pad && guideArrived(p.x, p.z, pad), show, dt });
